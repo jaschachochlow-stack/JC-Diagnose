@@ -1,0 +1,45 @@
+name: APK bauen
+on:
+  push:
+    branches: [main]
+    paths: ['android/**', '.github/workflows/apk.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.7' }
+      - name: Signaturschlüssel
+        env:
+          KS_B64: ${{ secrets.KEYSTORE_B64 }}
+          KS_PASS_SECRET: ${{ secrets.KEYSTORE_PASS }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > android/release.jks
+            echo "KS_PASS=$KS_PASS_SECRET" >> "$GITHUB_ENV"
+          else
+            P=$(openssl rand -hex 16); echo "::add-mask::$P"
+            keytool -genkeypair -keystore android/release.jks -alias jc -keyalg RSA -keysize 2048 -validity 12000 -storepass "$P" -keypass "$P" -dname "CN=JC Diagnose, C=DE"
+            echo "KS_PASS=$P" >> "$GITHUB_ENV"
+          fi
+      - name: Bauen
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+        run: gradle -p android assembleRelease --no-daemon
+      - run: cp android/app/build/outputs/apk/release/app-release.apk JC-Diagnose.apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk
+          name: JC Diagnose (Android-APK)
+          make_latest: true
+          body: |
+            Android-App für Tablet und Handy. Öffnet https://jaschachochlow-stack.github.io/JC-Diagnose/ in Chrome (USB-Oszilloskop und Bluetooth-OBD funktionieren).
+            Installation: JC-Diagnose.apk herunterladen → öffnen → „Unbekannte Apps installieren“ für Chrome/Dateien erlauben.
+            Build ${{ github.run_number }}
+          files: JC-Diagnose.apk

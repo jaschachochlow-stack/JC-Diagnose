@@ -1,0 +1,26 @@
+plugins { id 'com.android.application' }
+def ksFile = rootProject.file('release.jks')
+android {
+    namespace 'de.jc.diagnose'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'de.jc.diagnose'
+        minSdk 21
+        targetSdk 34
+        versionCode Integer.parseInt(System.getenv('VERSION_CODE') ?: '1')
+        versionName '0.9.' + (System.getenv('VERSION_CODE') ?: '1')
+    }
+    signingConfigs {
+        release {
+            storeFile ksFile
+            storePassword System.getenv('KS_PASS')
+            keyAlias 'jc'
+            keyPassword System.getenv('KS_PASS')
+        }
+    }
+    buildTypes {
+        release { minifyEnabled false; signingConfig signingConfigs.release }
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}
+dependencies { implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0' }
