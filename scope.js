@@ -34,7 +34,7 @@ function hex(u8){ return Array.prototype.map.call(u8, function(b){ return ('0'+b
 function defCh(i){ return {on:i<2, vdiv:i<2?2:1, off:i===0?1.5:(i===1?-2.5:0), probe:'x1', ac:false}; }
 var S = A.lget('jc-scope', null);
 if (!S || !S.ch || S.ch.length!==8) S = {ch:[0,1,2,3,4,5,6,7].map(defCh), tdiv:0.01, roll:false, rollT:1, trig:{src:0, slope:'rise', level:2.5, mode:'auto'}, sel:0, preset:'', comp:'', cal:1};
-if (!S.cal || S.calV !== 2){ S.cal = 1; S.calMap = {}; S.calV = 2; }   // v0.9.1: alte (falsch gerichtete) Kalibrierung verwerfen
+if (!S.cal || S.calV !== 3){ S.cal = 1; S.calMap = {}; S.calV = 3; }   // v0.9.1: alte (falsch gerichtete) Kalibrierung verwerfen
 if (!S.calMap) S.calMap = {};
 function calKey(n){ return n+'|'+S.tdiv; }
 function calFor(n){ return S.calMap[calKey(n)] || S.cal; }
@@ -499,7 +499,7 @@ function body(){
     (w && R.ref ? '<h2>'+T('Sollbild zum Vergleich','Эталон для сравнения')+'</h2>'+A.waveBlock(S.preset, null) : '') +
     '<details class="sc-log"><summary>'+T('Verbindungsprotokoll','Журнал подключения')+' ('+R.log.length+')</summary><p class="muted">'+T('Wenn etwas nicht klappt: „Kopieren“ und an Claude schicken.','Если что-то не работает: «Скопировать» и отправить Claude.')+'</p><div class="btn-row"><button class="btn small" data-k="copylog">'+T('Kopieren','Скопировать')+'</button><label class="sc-sw"><input type="checkbox" id="scVerb"'+(R.drv&&R.drv.verbose?' checked':'')+'> '+T('alle USB-Befehle mitschreiben','писать все USB-команды')+'</label></div><pre id="scLogTxt">'+esc(R.log.slice(-200).join('\n'))+'</pre></details>' +
     '<p class="muted" style="font-size:var(--text-xs)">'+T('Hantek 1008C: Treiber auf Basis des offenen Projekts hantek1008py (Apache-2.0); nicht vom Hersteller. Bereiche ±0,4 / ±2,5 / ±20 V am Eingang, 8 Kanäle, max. 2,4 MS/s. Zeitachse lässt sich mit dem Kompensationsausgang (1 kHz) prüfen.','Hantek 1008C: драйвер на основе открытого проекта hantek1008py (Apache-2.0), не от производителя. Диапазоны ±0,4 / ±2,5 / ±20 В на входе, 8 каналов, до 2,4 МВыб/с. Ось времени можно проверить по выходу компенсации (1 кГц).')+
-      ' <button class="btn small" data-k="cal">'+T('Zeitachse mit 1-kHz-Ausgang kalibrieren','Откалибровать время по выходу 1 кГц')+'</button></p>';
+      ' <button class="btn small" data-k="cal"'+(R.calBusy?' disabled':'')+'>'+T('Zeitachse automatisch kalibrieren (Tastkopf des gewählten Kanals am 1-kHz-Ausgang)','Автокалибровка времени (щуп выбранного канала на выходе 1 кГц)')+'</button></p>';
   return h;
 }
 function redraw(){
@@ -555,7 +555,7 @@ async function act(k){
     case 'png': png(); return;
     case 'csv': csv(); return;
     case 'copylog': try { await navigator.clipboard.writeText(R.log.join('\n')); A.toast(T('Protokoll kopiert','Журнал скопирован')); } catch(e){ A.toast(T('Kopieren nicht möglich','Не удалось скопировать')); } return;
-    case 'cal': calibrate(); break;
+    case 'cal': autoCal(); return;
   }
   redraw();
 }
@@ -565,6 +565,37 @@ function calibrate(){
   var k = m.f/1000; if (k < 0.2 || k > 5){ A.toast(T('Gemessen ','Измерено ')+fmtSI(m.f,'Hz')+T(' – unplausibel, nicht übernommen',' — неправдоподобно, не принято')); return; }
   var n = R.drv && R.drv.act ? R.drv.act.length : S.ch.filter(function(c){ return c.on; }).length, old = calFor(n), nw = old / k;
   S.calMap[calKey(n)] = nw; S.cal = nw; save(); log('Kalibrierung: gemessen '+m.f.toFixed(1)+' Hz bei '+fmtSI(S.tdiv,'s')+'/div, '+n+' Kanal/Kanäle → Faktor '+old.toFixed(4)+' → '+nw.toFixed(4)+' (jetzt ca. 1 kHz)'); A.toast(T('Zeitachse kalibriert','Ось времени откалибрована'));
+}
+async function autoCal(){
+  var d = R.drv; if (!d || !d.hw){ A.toast(T('Nur mit angeschlossenem Hantek möglich','Только с подключённым Hantek')); return; }
+  if (R.calBusy) return; R.calBusy = true;
+  var was = R.running; R.running = false; R.single = false; R.loopId++; await sleep(400);
+  var keepT = S.tdiv, keepRoll = S.roll, ch = S.sel, n = d.act.length || 1, res = [];
+  S.roll = false; log('Auto-Kalibrierung: CH'+(ch+1)+' am 1-kHz-Ausgang, '+n+' Kanal/Kanäle');
+  try {
+    for (var i=0;i<TB_BURST.length;i++){
+      S.tdiv = TB_BURST[i]; R.status = T('Kalibriere ','Калибрую ')+fmtSI(S.tdiv,'s')+'/div …'; redraw();
+      await d.apply(); n = d.act.length || 1; var f = await d.burst(); if (!f || !f.data[ch]) continue;
+      var a = f.data[ch], m = measure(a, 1), per = m && m.per;
+      var ok = per && per >= 6 && per <= a.length/2.5 && m.pp > 0.5;
+      log('  '+fmtSI(S.tdiv,'s')+'/div: '+a.length+' Werte, Periode '+(per?per.toFixed(1):'–')+' Werte'+(ok ? ' → '+fmtSI(per*1000,'S/s') : ' (unbrauchbar)'));
+      res.push({t:S.tdiv, rate: ok ? per*1000 : null});
+    }
+    var good = res.filter(function(r){ return r.rate; });
+    if (!good.length){ A.toast(T('Kein 1-kHz-Signal erkannt – Tastkopf am Kompensationsausgang?','Сигнал 1 кГц не найден — щуп на выходе компенсации?')); log('Auto-Kalibrierung: kein Signal'); }
+    else {
+      var base = good.filter(function(r){ return r.t <= 2e-3; }); if (!base.length) base = good;
+      var Ks = base.map(function(r){ return r.rate*r.t; }).sort(function(x,y){ return x-y; }), K = Ks[Math.floor(Ks.length/2)];
+      // langsame Zeitbasen: 1 kHz kann dort verfälscht (Aliasing) erscheinen – nur plausible Werte übernehmen
+      res.forEach(function(r){ var own = r.rate && Math.abs(r.rate*r.t/K - 1) < 0.3; var rate = own ? r.rate : K/r.t; if (r.rate && !own) log('  '+fmtSI(r.t,'s')+'/div: Messung verworfen, hochgerechnet'); S.calMap[n+'|'+r.t] = rate*r.t/(25*RATE_F[n-1]); });
+      S.cal = K/(25*RATE_F[n-1]); save();
+      log('Auto-Kalibrierung fertig: '+good.length+' Zeitbasen gemessen, Werte je Teilung ≈ '+K.toFixed(1)+' (Faktor '+S.cal.toFixed(3)+')');
+      A.toast(T('Zeitachse kalibriert ('+good.length+' Zeitbasen)','Ось времени откалибрована ('+good.length+' развёрток)'));
+    }
+  } catch(e){ R.err = (e && e.message) || String(e); log('Fehler Kalibrierung: '+R.err); }
+  S.tdiv = keepT; S.roll = keepRoll; R.status = ''; R.calBusy = false; R.dirty = true; R.frame = null;
+  if (was || true){ R.running = true; loop(); }
+  redraw();
 }
 var ro = null;
 function vScope(){
