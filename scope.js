@@ -34,7 +34,10 @@ function hex(u8){ return Array.prototype.map.call(u8, function(b){ return ('0'+b
 function defCh(i){ return {on:i<2, vdiv:i<2?2:1, off:i===0?1.5:(i===1?-2.5:0), probe:'x1', ac:false}; }
 var S = A.lget('jc-scope', null);
 if (!S || !S.ch || S.ch.length!==8) S = {ch:[0,1,2,3,4,5,6,7].map(defCh), tdiv:0.01, roll:false, rollT:1, trig:{src:0, slope:'rise', level:2.5, mode:'auto'}, sel:0, preset:'', comp:'', cal:1};
-if (!S.cal) S.cal = 1;
+if (!S.cal || S.calV !== 2){ S.cal = 1; S.calMap = {}; S.calV = 2; }   // v0.9.1: alte (falsch gerichtete) Kalibrierung verwerfen
+if (!S.calMap) S.calMap = {};
+function calKey(n){ return n+'|'+S.tdiv; }
+function calFor(n){ return S.calMap[calKey(n)] || S.cal; }
 function save(){ A.lset('jc-scope', S); }
 
 /* ---------- Laufzeit ---------- */
@@ -95,7 +98,7 @@ Hantek.prototype.init = async function(){
   await this.cmd(0xb9, [0x01, 0xb0, 0x04, 0x00, 0x00]);                 // Generator-Takt (Standard)
   await this.cmd(0xb7, [0x00]); await this.cmd(0xbb, [0x08, 0x00]);       // Generator aus
   await this.cmd(0xb5, [], 64, false, 19); await this.cmd(0xb6, [], 64, false);
-  var id = await this.cmd(0xe5, [], 2, false); log('Kennung e5: '+hex(id)+(hex(id)==='d606'?' (wie bekannt)':' (abweichend – bitte Log senden)'));
+  var id = await this.cmd(0xe5, [], 2, false); log('Kennung e5: '+hex(id)+(hex(id)==='d606'?' (Hantek 1008)':(hex(id)==='ef06'?' (1008C / YDJ-2088)':' (unbekannt – bitte Log senden)')));
   await this.cmd(0xf7, [], 64, false); await this.cmd(0xf8, [], 64, false); await this.cmd(0xfa, [], 56, false);
   await this.cmd(0xf5, [], 0, true, 214);
   await this.setActive([0,1,2,3,4,5,6,7]); await this.setTime(500e-6); await this.cmd(0xc1, [0, 0]);
@@ -128,6 +131,7 @@ Hantek.prototype.apply = async function(){
   var tc = S.ch[S.trig.src], p = probe(tc.probe), zz = this.zero ? this.zero[vs[S.trig.src]][S.trig.src] : 2048;
   await this.setTrig(S.trig.src, S.trig.slope, zz + (S.trig.level/p.f)/(0.01*vs[S.trig.src]));
   await this.cmd(0xa7, [0, 0], 1); await this.cmd(0xac, [0,0,0,0,0x01,0x00,0x05,0x79]);
+  this.logFrame = true;
   log('Einstellung: Kanäle '+act.map(function(i){ return 'CH'+(i+1); }).join(',')+' · Bereiche '+vs.join('/')+' · '+(S.roll ? 'Roll '+S.rollT+' s/div' : fmtSI(S.tdiv,'s')+'/div'));
 };
 Hantek.prototype.toVolts = function(rawArr, ch){
@@ -146,7 +150,8 @@ Hantek.prototype.burst = async function(){
   if (!ok && S.trig.mode!=='auto') return null;
   if (!ok) log('kein Trigger – Auto-Aufnahme');
   var raw = concat(await this.c6a6(2), await this.c6a6(3));
-  var data = this.split(shorts(raw), false), dt = S.tdiv / (25 * RATE_F[this.act.length-1]) / S.cal;
+  var data = this.split(shorts(raw), false), dt = S.tdiv / (25 * RATE_F[this.act.length-1]) / calFor(this.act.length);
+  if (this.logFrame){ this.logFrame = false; var ch0 = this.act[0]; log('Rahmen: '+raw.length+' Byte · '+(data[ch0]?data[ch0].length:0)+' Werte je Kanal · dt '+fmtSI(dt,'s')+' · Faktor '+calFor(this.act.length).toFixed(3)); }
   return {dt:dt, data:data, trig:ok};
 };
 Hantek.prototype.rollStart = async function(){
@@ -550,7 +555,7 @@ async function act(k){
     case 'png': png(); return;
     case 'csv': csv(); return;
     case 'copylog': try { await navigator.clipboard.writeText(R.log.join('\n')); A.toast(T('Protokoll kopiert','Журнал скопирован')); } catch(e){ A.toast(T('Kopieren nicht möglich','Не удалось скопировать')); } return;
-    case 'cal': calibrate(); return;
+    case 'cal': calibrate(); break;
   }
   redraw();
 }
@@ -558,7 +563,8 @@ function calibrate(){
   var v = view(), a = v && v.data[S.sel]; if (!a){ A.toast(T('Erst den Tastkopf an den 1-kHz-Ausgang, dann Start','Сначала щуп на выход 1 кГц, потом «Пуск»')); return; }
   var m = measure(a, v.dt); if (!m || !m.f){ A.toast(T('Keine Frequenz erkannt – Zeitbasis 0,5 ms/div wählen','Частота не найдена — поставь 0,5 мс/дел')); return; }
   var k = m.f/1000; if (k < 0.2 || k > 5){ A.toast(T('Gemessen ','Измерено ')+fmtSI(m.f,'Hz')+T(' – unplausibel, nicht übernommen',' — неправдоподобно, не принято')); return; }
-  S.cal = S.cal * k; save(); log('Kalibrierung: gemessen '+m.f.toFixed(1)+' Hz → Faktor '+S.cal.toFixed(4)); A.toast(T('Zeitachse kalibriert','Ось времени откалибрована'));
+  var n = R.drv && R.drv.act ? R.drv.act.length : S.ch.filter(function(c){ return c.on; }).length, old = calFor(n), nw = old / k;
+  S.calMap[calKey(n)] = nw; S.cal = nw; save(); log('Kalibrierung: gemessen '+m.f.toFixed(1)+' Hz bei '+fmtSI(S.tdiv,'s')+'/div, '+n+' Kanal/Kanäle → Faktor '+old.toFixed(4)+' → '+nw.toFixed(4)+' (jetzt ca. 1 kHz)'); A.toast(T('Zeitachse kalibriert','Ось времени откалибрована'));
 }
 var ro = null;
 function vScope(){

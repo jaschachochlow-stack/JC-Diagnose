@@ -1,6 +1,6 @@
 /* JC Diagnose – Offline-Cache. Bei jeder neuen Version VER erhöhen. */
-var VER = 'jc-091';
-var FILES = ['./', './index.html', './app.css?v=091', './data.js?v=091', './jcx.js?v=091', './oszi.js?v=091', './scope.js?v=091', './app.js?v=091', './manifest.json', './icon-192.png', './icon-512.png'];
+var VER = 'jc-092';
+var FILES = ['./', './index.html', './app.css?v=092', './data.js?v=092', './jcx.js?v=092', './oszi.js?v=092', './scope.js?v=092', './app.js?v=092', './manifest.json', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', function(e){ e.waitUntil(caches.open(VER).then(function(c){ return c.addAll(FILES); }).then(function(){ return self.skipWaiting(); })); });
 self.addEventListener('activate', function(e){ e.waitUntil(caches.keys().then(function(ks){ return Promise.all(ks.filter(function(k){ return k!==VER; }).map(function(k){ return caches.delete(k); })); }).then(function(){ return self.clients.claim(); })); });
 self.addEventListener('fetch', function(e){
