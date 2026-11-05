@@ -179,7 +179,7 @@ tbody tr:hover td{background:color-mix(in oklab,var(--color-primary) 5%,transpar
 .tbl.big{max-height:70vh}
 .tbl td:first-child{font-weight:600}
 .tbl td,.tbl th{min-width:110px}
-.tbl td a{word-break:normal;overflow-wrap:anywhere}
+.tbl td a{word-break:normal;overflow-wrap:break-word;hyphens:auto}
 @media (max-width:560px){.tbl table{min-width:560px}.tbl td,.tbl th{min-width:120px;font-size:var(--text-xs)}}
 
 /* Search results */
@@ -560,3 +560,13 @@ html[data-skin=workshop] .quick-nav a[aria-current=page]{color:#fff}
 .pid-grp legend{font-weight:600;font-size:var(--text-sm);padding:0 4px 0 0;color:var(--color-muted)}
 .pid-grp label{display:flex;gap:6px;align-items:baseline;font-size:var(--text-sm);line-height:1.3;cursor:pointer}
 .pid-grp .mono,.live .lbl .mono{font-size:var(--text-xs);color:var(--color-muted)}
+
+/* Buttons: langer Text bricht um statt abgeschnitten zu werden (Telefon) */
+.btn{height:auto;min-height:38px;padding-top:6px;padding-bottom:6px;white-space:normal;text-align:center;line-height:1.25;max-width:100%;overflow-wrap:break-word;hyphens:auto}
+html[data-skin=field] .btn{height:auto;min-height:52px}
+html[data-skin=field] .dg-res .btn{height:auto;min-height:84px}
+@media (max-width:720px){
+  .callout{flex-wrap:wrap}
+  .callout>p{flex:1 1 60%}
+  .callout>.btn,.callout>.btn-row{flex:1 1 100%;justify-content:center}
+}
