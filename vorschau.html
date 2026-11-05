@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JC Diagnose – Vorschau Telefon &amp; Tablet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#0d0f12;color:#e8eaed;font-family:'Geist',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column}
+  header{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding:12px 18px;border-bottom:1px solid #23272d;background:#121519;position:sticky;top:0;z-index:5}
+  header b{font-size:16px}
+  .grp{display:flex;border:1px solid #2c3138;border-radius:10px;overflow:hidden}
+  .grp button{background:transparent;border:0;color:#b9bec6;padding:9px 13px;font:inherit;font-size:14px;cursor:pointer;min-height:40px}
+  .grp button[aria-pressed=true]{background:#f2b705;color:#1a1400;font-weight:600}
+  .btn{background:#1b1f25;border:1px solid #2c3138;color:#e8eaed;border-radius:10px;padding:9px 13px;font:inherit;font-size:14px;cursor:pointer;text-decoration:none;min-height:40px;display:inline-flex;align-items:center}
+  .btn:hover{border-color:#f2b705}
+  .sp{flex:1}
+  .hint{font-size:13px;color:#8d939c}
+  .stage{flex:1;display:flex;gap:40px;justify-content:center;align-items:flex-start;padding:28px 16px 40px;flex-wrap:wrap}
+  .dev{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .dev .lbl{font-size:13px;color:#8d939c}
+  .frame{background:#050608;border:2px solid #2f343b;box-shadow:0 30px 80px rgba(0,0,0,.55),inset 0 0 0 2px #15181c;position:relative;overflow:hidden}
+  .frame.phone{border-radius:46px;padding:14px}
+  .frame.tab{border-radius:30px;padding:18px}
+  .frame .screen{overflow:hidden;background:#111;border-radius:34px;position:relative}
+  .frame.tab .screen{border-radius:14px}
+  .frame.phone .notch{position:absolute;top:20px;left:50%;transform:translateX(-50%);width:110px;height:26px;background:#050608;border-radius:14px;z-index:3;pointer-events:none}
+  iframe{border:0;display:block;transform-origin:0 0;background:#111}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1b1f25;border:1px solid #2c3138;padding:10px 16px;border-radius:10px;font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <b>JC Diagnose · предпросмотр</b>
+  <div class="grp" role="group" aria-label="Устройства">
+    <button data-v="both" aria-pressed="true">Телефон + планшет</button>
+    <button data-v="phone" aria-pressed="false">Телефон</button>
+    <button data-v="tab" aria-pressed="false">Планшет вертикально</button>
+    <button data-v="tabq" aria-pressed="false">Планшет горизонтально</button>
+  </div>
+  <button class="btn" id="home">⌂ На главную</button>
+  <button class="btn" id="demo">Загрузить пример данных</button>
+  <button class="btn" id="demoDel">Убрать пример</button>
+  <span class="sp"></span>
+  <a class="btn" href="index.html">Открыть приложение целиком</a>
+  <span class="hint" style="flex-basis:100%">Нажимай внутри устройств как пальцем. Телефон и планшет — одно и то же приложение с общими данными: изменение на одном видно на другом после «На главную». Оформление меняется кнопкой с палитрой внутри приложения.</span>
+</header>
+<div class="stage" id="stage"></div>
+<div class="toast" id="toast" hidden></div>
+<script>
+(function(){
+  var DEV = {
+    phone:{w:390,h:844,cls:'phone',lbl:'Телефон · 390 × 844'},
+    tab:{w:820,h:1180,cls:'tab',lbl:'Планшет вертикально · 820 × 1180'},
+    tabq:{w:1180,h:820,cls:'tab',lbl:'Планшет горизонтально · 1180 × 820'}
+  };
+  var view = 'both', stage = document.getElementById('stage');
+  function toast(t){ var e = document.getElementById('toast'); e.textContent = t; e.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(function(){ e.hidden = true; }, 2600); }
+  function build(){
+    var list = view==='both' ? ['phone','tab'] : [view];
+    var availW = window.innerWidth - 40, availH = window.innerHeight - 190;
+    var totalW = list.reduce(function(s,k){ return s + DEV[k].w + (DEV[k].cls==='phone'?28:36); }, 0) + (list.length-1)*40;
+    var maxH = Math.max.apply(null, list.map(function(k){ return DEV[k].h + (DEV[k].cls==='phone'?28:36); }));
+    var sc = Math.min(1, availW/totalW, Math.max(0.35, availH/maxH));
+    stage.innerHTML = '';
+    list.forEach(function(k){
+      var d = DEV[k], w = Math.round(d.w*sc), h = Math.round(d.h*sc);
+      var wrap = document.createElement('div'); wrap.className = 'dev';
+      wrap.innerHTML = '<div class="frame '+d.cls+'"><div class="screen" style="width:'+w+'px;height:'+h+'px">'+'<iframe title="'+d.lbl+'" src="index.html#start" style="width:'+d.w+'px;height:'+d.h+'px;transform:scale('+sc+')"></iframe></div></div><div class="lbl">'+d.lbl+(sc<1?' · масштаб '+Math.round(sc*100)+' %':'')+'</div>';
+      stage.appendChild(wrap);
+    });
+  }
+  document.querySelectorAll('[data-v]').forEach(function(b){ b.onclick = function(){ view = b.dataset.v; document.querySelectorAll('[data-v]').forEach(function(x){ x.setAttribute('aria-pressed', x===b); }); build(); }; });
+  document.getElementById('home').onclick = function(){ document.querySelectorAll('iframe').forEach(function(f){ try { f.contentWindow.location.hash = 'start'; f.contentWindow.location.reload(); } catch(e){ f.src = 'index.html#start'; } }); };
+  var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(build, 200); });
+
+  /* Beispieldaten */
+  var LS = null; try { LS = window['local'+'Storage']; } catch(e){}
+  function get(k, d){ try { var v = LS.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
+  function set(k, v){ try { LS.setItem(k, JSON.stringify(v)); } catch(e){} }
+  var FZ1 = {kz:'F-JC 81', marke:'Volkswagen', modell:'Golf 7 (MJ 2016)', vin:'WVWZZZAUZGW000001', km:'191450', kunde:'Testkunde', tel:''};
+  var FZ2 = {kz:'OF-XY 77', marke:'BMW/MINI', modell:'320d F31', vin:'WBA3A5C59FK421128', km:'143200', kunde:'Ivanov', tel:''};
+  function m(id, datum, fz, comp, punkt, mittel, lo, hi, ein, ist, befund){ return {id:id, datum:datum, kz:fz.kz, marke:fz.marke, modell:fz.modell, vin:fz.vin, motorcode:'', comp:comp, compFree:'', zustand:'', punkt:punkt, mittel:mittel, lo:lo, hi:hi, einheit:ein, solltxt:'', herkunft:1, ist:ist, vdiv:'', tdiv:'', trigger:'', befund:befund, notiz:'', photos:[], updated:datum+'T10:00:00.000Z'}; }
+  var MESS = [
+    m('demo-m1','2026-10-03',FZ1,'k102','Ruhespannung, Batterie voll','Multimeter','12,4','12,8','V','12,1','Batterie tiefentladen'),
+    m('demo-m2','2026-10-03',FZ1,'k4','20 °C','Multimeter','2,4','2,7','kΩ','2,52','Sensor i. O.'),
+    m('demo-m3','2026-10-21',FZ2,'k7','Lambda vor Kat, Regelbetrieb','Oszilloskop','0,1','0,9','V','0,45','träge Umschaltung')
+  ];
+  function st(k, t, s, extra){ var o = {k:k, st:s, rep:!!s, note:'', mess:[]}; if (k==='check') o.t = t; else if (k==='comp'){ o.ch = t; o.why = ''; o.kind = 'Sensor'; } for (var x in (extra||{})) o[x] = extra[x]; return o; }
+  var ARCH = [
+    {id:'demo-r1', started:'2026-10-03T09:10:00.000Z', ended:'2026-10-03T11:40:00.000Z', src:'OBD', car:'Vgate iCar Pro BLE · ISO 15765-4', ci:0, sel:true, fz:FZ1, codes:[
+      {code:'P0562', set:'stored', si:2, done:true, doneAt:'2026-10-03T11:30:00.000Z', cause:'Batterie sulfatiert → Batterie ersetzt, Masseband gereinigt', steps:[
+        st('check','Spannung Motor aus und bei laufendem Motor.','ok',{at:'2026-10-03T09:20:00.000Z'}),
+        st('comp','k102','nok',{mess:['demo-m1'], note:'Ruhespannung 12,1 V, Batterietester: SOH 41 %', at:'2026-10-03T09:40:00.000Z'}),
+        st('end','', '')]},
+      {code:'P0118', set:'pending', si:1, done:true, doneAt:'2026-10-03T11:35:00.000Z', cause:'Steckverbindung G62 korrodiert → gereinigt, Kontaktspray', steps:[
+        st('check','Istwert kalt und warm mit Thermometer vergleichen.','ok',{at:'2026-10-03T10:10:00.000Z'}),
+        st('comp','k4','ok',{mess:['demo-m2'], at:'2026-10-03T10:30:00.000Z'}),
+        st('check','Stecker G62 korrodiert, gereinigt','ok',{own:true, at:'2026-10-03T10:50:00.000Z'}),
+        st('end','', '')]}
+    ]},
+    {id:'demo-r2', started:'2026-10-21T13:00:00.000Z', ended:'2026-10-21T15:15:00.000Z', src:'OBD', car:'OBDLink CX · ISO 15765-4', ci:0, sel:true, fz:FZ2, codes:[
+      {code:'P0134', set:'stored', si:1, done:true, doneAt:'2026-10-21T15:00:00.000Z', cause:'Lambdasonde gealtert → ersetzt', steps:[
+        st('check','Freeze Frame und Istwerte lesen.','ok',{at:'2026-10-21T13:10:00.000Z'}),
+        st('comp','k7','nok',{mess:['demo-m3'], note:'Umschaltung deutlich unter 1 Hz', at:'2026-10-21T13:50:00.000Z'}),
+        st('end','', '')]}
+    ]}
+  ];
+  document.getElementById('demo').onclick = function(){
+    if (!LS) return toast('Хранилище браузера недоступно');
+    var mess = get('jc-mess', []), arch = get('jc-archiv', []);
+    MESS.forEach(function(x){ if (!mess.some(function(y){ return y.id===x.id; })) mess.push(x); });
+    ARCH.forEach(function(x){ if (!arch.some(function(y){ return y.id===x.id; })) arch.push(x); });
+    set('jc-mess', mess); set('jc-archiv', arch);
+    toast('Пример загружен: 2 машины, 2 отчёта, 3 замера'); document.getElementById('home').click();
+  };
+  document.getElementById('demoDel').onclick = function(){
+    if (!LS) return;
+    set('jc-mess', get('jc-mess', []).filter(function(x){ return String(x.id).indexOf('demo-')!==0; }));
+    set('jc-archiv', get('jc-archiv', []).filter(function(x){ return String(x.id).indexOf('demo-')!==0; }));
+    toast('Пример убран, твои данные не тронуты'); document.getElementById('home').click();
+  };
+  build();
+})();
+</script>
+</body>
+</html>
