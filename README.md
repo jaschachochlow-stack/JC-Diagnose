@@ -4,7 +4,7 @@ Kfz-Diagnose-Web-App (Deutsch / Русский) für den eigenen Gebrauch:
 Nachschlagewerk, Fehlercodes, geführte Diagnose, OBD (ELM327 über Bluetooth LE / USB), Soll/Ist-Messprotokoll mit Fotos,
 Berichte, Fahrzeugakte und **Oszilloskop live** (Hantek 1008C über WebUSB, Demo-Modus).
 
-**App öffnen:** https://jaschachochlow-stack.github.io/jc-diagnose/
+**App öffnen:** https://jaschachochlow-stack.github.io/JC-Diagnose/
 
 - Läuft im Browser, installierbar als App (Chrome → Menü → „App installieren“), funktioniert offline.
 - USB (Oszilloskop) und Bluetooth (OBD) nur in Chrome/Edge über https. iPhone/iPad: kein USB.
