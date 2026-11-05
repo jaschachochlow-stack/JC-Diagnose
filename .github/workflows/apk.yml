@@ -39,7 +39,7 @@ jobs:
           name: JC Diagnose (Android-APK)
           make_latest: true
           body: |
-            Android-App für Tablet und Handy. Öffnet https://jaschachochlow-stack.github.io/JC-Diagnose/ in Chrome (USB-Oszilloskop und Bluetooth-OBD funktionieren).
+            Android-App für Tablet und Handy. Öffnet https://jaschachochlow-stack.github.io/JC-Diagnose/ in Chrome (Bluetooth-OBD funktioniert).
             Installation: JC-Diagnose.apk herunterladen → öffnen → „Unbekannte Apps installieren“ für Chrome/Dateien erlauben.
             Build ${{ github.run_number }}
           files: JC-Diagnose.apk

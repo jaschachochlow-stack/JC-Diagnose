@@ -208,15 +208,15 @@ function newId(){ return 'm' + Date.now().toString(36) + Math.random().toString(
 /* ---------- Sidebar ---------- */
 function renderQuick(r){
   var qn = $('#quickNav'); if (!qn) return;
-  var it = [['start',T('Start','Главная')],['fz',T('Fahrzeuge','Машины')],['diag',T('Diagnose','Диагностика')],['obd','OBD'],['scope',T('Oszilloskop','Осциллограф')],['mess',T('Messungen','Замеры')],['berichte',T('Berichte','Отчёты')],['dtc',T('Codes','Коды')],['kat-sensoren',T('Nachschlagewerk','Справочник')],['oszi',T('Oszi','Осциллограммы')],['systemtests',T('Tests','Тесты')],['rechner',T('Rechner','Калькуляторы')]];
+  var it = [['start',T('Start','Главная')],['fz',T('Fahrzeuge','Машины')],['diag',T('Diagnose','Диагностика')],['obd','OBD'],['mess',T('Messungen','Замеры')],['berichte',T('Berichte','Отчёты')],['dtc',T('Codes','Коды')],['kat-sensoren',T('Nachschlagewerk','Справочник')],['oszi',T('Oszi','Осциллограммы')],['systemtests',T('Tests','Тесты')],['rechner',T('Rechner','Калькуляторы')]];
   var act = function(k){ if (k==='start') return r==='start'||r===''; if (k==='kat-sensoren') return r.indexOf('kat-')===0 || r.indexOf('b-')===0 || r.indexOf('tab-')===0; if (k==='berichte') return r.indexOf('bericht')===0; if (k==='diag') return r==='diag'||r==='diag-bericht'; if (k==='mess') return r.indexOf('mess')===0; if (k==='fz') return r.indexOf('fz')===0; return r===k; };
-  qn.innerHTML = it.map(function(x){ var on = act(x[0]); var badge = (x[0]==='diag' && state.diag) ? ' <i class="qn-dot"></i>' : ((x[0]==='obd' && obd.io) || (x[0]==='scope' && SC && SC.connected()) ? ' <i class="qn-dot ok"></i>' : ''); return '<a href="#'+x[0]+'"'+(on?' aria-current="page"':'')+'>'+esc(x[1])+badge+'</a>'; }).join('');
+  qn.innerHTML = it.map(function(x){ var on = act(x[0]); var badge = (x[0]==='diag' && state.diag) ? ' <i class="qn-dot"></i>' : (x[0]==='obd' && obd.io ? ' <i class="qn-dot ok"></i>' : ''); return '<a href="#'+x[0]+'"'+(on?' aria-current="page"':'')+'>'+esc(x[1])+badge+'</a>'; }).join('');
   var on = qn.querySelector('[aria-current]'); if (on) { var l = on.offsetLeft - 12; if (l < qn.scrollLeft || on.offsetLeft + on.offsetWidth > qn.scrollLeft + qn.clientWidth) qn.scrollLeft = Math.max(0, l); }
 }
 (function(){ var hd = document.querySelector('.topbar'); function sync(){ document.documentElement.style.setProperty('--topbar', hd.offsetHeight + 'px'); } if (window.ResizeObserver) new ResizeObserver(sync).observe(hd); window.addEventListener('resize', sync); setTimeout(sync, 0); })();
 function renderBottom(r){
   var bn = $('#bottomNav'); if (!bn) return;
-  var it = [['obd','OBD','M7 4v6M17 4v6M5 10h14v4a7 7 0 0 1-14 0zM12 21v-2'],['diag',T('Diagnose','Диагностика'),'M3 12h4l3-7 4 14 3-7h4'],['scope',T('Oszi','Осцилл.'),'M3 5h18v14H3zM5 14l3-5 3 7 3-9 3 7 2-3'],['mess',T('Messungen','Замеры'),'M6 3h12v18H6zM9 8h6M9 12h6M9 16h3'],['berichte',T('Berichte','Отчёты'),'M4 5h16v14H4zM8 9h8M8 13h5']];
+  var it = [['obd','OBD','M7 4v6M17 4v6M5 10h14v4a7 7 0 0 1-14 0zM12 21v-2'],['diag',T('Diagnose','Диагностика'),'M3 12h4l3-7 4 14 3-7h4'],['mess',T('Messungen','Замеры'),'M6 3h12v18H6zM9 8h6M9 12h6M9 16h3'],['berichte',T('Berichte','Отчёты'),'M4 5h16v14H4zM8 9h8M8 13h5']];
   bn.innerHTML = it.map(function(x){ var on = r.indexOf(x[0])===0 || (x[0]==='berichte' && r.indexOf('bericht')===0); return '<a href="#'+x[0]+'"'+(on?' aria-current="page"':'')+'><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="'+x[2]+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>'+esc(x[1])+'</span></a>'; }).join('');
 }
 function renderSide(r){
@@ -225,7 +225,6 @@ function renderSide(r){
     link('fz', T('Fahrzeuge','Машины'), vehicles().length || '') +
     link('mess', T('Messprotokoll Soll/Ist','Журнал замеров'), state.mess.length || '') +
     link('obd', T('Fahrzeug verbinden (OBD)','Подключить машину (OBD)'), obd.io?'●':'') +
-    link('scope', T('Oszilloskop live','Осциллограф онлайн'), SC && SC.connected() ? '●' : '') +
     link('diag', T('Geführte Diagnose','Пошаговая диагностика'), state.diag ? state.diag.codes.filter(function(x){return !x.done;}).length : '') +
     link('berichte', T('Berichte (Archiv)','Отчёты (архив)'), state.archiv.length || '') +
     link('dtc', T('Fehlercodes','Коды ошибок'), '') +
@@ -253,14 +252,14 @@ function card(it){
 }
 function hvCallout(){ return '<div class="callout hv"><b>'+T('Hochvolt','Высокое напряжение')+'</b><p>'+T('Arbeiten an HV-Systemen nur mit Qualifikation nach DGUV Information 209-093. Spannungsfreiheit mit zweipoligem Spannungsprüfer feststellen. Messgeräte mindestens CAT III 1000 V.','Работы с ВВ-системами только при наличии допуска по DGUV Information 209-093. Отсутствие напряжения проверять двухполюсным указателем. Приборы не ниже CAT III 1000 В.')+'</p></div>'; }
 function deNote(){ return state.lang==='ru' ? '<p class="note">Текст главы пока на немецком. Перевод — следующий этап.</p>' : ''; }
-function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.9.3 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/latest/download/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a></footer>'; }
+function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.9.4 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/latest/download/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a></footer>'; }
 function crumbs(parts){ return '<p class="eyebrow"><a href="#start">'+T('Start','Главная')+'</a>'+parts.map(function(p){ return ' / '+p; }).join('')+'</p>'; }
 
 /* ---------- Start ---------- */
 var PANNE = ['k102','k103','k29','k28','k109','k119','k111','k110','k45'];
 function vHome(){
   var m = D.meta, v = m.verify;
-  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.9.3 · Stand','Версия 0.8.2 · состояние')+' '+esc(m.stand)+'</p>' +
+  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.9.4 · Stand','Версия 0.8.2 · состояние')+' '+esc(m.stand)+'</p>' +
     '<h1>JC Diagnose</h1><p class="lead">'+T('Sollwerte, Pinbelegung, Multimeter- und Oszilloskop-Prüfschritte für Sensoren, Aktoren, Bordnetz, Bussysteme und Hochvolt – plus Systemtests und dein eigenes Soll/Ist-Messprotokoll.','Нормы, распиновка, проверки мультиметром и осциллографом для датчиков, исполнительных механизмов, бортсети, шин и ВВ — плюс системные тесты и твой собственный журнал замеров «норма/факт».')+'</p>' +
     '<div class="chips"><a class="chip" href="#mess-neu">+ '+T('Neue Messung','Новый замер')+'</a><a class="chip" href="#obd">'+T('Fahrzeug verbinden','Подключить машину')+'</a><a class="chip" href="#dtc">'+T('Fehlercode prüfen','Проверить код ошибки')+'</a><a class="chip" href="#oszi">'+T('Oszillogramme','Осциллограммы')+'</a><a class="chip" href="#tab-oszi">'+T('Oszi-Startwerte','Настройки осциллографа')+'</a><a class="chip" href="#systemtests">'+T('Systemtests','Системные тесты')+'</a><a class="chip" href="#rechner">'+T('Rechner','Калькуляторы')+'</a><a class="chip" href="#tab-fehler">'+T('Fehlerbilder','Неисправности')+'</a></div></div>' +
     '<div class="stats"><div class="stat"><b>'+m.n_items+'</b><span>'+T('Kapitel','глав')+'</span></div><div class="stat"><b>'+X.systemtests.rows.length+'</b><span>'+T('Systemtests','системных тестов')+'</span></div><div class="stat"><b>'+state.mess.length+'</b><span>'+T('eigene Messungen','своих замеров')+'</span></div></div></section>';
@@ -579,7 +578,7 @@ function waveBlock(kind, compId){
   return '<section class="osz" id="w-'+kind+'"><div class="osz-head"><b>'+esc(t.n)+'</b><span class="badge">'+esc(T(w.g, GROUP_RU[w.g]||w.g))+'</span></div>'+scopeSvg(kind)+
     '<div class="osz-cols"><div><h4 class="okc">'+T('Sollbild','Норма')+'</h4><ul>'+t.ok.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div><div><h4 class="badc">'+T('Fehlerbilder','Неисправности')+'</h4><ul>'+t.bad.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div></div>' +
     '<p class="osz-set"><b>'+T('Einstellung','Настройка')+':</b> '+esc(t.set)+'</p>' +
-    '<div class="btn-row" style="margin:6px 0 0"><button class="btn small primary" data-live="'+kind+'" data-comp="'+esc(compId||'')+'">'+T('Live messen','Измерить онлайн')+'</button>'+(compId ? '<button class="btn small" data-wave="'+kind+'">+ '+T('Oszi-Messung erfassen','Записать замер осциллографом')+'</button>' : '')+'</div>' + (compId ? '' :
+    (compId ? '<div class="btn-row" style="margin:6px 0 0"><button class="btn small" data-wave="'+kind+'">+ '+T('Oszi-Messung erfassen','Записать замер осциллографом')+'</button></div>' :
       (users.length ? '<p class="meta">'+T('Verwendet in','Используется в')+': '+users.slice(0,8).map(function(k){ return '<a href="#b-'+k+'">'+esc(L(byId[k],'title'))+'</a>'; }).join(', ')+(users.length>8?' …':'')+'</p>' : '')) + '</section>';
 }
 function oszForItem(id){
@@ -1158,7 +1157,6 @@ function vCockpit(){
   h += '<div class="ck-grid">' + big +
     tile('#obd', 'M4 6h16M4 12h10M4 18h7M17 15l3 3-3 3', 'var(--ck-a2)', T('Fehler lesen','Прочитать ошибки'), obd.dtcs ? ([].concat(obd.dtcs.stored, obd.dtcs.pending, obd.dtcs.permanent).length+' '+T('Codes','кодов')) : 'OBD') +
     tile('#obd', 'M4 18h16M6 15l4-6 3 4 3-5 3 7', 'var(--ck-a2)', T('Live-Daten','Живые данные'), esc(liveTxt)) +
-    tile('#scope', 'M3 5h18v14H3zM5 14l3-5 3 7 3-9 3 7 2-3', 'var(--ck-a2)', T('Oszilloskop','Осциллограф'), SC && SC.connected() ? esc(SC.name())+' · '+T('verbunden','подключён') : T('Hantek 1008C per USB','Hantek 1008C по USB')) +
     tile('#mess-neu', 'M6 3h12v18H6zM9 8h6M9 12h6M9 16h3', 'var(--ck-a3)', T('Neue Messung','Новый замер'), T('Soll / Ist / Foto','норма / факт / фото')) +
     tile('#fz', 'M4 5h16v14H4zM8 9h8M8 13h5', 'var(--ck-a3)', T('Fahrzeuge & Berichte','Машины и отчёты'), vs.length+' '+T('Fahrzeuge','машин')+' · '+state.archiv.length+' '+T('Berichte','отчётов')) +
   '</div>';
@@ -1232,7 +1230,6 @@ function cmdBuild(q){
   }
   if (/^(obd|adapter|verbinden|подключ)/i.test(qq)) add(G.act, T('Fahrzeug verbinden (OBD)','Подключить машину (OBD)'), '', nav('obd'));
   if (/^(mess|замер|messung)/i.test(qq)) add(G.act, T('Neue Messung','Новый замер'), '', function(){ startDraft({}); });
-  if (/^(oszi|scope|hantek|осцил)/i.test(qq)) add(G.act, T('Oszilloskop live','Осциллограф онлайн'), 'Hantek 1008C · USB', nav('scope'));
   if (/^(diag|диагн)/i.test(qq)) add(G.act, T('Geführte Diagnose','Пошаговая диагностика'), '', nav('diag'));
   var mb = qq.match(/^(bericht|berichte|отч[её]т\w*)\s*(.*)$/i); if (mb) add(G.act, T('Berichte suchen','Искать отчёты')+(mb[2]?' · '+mb[2]:''), '', function(){ state.berQ = mb[2]||''; go('berichte'); });
   var mo = qq.match(/^(ohm|ом)\s+(-?[\d.,]+)\s+(-?[\d.,]+)$/i);
@@ -1262,8 +1259,7 @@ function cmdRun(i){ var it = CMD.items[i]; if (!it) return; CMD.open = false; cm
 /* ---------- Router (#name) ---------- */
 var mem = 'start', pending = [];
 function after(fn){ pending.push(fn); }
-/* ---------- Oszilloskop live (scope.js) ---------- */
-var SC = window.JCScope ? window.JCScope({T:T, esc:esc, state:state, OSZ:OSZ, GROUP_RU:GROUP_RU, PH:PH, lget:lget, lset:lset, toast:toast, crumbs:crumbs, foot:foot, after:after, go:go, startDraft:startDraft, waveBlock:waveBlock}) : null;
+try { localStorage.removeItem('jc-scope'); } catch(e){}
 function cur(){ try { var h = location.hash.replace(/^#/,''); return h || mem; } catch(e){ return mem; } }
 function go(r){ mem = r; try { if (location.hash !== '#'+r) { location.hash = r; return; } } catch(e){} render(); }
 function render(keepScroll){
@@ -1278,7 +1274,6 @@ function render(keepScroll){
   else if (r==='dtc') html = vDtc();
   else if (r==='oszi') html = vOszi();
   else if (r==='obd') html = vObd();
-  else if (r==='scope') html = SC ? SC.view() : vNotFound();
   else if (r==='diag') html = vDiag();
   else if (r==='diag-bericht') html = vDiagReport();
   else if (r==='berichte') html = vBerichte();
@@ -1294,7 +1289,6 @@ function render(keepScroll){
   main.innerHTML = html;
   if (state.diag && r!=='diag' && r!=='diag-bericht' && r!=='berichte') main.insertAdjacentHTML('afterbegin', '<div class="wrap" style="padding-bottom:0">'+diagBanner()+'</div>');
   pending.forEach(function(fn){ try { fn(); } catch(e){ console.error(e); } }); pending = [];
-  main.querySelectorAll('[data-live]').forEach(function(b){ b.onclick = function(){ if (SC) SC.open(b.dataset.live, b.dataset.comp); }; });
   window.scrollTo(0, keepScroll===true ? y : 0);
   renderSide(r); renderBottom(r); renderQuick(r); closeNav();
   var t = main.querySelector('h1'); document.title = (t && r!=='start' ? t.textContent + ' · ' : '') + 'JC Diagnose';
