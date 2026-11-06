@@ -1,6 +1,6 @@
 {
   "name": "jc-diagnose-desktop",
-  "version": "0.11.5",
+  "version": "0.11.6",
   "description": "JC Diagnose für Windows",
   "main": "main.js",
   "author": "JC",

@@ -179,20 +179,49 @@ async function supported(io, log){
   }
   return out.filter(function(p){ return p % 0x20 !== 0; });
 }
+// Mehrere PIDs in einer Anfrage ("01 0C 0D 05 04"): Antwort = 41 PID Daten PID Daten …
+function parseMulti(raw, group){
+  var hexs = '', ls = String(raw||'').toUpperCase().split(/[\r\n]+/), i, res = {};
+  for (i=0;i<ls.length;i++){ var l = ls[i].trim(); if (!l || /^[0-9A-F]{3}$/.test(l)) continue; hexs += l.replace(/^[0-9A-F]+:/,'').replace(/[^0-9A-F]/g,''); }
+  var b = []; for (i=0;i+1<hexs.length;i+=2) b.push(parseInt(hexs.substr(i,2),16));
+  var s = b.indexOf(0x41); if (s < 0) return res;
+  var k = s+1;
+  while (k < b.length){ var pid = b[k], def = BY[pid]; if (!def || group.indexOf(pid) < 0 || k+1+def.n > b.length) break; res[pid] = b.slice(k+1, k+1+def.n); k += 1+def.n; }
+  return res;
+}
+// Eine Anfrage; "1" am Ende = nur 1 Antwort erwarten, der Adapter wartet dann nicht den ganzen Timeout ab
+async function ask(io, cmd, to){
+  var raw = await io.send(cmd + (io.__noN ? '' : '1'), to);
+  if (!io.__noN && /^\s*\?/.test(String(raw)) && !/41/.test(String(raw))){ io.__noN = true; raw = await io.send(cmd, to); }
+  return raw;
+}
 async function read(io, pids, onEach){
-  var out = [], diag = [], woke = false;
-  for (var i=0;i<pids.length;i++){
+  var out = [], diag = [], woke = false, i, j, done = {};
+  function take(pid, b){ var r = decode(pid, b); if (r){ out.push(r); done[pid] = 1; if (onEach) onEach(r, out); } return r; }
+  // 1) Gruppen von bis zu 6 bekannten PIDs in einer Anfrage
+  if (!io.__noMulti){
+    var known = pids.filter(function(x){ return BY[x]; });
+    for (i=0;i<known.length;i+=6){
+      var g = known.slice(i, i+6); if (g.length < 2) continue;
+      var raw0 = null, res = {}; try { raw0 = await ask(io, '01' + g.map(hex).join(''), 4000); res = parseMulti(raw0, g); } catch(e){ if (io.closed) throw e; }
+      var okn = 0; g.forEach(function(x){ if (res[x]){ take(x, res[x]); okn++; } });
+      if (!okn && !i){ io.__noMulti = true; break; }   // Steuergerät kann es nicht: einzeln weiter
+    }
+  }
+  // 2) Rest einzeln
+  for (j=0;j<pids.length;j++){
+    var pid = pids[j]; if (done[pid]) continue;
     var raw = null, b = null;
     for (var t=0;t<2 && !b;t++){   // einmal wiederholen (BLE-Adapter verlieren gern die erste Antwort)
-      try { raw = await io.send('01'+hex(pids[i]), 4000); } catch(e){ raw = 'FEHLER: '+(e && e.message || e); if (!io || (io.closed)) throw e; }
-      b = parse(raw, pids[i]);
-      if (!b && !woke && /NO DATA/i.test(String(raw))){ woke = true; try { await io.send('ATSH7DF', 2000); await io.send('0100', 8000); } catch(e){} }   // Steuergerät wecken, dann nochmal
+      try { raw = await ask(io, '01'+hex(pid), 4000); } catch(e){ raw = 'FEHLER: '+(e && e.message || e); if (io.closed) throw e; }
+      b = parse(raw, pid);
+      if (!b && !woke && /NO DATA/i.test(String(raw))){ woke = true; try { await io.send('ATSH7DF', 2000); await io.send('0100', 8000); } catch(e){} }
     }
-    if (!b){ if (diag.length < 4) diag.push(hex(pids[i])+' → '+String(raw == null ? '–' : raw).replace(/\s+/g,' ').trim().slice(0,48)); continue; }
-    var r = decode(pids[i], b);
-    if (r){ out.push(r); if (onEach) onEach(r, out); }
-    else if (diag.length < 4) diag.push(hex(pids[i])+' → '+JSON.stringify(b).slice(0,40)+' (nicht lesbar)');
+    if (!b){ if (diag.length < 4) diag.push(hex(pid)+' → '+String(raw == null ? '–' : raw).replace(/\s+/g,' ').trim().slice(0,48)); continue; }
+    if (!take(pid, b) && diag.length < 4) diag.push(hex(pid)+' → '+JSON.stringify(b).slice(0,40)+' (nicht lesbar)');
   }
+  // Reihenfolge wie angefordert
+  out.sort(function(x, y){ return pids.indexOf(x.pid) - pids.indexOf(y.pid); });
   out.diag = diag;
   return out;
 }

@@ -2223,7 +2223,7 @@ var JCX = (() => {
     await io.send("ATH0");
     await io.send("ATCAF1");
     await io.send("ATAT1");
-    await io.send("ATSTFF");
+    await io.send("ATST96");
     if (protocol.kind === "stn" && protocol.stn) {
       const answer = await io.send("STP " + protocol.stn);
       if (answer.trim() === "?" || /^\?/.test(answer.trim())) {
