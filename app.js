@@ -253,14 +253,14 @@ function card(it){
 }
 function hvCallout(){ return '<div class="callout hv"><b>'+T('Hochvolt','Высокое напряжение')+'</b><p>'+T('Arbeiten an HV-Systemen nur mit Qualifikation nach DGUV Information 209-093. Spannungsfreiheit mit zweipoligem Spannungsprüfer feststellen. Messgeräte mindestens CAT III 1000 V.','Работы с ВВ-системами только при наличии допуска по DGUV Information 209-093. Отсутствие напряжения проверять двухполюсным указателем. Приборы не ниже CAT III 1000 В.')+'</p></div>'; }
 function deNote(){ return state.lang==='ru' ? '<p class="note">Текст главы пока на немецком. Перевод — следующий этап.</p>' : ''; }
-function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.11.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
+function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.11.1 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
 function crumbs(parts){ return '<p class="eyebrow"><a href="#start">'+T('Start','Главная')+'</a>'+parts.map(function(p){ return ' / '+p; }).join('')+'</p>'; }
 
 /* ---------- Start ---------- */
 var PANNE = ['k102','k103','k29','k28','k109','k119','k111','k110','k45'];
 function vHome(){
   var m = D.meta, v = m.verify;
-  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.11.0 · Stand','Версия 0.8.2 · состояние')+' '+esc(m.stand)+'</p>' +
+  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.11.1 · Stand','Версия 0.11.1 · состояние')+' '+esc(m.stand)+'</p>' +
     '<h1>JC Diagnose</h1><p class="lead">'+T('Sollwerte, Pinbelegung, Multimeter- und Oszilloskop-Prüfschritte für Sensoren, Aktoren, Bordnetz, Bussysteme und Hochvolt – plus Systemtests und dein eigenes Soll/Ist-Messprotokoll.','Нормы, распиновка, проверки мультиметром и осциллографом для датчиков, исполнительных механизмов, бортсети, шин и ВВ — плюс системные тесты и твой собственный журнал замеров «норма/факт».')+'</p>' +
     '<div class="chips"><a class="chip" href="#mess-neu">+ '+T('Neue Messung','Новый замер')+'</a><a class="chip" href="#obd">'+T('Fahrzeug verbinden','Подключить машину')+'</a><a class="chip" href="#dtc">'+T('Fehlercode prüfen','Проверить код ошибки')+'</a><a class="chip" href="#import">'+T('Bericht importieren','Импорт отчёта')+'</a><a class="chip" href="#oszi">'+T('Oszillogramme','Осциллограммы')+'</a><a class="chip" href="#tab-oszi">'+T('Oszi-Startwerte','Настройки осциллографа')+'</a><a class="chip" href="#systemtests">'+T('Systemtests','Системные тесты')+'</a><a class="chip" href="#rechner">'+T('Rechner','Калькуляторы')+'</a><a class="chip" href="#tab-fehler">'+T('Fehlerbilder','Неисправности')+'</a></div></div>' +
     '<div class="stats"><div class="stat"><b>'+m.n_items+'</b><span>'+T('Kapitel','глав')+'</span></div><div class="stat"><b>'+X.systemtests.rows.length+'</b><span>'+T('Systemtests','системных тестов')+'</span></div><div class="stat"><b>'+state.mess.length+'</b><span>'+T('eigene Messungen','своих замеров')+'</span></div></div></section>';
@@ -1102,28 +1102,46 @@ function diagReport(D0){
 
 
 /* ---------- Bericht importieren (andere Diagnosegeräte) ---------- */
-var imp = {res:null, items:[], sel:{}, busy:'', err:'', file:''};
+var imp = {res:null, items:[], sel:{}, busy:'', err:'', file:'', txt:'', lang:'deu+eng', ocr:false};
 var IMP_ST = {active:['aktiv','активный','hi'], pending:['anstehend','ожидающий','na'], permanent:['permanent','постоянный','hi'], stored:['gespeichert','сохранённый','ok']};
 function impDone(res, name){
   imp.busy = ''; imp.file = name || '';
   if (!res || !res.codes || !res.codes.length){ imp.res = null; imp.items = []; imp.err = T('Keine Fehlercodes gefunden. Ist es ein Bericht mit Codes wie P0301, C0035, B1234, U0100? Bei Fotos oder gescannten PDFs den Text hier einfügen.','Коды ошибок не найдены. Это отчёт с кодами вроде P0301, C0035, B1234, U0100? Для фото и сканов вставь текст вручную.'); render(true); return; }
   var rank = {active:0, pending:1, permanent:2, stored:3};
-  imp.res = res; imp.err = '';
+  imp.res = res; imp.err = ''; imp.ocr = !!res.ocr; if (res.text) imp.txt = res.text;
   imp.items = res.codes.map(function(c,i){ c.i = i; return c; }).sort(function(a,b){ return (rank[a.status]-rank[b.status]) || (a.i-b.i); });
   imp.sel = {}; imp.items.forEach(function(c){ imp.sel[c.code] = true; });
   render(true);
 }
 function impFail(e){ imp.busy = ''; imp.err = (e && e.message) || String(e); render(true); }
+function impProgress(st, p, done, total){
+  var n = $('#impBusy'); if (!n) return;
+  var map = {'loading tesseract core':T('Texterkennung wird geladen …','Загружается распознавание …'), 'loading language traineddata':T('Sprachdaten werden geladen …','Загружаются данные языка …'), 'initializing api':T('Starte …','Запуск …'), 'recognizing text':T('Text wird erkannt','Распознаю текст')};
+  n.textContent = (map[st] || T('Texterkennung …','Распознавание …')) + (st==='recognizing text' ? ' ' + Math.round(p*100) + ' %' + (total>1 ? ' ('+(done+1)+'/'+total+')' : '') : '');
+}
+function impOcr(sources, name){
+  imp.busy = T('Texterkennung wird vorbereitet …','Готовлю распознавание …'); imp.err = ''; render(true);
+  return JCREP.fromImages(sources, imp.lang, impProgress).then(function(r){ impDone(r, name); }, impFail);
+}
 function impLoad(file){
   if (!file || !window.JCREP) return;
   imp.busy = T('Lese Bericht …','Читаю отчёт …'); imp.err = ''; render(true);
   var rd = new FileReader(), name = file.name || '';
   if (/\.pdf$/i.test(name) || file.type === 'application/pdf'){
-    rd.onload = function(){ JCREP.fromPdf(rd.result).then(function(r){ impDone(r, name); }, impFail); };
+    rd.onload = function(){
+      var buf = rd.result;
+      JCREP.fromPdf(buf.slice(0)).then(function(r){
+        if (r.codes && r.codes.length) { impDone(r, name); return; }
+        imp.busy = T('Kein Text im PDF, lese als Scan …','В PDF нет текста, читаю как скан …'); render(true);
+        return JCREP.pdfCanvases(buf, 6).then(function(cv){ return impOcr(cv, name); });
+      }).catch(impFail);
+    };
     rd.onerror = function(){ impFail(new Error(T('Datei nicht lesbar.','Файл не читается.'))); };
     rd.readAsArrayBuffer(file);
-  } else if (/^image\//.test(file.type) || /\.(jpe?g|png|webp|heic)$/i.test(name)){
-    impFail(new Error(T('Fotos kann die App noch nicht lesen. Bitte den PDF-Bericht des Geräts nehmen oder den Text hier einfügen.','Фото приложение пока не читает. Возьми PDF-отчёт прибора или вставь текст.')));
+  } else if (/^image\//.test(file.type) || /\.(jpe?g|png|webp|bmp|gif)$/i.test(name)){
+    impOcr([file], name);
+  } else if (/\.(heic|heif)$/i.test(name)){
+    impFail(new Error(T('HEIC-Fotos kann der Browser nicht öffnen. Foto als JPG speichern oder direkt mit der Kamera-Taste aufnehmen.','HEIC-фото браузер не открывает. Сохрани как JPG или сними кнопкой «Камера».')));
   } else {
     rd.onload = function(){
       var t = String(rd.result||'');
@@ -1141,11 +1159,14 @@ function impFz(fz){
 function vImport(){
   var ok = !!window.JCREP;
   var h = '<div class="wrap">'+crumbs([T('Bericht importieren','Импорт отчёта')])+'<h1>'+T('Bericht importieren','Импорт отчёта')+'</h1><p class="lead">'+T('Bericht eines anderen Diagnosegeräts (Launch, Autel, Bosch, Foxwell, Thinkdiag …) einlesen: Fahrzeug, Fehlercodes und Zustand werden übernommen, dazu gibt es die Prüfreihenfolge und die geführte Diagnose.','Загрузи отчёт другого диагностического прибора (Launch, Autel, Bosch, Foxwell, Thinkdiag …): машина, коды ошибок и их состояние подтянутся, плюс порядок проверки и пошаговая диагностика.')+'</p>';
-  h += '<fieldset class="fs"><legend>'+T('Bericht laden','Загрузить отчёт')+'</legend><div class="form-grid"><div class="field wide"><label for="impFile">'+T('Datei (PDF, TXT, CSV, HTML)','Файл (PDF, TXT, CSV, HTML)')+'</label><input id="impFile" type="file" accept=".pdf,.txt,.csv,.htm,.html,.log,.json,.xml,application/pdf,text/*"></div>' +
-    '<div class="field wide"><label for="impTxt">'+T('… oder Text des Berichts einfügen','… или вставь текст отчёта')+'</label><textarea id="impTxt" rows="4" placeholder="P0301 Zylinder 1 Fehlzündung aktiv&#10;U0100 ..."></textarea></div></div>' +
+  h += '<fieldset class="fs"><legend>'+T('Bericht laden','Загрузить отчёт')+'</legend><div class="form-grid"><div class="field wide"><label for="impFile">'+T('Datei (PDF, Foto, Scan, TXT, CSV, HTML)','Файл (PDF, фото, скан, TXT, CSV, HTML)')+'</label><input id="impFile" type="file" accept=".pdf,.txt,.csv,.htm,.html,.log,.json,.xml,image/*,application/pdf,text/*"></div>' +
+    '<div class="field"><label for="impCam">'+T('Foto aufnehmen','Снять фото')+'</label><input id="impCam" type="file" accept="image/*" capture="environment"></div>' +
+    '<div class="field"><label for="impLang">'+T('Sprache des Berichts (für Fotos)','Язык отчёта (для фото)')+'</label><select id="impLang"><option value="deu+eng"'+(imp.lang==='deu+eng'?' selected':'')+'>Deutsch / English</option><option value="eng"'+(imp.lang==='eng'?' selected':'')+'>English</option><option value="rus+eng"'+(imp.lang==='rus+eng'?' selected':'')+'>Русский / English</option></select></div>' +
+    '<div class="field wide"><label for="impTxt">'+T('… oder Text des Berichts einfügen','… или вставь текст отчёта')+'</label><textarea id="impTxt" rows="'+(imp.txt?'9':'4')+'" placeholder="P0301 Zylinder 1 Fehlzündung aktiv&#10;U0100 ...">'+esc(imp.txt)+'</textarea></div></div>' +
     '<div class="btn-row"><button class="btn primary" id="impGo"'+(ok?'':' disabled')+'>'+T('Text auswerten','Разобрать текст')+'</button></div></fieldset>';
-  if (imp.busy) h += '<p class="note">'+esc(imp.busy)+'</p>';
+  if (imp.busy) h += '<p class="note" id="impBusy">'+esc(imp.busy)+'</p>';
   if (imp.err) h += '<div class="callout hv"><b>'+T('Fehler','Ошибка')+'</b><p>'+esc(imp.err)+'</p></div>';
+  if (imp.res && imp.ocr) h += '<div class="callout hv"><b>'+T('Aus dem Bild gelesen','Прочитано с изображения')+'</b><p>'+T('Die Texterkennung verwechselt gelegentlich Zeichen (0/O, 1/I, 8/B, 5/S). Codes, Zustand und Beschreibung bitte mit dem Bild vergleichen; der erkannte Text steht oben und lässt sich korrigieren, dann „Text auswerten“.','Распознавание иногда путает символы (0/O, 1/I, 8/B, 5/S). Сверь коды, состояние и описание с изображением; распознанный текст выше можно поправить и нажать «Разобрать текст».')+'</p></div>';
   if (imp.res){
     var r = imp.res, fz = r.fz || {}, n = imp.items.filter(function(c){ return imp.sel[c.code]; }).length;
     var rows = [[T('Marke','Марка'),fz.marke],[T('Modell','Модель'),fz.modell],[T('Modelljahr','Модельный год'),fz.jahr],['VIN',fz.vin],[T('Motor','Двигатель'),fz.motor],[T('Kilometerstand','Пробег'),fz.km],[T('Prüfzeit','Время проверки'),fz.datum],[T('Software','ПО'),fz.sw],[T('Steuergerät','Блок'),(imp.items[0]||{}).module],[T('Gerät','Прибор'),fz.geraet]].filter(function(x){ return x[1]; });
@@ -1164,7 +1185,9 @@ function vImport(){
   h += foot() + '</div>';
   after(function(){
     var f = $('#impFile'); if (f) f.onchange = function(){ if (f.files && f.files[0]) impLoad(f.files[0]); };
-    var g = $('#impGo'); if (g) g.onclick = function(){ var t = ($('#impTxt').value||'').trim(); if (!t) return; impDone(JCREP.parseText(t), T('eingefügter Text','вставленный текст')); };
+    var cam = $('#impCam'); if (cam) cam.onchange = function(){ if (cam.files && cam.files[0]) impLoad(cam.files[0]); };
+    var lg = $('#impLang'); if (lg) lg.onchange = function(){ imp.lang = lg.value; };
+    var g = $('#impGo'); if (g) g.onclick = function(){ var t = ($('#impTxt').value||'').trim(); if (!t) return; var rr = JCREP.parseText(JCREP.fixOcr(t)); rr.text = t; rr.ocr = false; impDone(rr, T('eingefügter Text','вставленный текст')); };
     main.querySelectorAll('[data-ic]').forEach(function(cb){ cb.onchange = function(){ imp.sel[cb.dataset.ic] = cb.checked; var n = imp.items.filter(function(c){ return imp.sel[c.code]; }).length, b = $('#impDiag'); if (b){ b.disabled = !n; b.textContent = T('Geführte Diagnose starten','Начать пошаговую диагностику')+' ('+n+')'; } }; });
     var d = $('#impDiag'); if (d) d.onclick = function(){
       if (state.diag && state.diag.codes.length){ toast(T('Erst die laufende Diagnose abschließen','Сначала заверши текущую диагностику')); return; }

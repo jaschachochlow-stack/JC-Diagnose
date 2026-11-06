@@ -19,4 +19,7 @@ Richtwerte ohne Gewähr – Herstellerdaten gehen vor.
 - Web/PWA (GitHub Pages): Bluetooth LE und USB/COM in Chrome/Edge; kein klassisches Bluetooth, kein WLAN-TCP.
 
 ## Bericht-Import (0.11.0)
-Berichte anderer Diagnosegeräte (Launch X431 getestet; Autel, Bosch, Foxwell u. a. über allgemeine Texterkennung) per PDF, TXT, CSV, HTML oder eingefügtem Text. Liest Fahrzeugdaten, Codes (auch mit Fehlerart-Suffix wie B16DF-15), Zustand und Beschreibung, zeigt das Gesamtbild und startet die geführte Diagnose. PDF-Lesen offline mit pdf.js. Fotos/Scans (OCR) noch nicht.
+Berichte anderer Diagnosegeräte (Launch X431 getestet; Autel, Bosch, Foxwell u. a. über allgemeine Texterkennung) per PDF, TXT, CSV, HTML oder eingefügtem Text. Liest Fahrzeugdaten, Codes (auch mit Fehlerart-Suffix wie B16DF-15), Zustand und Beschreibung, zeigt das Gesamtbild und startet die geführte Diagnose. PDF-Lesen offline mit pdf.js. Fotos/Scans: siehe unten.
+
+## Foto-/Scan-Erkennung (0.11.1)
+Fotos (Kamera oder Galerie), Screenshots und eingescannte PDFs werden offline per Tesseract (WebAssembly, Sprachen deu/eng/rus, Ordner `ocr/`, ca. 15 MB) gelesen. Schräg fotografierte Berichte werden über die erkannten Zeilen geradegerechnet. Die Erkennung ist auf Bildern naturgemäß unsicherer als bei PDF mit Textebene: Codes, Zustand und Beschreibung immer mit dem Bild vergleichen (typische Verwechslungen 0/O, 1/I, 8/B, 5/S werden in Codes automatisch korrigiert). Windows-App lädt die Oberfläche jetzt über ein eigenes `app://`-Schema, damit Web-Worker und WebAssembly zuverlässig laufen. Android: Kamera-Berechtigung für die Fotoaufnahme.

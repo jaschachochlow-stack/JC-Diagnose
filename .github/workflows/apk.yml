@@ -20,6 +20,7 @@ jobs:
           npm ci
           mkdir -p www
           cp index.html app.js app.css data.js jcx.js oszi.js pids.js bericht.js pdf.min.js pdf.worker.min.js sw.js manifest.json icon-192.png icon-512.png www/
+          cp -r ocr www/
           npx cap sync android
       - name: Signaturschlüssel
         env:

@@ -1,6 +1,6 @@
 {
   "name": "jc-diagnose-desktop",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "JC Diagnose für Windows",
   "main": "main.js",
   "author": "JC",
@@ -12,6 +12,7 @@
   "build": {
     "appId": "de.jc.diagnose.desktop",
     "productName": "JC Diagnose",
+    "asar": false,
     "directories": { "output": "dist", "buildResources": "build" },
     "files": ["main.js", "preload.js", "build/icon.png", "app/**/*"],
     "win": { "target": [{ "target": "portable", "arch": ["x64"] }], "icon": "build/icon.png" },

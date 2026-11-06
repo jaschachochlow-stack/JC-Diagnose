@@ -3,7 +3,7 @@
 (function(){
   var CODE_RE = /(^|[^A-Za-z0-9])([PBCU][0-3][0-9A-F]{3})(?:\s?[-–\/]\s?([0-9A-F]{2}))?(?![A-Za-z0-9])/g;
   var ST = [
-    ['active', /\b(aktiv|aktuell|active|current|present|jetzt|vorhanden|ist\s+aktiv)\b|активн|текущ/i],
+    ['active', /\b(aktiv|akt[il1]v|aktuell|active|current|present|jetzt|vorhanden|ist\s+aktiv)\b|активн|текущ/i],
     ['pending', /\b(anstehend|pending|unbest[aä]tigt|unconfirmed)\b|ожида/i],
     ['permanent', /\b(permanent|dauerhaft)\b|постоянн/i],
     ['stored', /\b(gespeichert|gespeichert|stored|history|historisch|historie|saved|confirmed|bestätigt|sporadisch|intermittent|vergangen|inaktiv|inactive)\b|сохран|истори|прошл/i]
@@ -139,7 +139,7 @@
   function loadScript(src){ return new Promise(function(res, rej){ var s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = function(){ rej(new Error('Skript nicht geladen: '+src)); }; document.head.appendChild(s); }); }
   function loadPdfJs(){
     if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
-    if (!pdfReady) pdfReady = loadScript('pdf.min.js?v=0101').then(function(){ window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.min.js?v=0101'; return window.pdfjsLib; });
+    if (!pdfReady) pdfReady = loadScript('pdf.min.js?v=0102').then(function(){ window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.min.js?v=0102'; return window.pdfjsLib; });
     return pdfReady;
   }
   function groupLines(items, tol){
@@ -153,19 +153,20 @@
     return rows;
   }
   /* Tabelle mit Spalten Code | Beschreibung | Zustand: Zeilen mit Mehrzeilentexten richtig zuordnen */
-  function tableFromPage(items, cols, fromY){
-    var body = items.filter(function(i){ return i.y > fromY + 2; });
+  function tableFromPage(items, cols, fromY, tol){
+    tol = tol || 3;
+    var body = items.filter(function(i){ return i.y > fromY + tol*0.7; });
     var c1 = body.filter(function(i){ return i.x < cols.c2 - 4; });
     var c2 = body.filter(function(i){ return i.x >= cols.c2 - 4 && i.x < cols.c3 - 4; });
     var c3 = body.filter(function(i){ return i.x >= cols.c3 - 4; });
-    var codeRows = groupLines(c1, 3), codes = [];
+    var codeRows = groupLines(c1, tol), codes = [];
     codeRows.forEach(function(r){
       CODE_RE.lastIndex = 0; var m = CODE_RE.exec(r.text);
       if (m) codes.push({code:m[2].toUpperCase(), ftb:(m[3]||'').toUpperCase().replace(/^00$/,''), y:r.y});
     });
     if (!codes.length) return [];
-    var stRows = groupLines(c3, 3).filter(function(r){ return statusOf(r.text); });
-    var lines = groupLines(c2, 3);
+    var stRows = groupLines(c3, tol).filter(function(r){ return statusOf(r.text); });
+    var lines = groupLines(c2, tol);
     codes.forEach(function(c, i){
       var s = stRows.length === codes.length ? stRows[i] : null;
       c.status = s ? statusOf(s.text).st : null;
@@ -197,38 +198,172 @@
     }).then(function(pdf){
       var pages = [], p = Promise.resolve();
       for (var n=1;n<=pdf.numPages;n++) (function(n){ p = p.then(function(){ return pdf.getPage(n).then(function(pg){ return pg.getTextContent(); }).then(function(tc){
-        pages.push(tc.items.filter(function(i){ return i.str && i.str.trim(); }).map(function(i){ return {s:i.str.trim(), x:i.transform[4], y:-i.transform[5]}; }));
+        pages.push(tc.items.filter(function(i){ return i.str && i.str.trim(); }).map(function(i){ return {s:i.str.trim(), x:i.transform[4], y:-i.transform[5], h:i.height || 8}; }));
       }); }); })(n);
       return p.then(function(){ return pages; });
     }).then(function(pages){
-      var fullText = [], tcodes = [], cols = null;
-      pages.forEach(function(items){
-        var rows = groupLines(items, 3);
-        fullText.push(rows.map(function(r){ return r.text; }).join('\n'));
-        // Kopfzeile der Tabelle suchen
-        var hdr = rows.find(function(r){
-          var t = r.text; return /(Beschreibung|Description|Описание)/i.test(t) && /(Zustand|Status|Состояние)/i.test(t);
-        });
-        var pageCols = null, hy = null;
-        if (hdr){
-          var near = items.filter(function(i){ return Math.abs(i.y - hdr.y) < 14; });
-          var f1 = near.find(function(i){ return /(Fehlercod|DTC|^Code)/i.test(i.s); });
-          var f2 = near.find(function(i){ return /(Beschreibung|Description|Описание)/i.test(i.s); });
-          var f3 = near.find(function(i){ return /(Zustand|Status|Состояние)/i.test(i.s); });
-          if (f2 && f3){ pageCols = {c2:f2.x, c3:f3.x}; hy = Math.max.apply(null, near.map(function(i){ return i.y; })); cols = pageCols; }
-        } else if (cols) { pageCols = cols; hy = null; }
-        if (pageCols){
-          var pre = hy !== null ? rows.filter(function(r){ return r.y < hy; }).map(function(r){ return r.text; }).join(' ') : '';
-          var mod = modulOf(pre);
-          tableFromPage(items, pageCols, hy === null ? -1e9 : hy).forEach(function(c){ c.module = mod; tcodes.push(c); });
-        }
-      });
-      var text = fullText.join('\n\n');
-      var res = parseText(text);
-      if (tcodes.length) res.codes = dedupe(tcodes);
-      else res.codes.forEach(function(c){ c.module = c.module || ''; });
+      var res = processPages(pages, false);
       res.pages = pages.length;
       return res;
+    });
+  }
+  /* pages: Array von Seiten, jede Seite Array aus {s, x, y, h} (Text mit Koordinaten) */
+  function processPages(pages, fix){
+    var fullText = [], tcodes = [], cols = null;
+    pages.forEach(function(items0){
+      var items = fix ? items0.map(function(i){ return {s:fixOcr(i.s), x:i.x, y:i.y, h:i.h}; }) : items0;
+      var hs = items.map(function(i){ return i.h || 8; }).sort(function(a,b){ return a-b; });
+      var tol = Math.max(2, 0.4 * (hs[Math.floor(hs.length/2)] || 8));
+      var rows = groupLines(items, tol);
+      fullText.push(rows.map(function(r){ return r.text; }).join('\n'));
+      var hdr = rows.find(function(r){
+        var t = r.text; return /(Beschreibung|Description|Описание)/i.test(t) && /(Zustand|Status|Состояние)/i.test(t);
+      });
+      var pageCols = null, hy = null;
+      if (hdr){
+        var near = items.filter(function(i){ return Math.abs(i.y - hdr.y) < tol*4.5; });
+        var f2 = near.find(function(i){ return /(Beschreibung|Description|Описание)/i.test(i.s); });
+        var f3 = near.find(function(i){ return /(Zustand|Status|Состояние)/i.test(i.s); });
+        if (f2 && f3){ pageCols = {c2:f2.x, c3:f3.x}; hy = Math.max.apply(null, near.map(function(i){ return i.y; })); cols = pageCols; }
+      } else if (cols) { pageCols = cols; hy = null; }
+      if (pageCols){
+        var pre = hy !== null ? rows.filter(function(r){ return r.y < hy; }).map(function(r){ return r.text; }).join(' ') : '';
+        var mod = modulOf(pre);
+        tableFromPage(items, pageCols, hy === null ? -1e9 : hy, tol).forEach(function(c){ c.module = mod; tcodes.push(c); });
+      }
+    });
+    var text = fullText.join('\n\n');
+    var res = parseText(text);
+    if (tcodes.length) res.codes = dedupe(tcodes);
+    else res.codes.forEach(function(c){ c.module = c.module || ''; });
+    res.text = text; res.table = tcodes.length > 0;
+    return res;
+  }
+
+  /* ---------- OCR (Fotos und gescannte PDFs), komplett offline ---------- */
+  var DIGIT_FIX = {O:'0', I:'1', l:'1', S:'5', Z:'2', Q:'0'};
+  function fixChars(str){ return str.split('').map(function(ch){ return DIGIT_FIX[ch] || ch; }).join('').toUpperCase(); }
+  function fixOcr(text){
+    return String(text||'').replace(/(^|[^A-Za-z0-9])([PBCUpbcu][0-3OIl][0-9A-FOIlSZQ]{3})(?:\s?[-–]\s?([0-9A-FOIlSZQ]{2}))?(?![A-Za-z0-9])/g, function(all, pre, code, ftb){
+      return pre + code[0].toUpperCase() + fixChars(code.slice(1)) + (ftb ? '-' + fixChars(ftb) : '');
+    });
+  }
+  function toCanvas(src){
+    if (src && src.getContext) return Promise.resolve(src);
+    return createImageBitmap(src, {imageOrientation:'from-image'}).catch(function(){ return createImageBitmap(src); }).then(function(bm){
+      var c = document.createElement('canvas'); c.width = bm.width; c.height = bm.height; c.getContext('2d').drawImage(bm, 0, 0); return c;
+    });
+  }
+  function prep(c){
+    var w = c.width, h = c.height, longSide = Math.max(w, h), k = 1;
+    if (longSide > 2800) k = 2800/longSide; else if (longSide < 1800) k = Math.min(2.5, 1800/longSide);
+    var o = document.createElement('canvas'); o.width = Math.round(w*k); o.height = Math.round(h*k);
+    var x = o.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0,0,o.width,o.height); x.drawImage(c, 0, 0, o.width, o.height);
+    var d = x.getImageData(0, 0, o.width, o.height), a = d.data, n = a.length/4, g = new Uint8Array(n), hist = new Array(256).fill(0), i;
+    for (i=0;i<n;i++){ var v = Math.round(0.299*a[i*4] + 0.587*a[i*4+1] + 0.114*a[i*4+2]); g[i] = v; hist[v]++; }
+    var lo = 0, hi = 255, acc = 0;
+    for (i=0;i<256;i++){ acc += hist[i]; if (acc > n*0.02){ lo = i; break; } }
+    acc = 0; for (i=255;i>=0;i--){ acc += hist[i]; if (acc > n*0.02){ hi = i; break; } }
+    if (hi - lo < 40){ lo = 0; hi = 255; }
+    // Heller Text auf dunklem Grund (Bildschirm): umkehren
+    var mean = 0; for (i=0;i<n;i+=7) mean += g[i]; mean /= Math.ceil(n/7);
+    var inv = mean < 110;
+    for (i=0;i<n;i++){ var t = (g[i]-lo)*255/(hi-lo); t = t<0?0:t>255?255:t; if (inv) t = 255-t; a[i*4] = a[i*4+1] = a[i*4+2] = t; a[i*4+3] = 255; }
+    x.putImageData(d, 0, 0);
+    return deskew(o);
+  }
+
+  /* Schiefe Fotos geradeziehen (Projektionsprofil, -8..8 Grad) */
+  function deskew(c){
+    var k = Math.min(1, 700/c.width), sw = Math.max(1, Math.round(c.width*k)), sh = Math.max(1, Math.round(c.height*k));
+    var t = document.createElement('canvas'); t.width = sw; t.height = sh;
+    var tx = t.getContext('2d'); tx.drawImage(c, 0, 0, sw, sh);
+    var a = tx.getImageData(0, 0, sw, sh).data, pts = [], i, x, y;
+    for (y=0;y<sh;y++) for (x=0;x<sw;x++) if (a[(y*sw+x)*4] < 110) pts.push(x, y);
+    if (pts.length < 400) return c;
+    function score(deg){
+      var r = deg*Math.PI/180, sn = Math.sin(r), cs = Math.cos(r), bins = new Float32Array(sh + sw + 4), off = sw/2 + 2;
+      for (var j=0;j<pts.length;j+=2){ var yy = Math.round(pts[j+1]*cs - pts[j]*sn + off); bins[yy]++; }
+      var sc = 0; for (var q=0;q<bins.length;q++) sc += bins[q]*bins[q]; return sc;
+    }
+    var best = 0, bs = score(0), d;
+    for (d=-8; d<=8; d+=0.5){ var v = score(d); if (v > bs*1.0005){ bs = v; best = d; } }
+    var b2 = best;
+    for (d=best-0.5; d<=best+0.5; d+=0.1){ var v2 = score(d); if (v2 > bs){ bs = v2; b2 = d; } }
+    c.__skew = b2; if (Math.abs(b2) < 0.4) return c;
+    var r = b2*Math.PI/180, w = c.width, h = c.height;
+    var nw = Math.ceil(Math.abs(w*Math.cos(r)) + Math.abs(h*Math.sin(r))), nh = Math.ceil(Math.abs(w*Math.sin(r)) + Math.abs(h*Math.cos(r)));
+    var o = document.createElement('canvas'); o.width = nw; o.height = nh;
+    var ox = o.getContext('2d'); ox.fillStyle = '#fff'; ox.fillRect(0, 0, nw, nh);
+    ox.translate(nw/2, nh/2); ox.rotate(r); ox.drawImage(c, -w/2, -h/2);
+    return o;
+  }
+  var tessReady = null;
+  function loadTess(){
+    if (window.Tesseract) return Promise.resolve();
+    if (!tessReady) tessReady = loadScript('ocr/tesseract.min.js?v=0102');
+    return tessReady;
+  }
+  /* sources: Array aus Blob oder Canvas; lang z. B. 'deu+eng' */
+  function ocrImages(sources, lang, onProgress){
+    var texts = [], worker = null, total = sources.length;
+    return loadTess().then(function(){
+      return window.Tesseract.createWorker(lang || 'deu+eng', 1, {
+        workerPath:'ocr/worker.min.js', corePath:'ocr/', langPath:'ocr/lang', gzip:true, workerBlobURL:false,
+        logger:function(m){ if (onProgress && m && typeof m.progress === 'number') onProgress(m.status, m.progress, texts.length, total); }
+      });
+    }).then(function(w){
+      worker = w; var p = Promise.resolve();
+      sources.forEach(function(src){ p = p.then(function(){ return toCanvas(src); }).then(function(c){ return worker.recognize(prep(c), {}, {text:true, blocks:true}); }).then(function(r){ texts.push(pageFromOcr(r.data)); }); });
+      return p;
+    }).then(function(){ return worker.terminate(); }, function(e){ if (worker) worker.terminate(); throw e; }).then(function(){ return texts; });
+  }
+  /* Neigung aus den von Tesseract erkannten Zeilen schaetzen (Median der Regressionssteigung) */
+  function ocrSkew(d){
+    var lines = d.lines || [], sl = [];
+    if (!lines.length && d.blocks) d.blocks.forEach(function(b){ (b.paragraphs||[]).forEach(function(pg){ (pg.lines||[]).forEach(function(l){ lines.push(l); }); }); });
+    lines.forEach(function(l){
+      var ws = (l.words || []).filter(function(w){ return w.bbox && w.text && w.text.trim(); });
+      if (ws.length < 4) return;
+      var n = ws.length, sx = 0, sy = 0, sxx = 0, sxy = 0;
+      ws.forEach(function(w){ var x = (w.bbox.x0+w.bbox.x1)/2, y = (w.bbox.y0+w.bbox.y1)/2; sx += x; sy += y; sxx += x*x; sxy += x*y; });
+      var den = n*sxx - sx*sx; if (den < 1) return;
+      sl.push((n*sxy - sx*sy)/den);
+    });
+    if (sl.length < 3) return 0;
+    sl.sort(function(a,b){ return a-b; });
+    var m = sl[Math.floor(sl.length/2)], ang = Math.atan(m);
+    return Math.abs(ang) < 0.006 || Math.abs(ang) > 0.2 ? 0 : ang;
+  }
+  function pageFromOcr(d){
+    var words = d.words;
+    if (!words && d.blocks) { words = []; d.blocks.forEach(function(b){ (b.paragraphs||[]).forEach(function(pg){ (pg.lines||[]).forEach(function(l){ (l.words||[]).forEach(function(w){ words.push(w); }); }); }); }); }
+    var ang = ocrSkew(d), co = Math.cos(-ang), si = Math.sin(-ang);
+    var items = (words || []).filter(function(w){ return w.text && w.text.trim() && w.bbox; }).map(function(w){
+      var x = w.bbox.x0, y = (w.bbox.y0+w.bbox.y1)/2;
+      return {s:w.text.trim(), x:x*co - y*si, y:x*si + y*co, h:w.bbox.y1-w.bbox.y0};
+    });
+    return {items:items, text:d.text || '', skew:ang};
+  }
+  function fromImages(sources, lang, onProgress){
+    return ocrImages(sources, lang, onProgress).then(function(pages){
+      var withItems = pages.filter(function(pg){ return pg.items.length; });
+      var res;
+      if (withItems.length){ res = processPages(withItems.map(function(pg){ return pg.items; }), true); }
+      else { var tx = fixOcr(pages.map(function(pg){ return pg.text; }).join('\n\n')); res = parseText(tx); res.text = tx; }
+      // Falls die Tabellenerkennung nichts fand, den reinen Text von Tesseract versuchen
+      if (!res.codes.length){ var tx2 = fixOcr(pages.map(function(pg){ return pg.text; }).join('\n\n')); var r2 = parseText(tx2); if (r2.codes.length){ r2.text = tx2; res = r2; } }
+      res.ocr = true; return res;
+    });
+  }
+  function pdfCanvases(buf, maxPages){
+    return loadPdfJs().then(function(lib){ return lib.getDocument({data:new Uint8Array(buf)}).promise; }).then(function(pdf){
+      var n = Math.min(pdf.numPages, maxPages || 6), out = [], p = Promise.resolve();
+      for (var i=1;i<=n;i++) (function(i){ p = p.then(function(){ return pdf.getPage(i); }).then(function(pg){
+        var vp = pg.getViewport({scale:2.4}), c = document.createElement('canvas'); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+        return pg.render({canvasContext:c.getContext('2d'), viewport:vp}).promise.then(function(){ out.push(c); });
+      }); })(i);
+      return p.then(function(){ return out; });
     });
   }
 
@@ -285,5 +420,5 @@
     return out;
   }
 
-  window.JCREP = {parseText:parseText, fromPdf:fromPdf, parseHeader:parseHeader, ftbInfo:ftbInfo, insights:insights, statusOf:statusOf};
+  window.JCREP = {prep:prep, ocrImages:ocrImages, parseText:parseText, fromPdf:fromPdf, fromImages:fromImages, pdfCanvases:pdfCanvases, fixOcr:fixOcr, parseHeader:parseHeader, ftbInfo:ftbInfo, insights:insights, statusOf:statusOf};
 })();

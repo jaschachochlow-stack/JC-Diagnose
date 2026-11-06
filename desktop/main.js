@@ -1,6 +1,10 @@
-const { app, BrowserWindow, ipcMain, Menu, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, shell, protocol, net: enet } = require('electron');
+const { pathToFileURL } = require('url');
 const net = require('net');
 const path = require('path');
+
+protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, corsEnabled: true } }]);
+const APP_DIR = path.join(__dirname, 'app');
 
 let win = null;
 let btCb = null;
@@ -18,9 +22,9 @@ function createWindow() {
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
   });
   Menu.setApplicationMenu(null);
-  win.loadFile(path.join(__dirname, 'app', 'index.html'));
+  win.loadURL('app://jc/index.html');
   win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' }; });
-  win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith('file:')) { e.preventDefault(); shell.openExternal(url); } });
+  win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith('app:')) { e.preventDefault(); shell.openExternal(url); } });
 
   const ses = win.webContents.session;
   ses.setPermissionRequestHandler((wc, perm, cb) => cb(true));
@@ -71,6 +75,16 @@ const lock = app.requestSingleInstanceLock();
 if (!lock) app.quit();
 else {
   app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
-  app.whenReady().then(createWindow);
+  app.whenReady().then(() => {
+    // eigenes Schema statt file://, damit Web-Worker und WebAssembly (OCR, PDF) zuverlaessig laufen
+    protocol.handle('app', (req) => {
+      let p = decodeURIComponent(new URL(req.url).pathname);
+      if (p === '/' || p === '') p = '/index.html';
+      const full = path.normalize(path.join(APP_DIR, p));
+      if (!full.startsWith(APP_DIR + path.sep)) return new Response('forbidden', { status: 403 });
+      return enet.fetch(pathToFileURL(full).toString());
+    });
+    createWindow();
+  });
   app.on('window-all-closed', () => app.quit());
 }
