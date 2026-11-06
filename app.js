@@ -253,14 +253,14 @@ function card(it){
 }
 function hvCallout(){ return '<div class="callout hv"><b>'+T('Hochvolt','Высокое напряжение')+'</b><p>'+T('Arbeiten an HV-Systemen nur mit Qualifikation nach DGUV Information 209-093. Spannungsfreiheit mit zweipoligem Spannungsprüfer feststellen. Messgeräte mindestens CAT III 1000 V.','Работы с ВВ-системами только при наличии допуска по DGUV Information 209-093. Отсутствие напряжения проверять двухполюсным указателем. Приборы не ниже CAT III 1000 В.')+'</p></div>'; }
 function deNote(){ return state.lang==='ru' ? '<p class="note">Текст главы пока на немецком. Перевод — следующий этап.</p>' : ''; }
-function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.11.1 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
+function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.11.2 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
 function crumbs(parts){ return '<p class="eyebrow"><a href="#start">'+T('Start','Главная')+'</a>'+parts.map(function(p){ return ' / '+p; }).join('')+'</p>'; }
 
 /* ---------- Start ---------- */
 var PANNE = ['k102','k103','k29','k28','k109','k119','k111','k110','k45'];
 function vHome(){
   var m = D.meta, v = m.verify;
-  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.11.1 · Stand','Версия 0.11.1 · состояние')+' '+esc(m.stand)+'</p>' +
+  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.11.2 · Stand','Версия 0.11.2 · состояние')+' '+esc(m.stand)+'</p>' +
     '<h1>JC Diagnose</h1><p class="lead">'+T('Sollwerte, Pinbelegung, Multimeter- und Oszilloskop-Prüfschritte für Sensoren, Aktoren, Bordnetz, Bussysteme und Hochvolt – plus Systemtests und dein eigenes Soll/Ist-Messprotokoll.','Нормы, распиновка, проверки мультиметром и осциллографом для датчиков, исполнительных механизмов, бортсети, шин и ВВ — плюс системные тесты и твой собственный журнал замеров «норма/факт».')+'</p>' +
     '<div class="chips"><a class="chip" href="#mess-neu">+ '+T('Neue Messung','Новый замер')+'</a><a class="chip" href="#obd">'+T('Fahrzeug verbinden','Подключить машину')+'</a><a class="chip" href="#dtc">'+T('Fehlercode prüfen','Проверить код ошибки')+'</a><a class="chip" href="#import">'+T('Bericht importieren','Импорт отчёта')+'</a><a class="chip" href="#oszi">'+T('Oszillogramme','Осциллограммы')+'</a><a class="chip" href="#tab-oszi">'+T('Oszi-Startwerte','Настройки осциллографа')+'</a><a class="chip" href="#systemtests">'+T('Systemtests','Системные тесты')+'</a><a class="chip" href="#rechner">'+T('Rechner','Калькуляторы')+'</a><a class="chip" href="#tab-fehler">'+T('Fehlerbilder','Неисправности')+'</a></div></div>' +
     '<div class="stats"><div class="stat"><b>'+m.n_items+'</b><span>'+T('Kapitel','глав')+'</span></div><div class="stat"><b>'+X.systemtests.rows.length+'</b><span>'+T('Systemtests','системных тестов')+'</span></div><div class="stat"><b>'+state.mess.length+'</b><span>'+T('eigene Messungen','своих замеров')+'</span></div></div></section>';
@@ -741,7 +741,7 @@ function obdLiveLoop(){
   if (!obd.liveOn || !obd.io) return;
   var t0 = Date.now(), list = livePids();
   if (!list.length){ obd.liveOn = false; obd.err = T('Keine Live-Werte ausgewählt.','Не выбрано ни одного значения.'); obdRefresh(); return; }
-  JCPID.read(obd.io, list).then(function(r){ obd.live = r; obd.cyc = (Date.now()-t0)/1000; if (cur()==='obd') drawLive(); if (obd.liveOn) setTimeout(obdLiveLoop, 150); }, function(e){ obd.liveOn = false; obd.err = e.message; obdRefresh(); });
+  JCPID.read(obd.io, list).then(function(r){ if (!r.length && obd.liveOn){ obd.liveOn = false; obd.err = T('Das Fahrzeug liefert keine Werte. Zündung an? Antworten des Adapters: ','Машина не отдаёт значений. Зажигание включено? Ответы адаптера: ')+((r.diag||[]).join(' | ')||'–'); obdLog(obd.err); obdRefresh(); return; } obd.live = r; obd.cyc = (Date.now()-t0)/1000; if (cur()==='obd') drawLive(); if (obd.liveOn) setTimeout(obdLiveLoop, 150); }, function(e){ obd.liveOn = false; obd.err = e.message; obdRefresh(); });
 }
 function livePids(){ var sel = obd.sel || []; return obd.sup ? sel.filter(function(p){ return obd.sup.indexOf(p) >= 0; }) : sel; }
 function pidPicker(){
@@ -764,7 +764,7 @@ function bindPids(){
   main.querySelectorAll('[data-pid]').forEach(function(c){ c.onchange = function(){ var p = +c.dataset.pid, sel = obd.sel || []; var i = sel.indexOf(p); if (c.checked && i<0) sel.push(p); if (!c.checked && i>=0) sel.splice(i,1); obd.sel = sel; lset('jc-pids', sel); obd.pickOpen = true; render(true); }; });
   var d = main.querySelector('.pid-pick'); if (d) d.ontoggle = function(){ obd.pickOpen = d.open; };
   var bs = $('#bSnap'); if (bs) bs.onclick = function(){ var list = obd.sup || JCPID.list.map(function(p){ return p.pid; }); obd.liveOn = false;
-    obdRun(T('Lese alle unterstützten Werte …','Читаю все доступные значения …'), function(){ var t0 = Date.now(); return JCPID.read(obd.io, list).then(function(r){ obd.live = r; obd.cyc = (Date.now()-t0)/1000; obdLog(T('Momentaufnahme: ','Снимок: ')+r.length+' '+T('Werte','значений')); }); }); };
+    obdRun(T('Lese alle unterstützten Werte …','Читаю все доступные значения …'), function(){ var t0 = Date.now(); return JCPID.read(obd.io, list).then(function(r){ obd.live = r; obd.cyc = (Date.now()-t0)/1000; obdLog(T('Momentaufnahme: ','Снимок: ')+r.length+' '+T('Werte','значений')); if (!r.length && r.diag && r.diag.length) obdLog(T('Keine Werte. Antworten des Adapters: ','Нет значений. Ответы адаптера: ')+r.diag.join(' | ')); }); }); };
 }
 function liveTiles(){
   if (!obd.live.length) return '<p class="muted">'+T('Noch keine Werte.','Значений пока нет.')+'</p>';

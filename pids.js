@@ -180,13 +180,19 @@ async function supported(io, log){
   return out.filter(function(p){ return p % 0x20 !== 0; });
 }
 async function read(io, pids, onEach){
-  var out = [];
+  var out = [], diag = [];
   for (var i=0;i<pids.length;i++){
-    var raw = await io.send('01'+hex(pids[i]), 3000), b = parse(raw, pids[i]);
-    if (!b) continue;
+    var raw = null, b = null;
+    for (var t=0;t<2 && !b;t++){   // einmal wiederholen (BLE-Adapter verlieren gern die erste Antwort)
+      try { raw = await io.send('01'+hex(pids[i]), 4000); } catch(e){ raw = 'FEHLER: '+(e && e.message || e); if (!io || (io.closed)) throw e; }
+      b = parse(raw, pids[i]);
+    }
+    if (!b){ if (diag.length < 4) diag.push(hex(pids[i])+' → '+String(raw == null ? '–' : raw).replace(/\s+/g,' ').trim().slice(0,48)); continue; }
     var r = decode(pids[i], b);
     if (r){ out.push(r); if (onEach) onEach(r, out); }
+    else if (diag.length < 4) diag.push(hex(pids[i])+' → '+JSON.stringify(b).slice(0,40)+' (nicht lesbar)');
   }
+  out.diag = diag;
   return out;
 }
 
