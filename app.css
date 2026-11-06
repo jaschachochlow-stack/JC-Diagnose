@@ -579,3 +579,12 @@ html[data-skin=field] .dg-res .btn{height:auto;min-height:84px}
 .imp-row input[type=checkbox]{width:20px;height:20px;vertical-align:middle;margin-right:6px}
 dl.quick dd,.imp-row p{overflow-wrap:anywhere}
 dl.quick dd.mono{font-size:var(--text-sm)}
+
+.live-grid.charts{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.lchart{position:relative;height:84px;margin:4px 0 2px}
+.lchart svg{width:100%;height:76px;display:block;background:var(--color-bg,transparent);border-radius:6px}
+.lchart polyline{stroke:var(--color-primary);stroke-width:2}
+.lchart .lgrid{stroke:var(--color-border);stroke-width:1;stroke-dasharray:3 4;vector-effect:non-scaling-stroke}
+.lchart span{position:absolute;font-size:10px;color:var(--color-muted);font-family:var(--font-mono)}
+.lchart .lmax{left:3px;top:0}.lchart .lmin{left:3px;bottom:8px}.lchart .lspan{right:3px;bottom:8px}
+.btn-row.seg{margin:6px 0}

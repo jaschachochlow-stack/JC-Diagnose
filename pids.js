@@ -228,6 +228,19 @@ async function read(io, pids, onEach){
 
 // Demo-Antworten für alle Tabellen-PIDs
 function demo(cmd, t){
+  var c0 = cmd.replace(/\s/g,'').toUpperCase();
+  if (/^01([0-9A-F]{2})+[0-9A-F]?$/.test(c0)){
+    if (c0.length % 2) c0 = c0.slice(0,-1);          // Antwortanzahl-Ziffer
+    if (c0.length > 4){                               // mehrere PIDs in einer Anfrage
+      var s = '41';
+      for (var q=2;q<c0.length;q+=2){ var r1 = demo1('01'+c0.substr(q,2), t); if (r1 && r1 !== 'NO DATA') s += r1.slice(2); }
+      return s === '41' ? 'NO DATA' : s;
+    }
+    return demo1(c0, t);
+  }
+  return null;
+}
+function demo1(cmd, t){
   var c = cmd.replace(/\s/g,'').toUpperCase(); if (!/^01[0-9A-F]{2}$/.test(c)) return null;
   var pid = parseInt(c.slice(2),16);
   if (pid % 0x20 === 0){
