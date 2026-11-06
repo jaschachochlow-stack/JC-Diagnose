@@ -118,6 +118,11 @@ var PH = (function(){
         });
       });
     },
+    addFile: function(file){
+      if (/^image\//.test(file.type)) return this.add(file);
+      var p = {id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), kb:Math.round(file.size/1024), at:new Date().toISOString(), cap:'', type:file.type||'application/octet-stream', name:file.name||'Datei'};
+      return tx('readwrite', function(st){ return st.put(file, p.id); }).then(function(ok){ if (!ok) throw new Error('db'); urls[p.id] = URL.createObjectURL(file); return p; });
+    },
     url: function(p){
       if (urls[p.id]) return Promise.resolve(urls[p.id]);
       return tx('readonly', function(st){ return st.get(p.id); }).then(function(b){
@@ -253,14 +258,14 @@ function card(it){
 }
 function hvCallout(){ return '<div class="callout hv"><b>'+T('Hochvolt','Высокое напряжение')+'</b><p>'+T('Arbeiten an HV-Systemen nur mit Qualifikation nach DGUV Information 209-093. Spannungsfreiheit mit zweipoligem Spannungsprüfer feststellen. Messgeräte mindestens CAT III 1000 V.','Работы с ВВ-системами только при наличии допуска по DGUV Information 209-093. Отсутствие напряжения проверять двухполюсным указателем. Приборы не ниже CAT III 1000 В.')+'</p></div>'; }
 function deNote(){ return state.lang==='ru' ? '<p class="note">Текст главы пока на немецком. Перевод — следующий этап.</p>' : ''; }
-function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.11.9 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
+function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.12.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
 function crumbs(parts){ return '<p class="eyebrow"><a href="#start">'+T('Start','Главная')+'</a>'+parts.map(function(p){ return ' / '+p; }).join('')+'</p>'; }
 
 /* ---------- Start ---------- */
 var PANNE = ['k102','k103','k29','k28','k109','k119','k111','k110','k45'];
 function vHome(){
   var m = D.meta, v = m.verify;
-  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.11.9 · Stand','Версия 0.11.9 · состояние')+' '+esc(m.stand)+'</p>' +
+  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.12.0 · Stand','Версия 0.12.0 · состояние')+' '+esc(m.stand)+'</p>' +
     '<h1>JC Diagnose</h1><p class="lead">'+T('Sollwerte, Pinbelegung, Multimeter- und Oszilloskop-Prüfschritte für Sensoren, Aktoren, Bordnetz, Bussysteme und Hochvolt – plus Systemtests und dein eigenes Soll/Ist-Messprotokoll.','Нормы, распиновка, проверки мультиметром и осциллографом для датчиков, исполнительных механизмов, бортсети, шин и ВВ — плюс системные тесты и твой собственный журнал замеров «норма/факт».')+'</p>' +
     '<div class="chips"><a class="chip" href="#mess-neu">+ '+T('Neue Messung','Новый замер')+'</a><a class="chip" href="#obd">'+T('Fahrzeug verbinden','Подключить машину')+'</a><a class="chip" href="#dtc">'+T('Fehlercode prüfen','Проверить код ошибки')+'</a><a class="chip" href="#import">'+T('Bericht importieren','Импорт отчёта')+'</a><a class="chip" href="#oszi">'+T('Oszillogramme','Осциллограммы')+'</a><a class="chip" href="#tab-oszi">'+T('Oszi-Startwerte','Настройки осциллографа')+'</a><a class="chip" href="#systemtests">'+T('Systemtests','Системные тесты')+'</a><a class="chip" href="#rechner">'+T('Rechner','Калькуляторы')+'</a><a class="chip" href="#tab-fehler">'+T('Fehlerbilder','Неисправности')+'</a></div></div>' +
     '<div class="stats"><div class="stat"><b>'+m.n_items+'</b><span>'+T('Kapitel','глав')+'</span></div><div class="stat"><b>'+X.systemtests.rows.length+'</b><span>'+T('Systemtests','системных тестов')+'</span></div><div class="stat"><b>'+state.mess.length+'</b><span>'+T('eigene Messungen','своих замеров')+'</span></div></div></section>';
@@ -362,10 +367,10 @@ function vMess(){
     var fi = $('#messFilter'); fi.addEventListener('input', function(){ state.messF = fi.value; clearTimeout(fi.t); fi.t = setTimeout(function(){ render(true); var n = $('#messFilter'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); });
     $('#csvCopy').onclick = function(){ var c = toCSV(); copyText(c); };
     $('#csvSave').onclick = function(){ saveFile('JC-Diagnose_Messprotokoll_'+today()+'.csv', '\ufeff'+toCSV(), 'text/csv'); };
-    $('#bakSave').onclick = function(){ toast(T('Backup wird erstellt …','Создаю копию …')); var all = []; state.mess.forEach(function(m){ (m.photos||[]).forEach(function(p){ all.push(p); }); });
+    $('#bakSave').onclick = function(){ toast(T('Backup wird erstellt …','Создаю копию …')); var all = []; state.mess.forEach(function(m){ (m.photos||[]).forEach(function(p){ all.push(p); }); }); state.archiv.forEach(function(r){ (r.files||[]).forEach(function(p){ all.push(p); }); }); if (state.diag) (state.diag.files||[]).forEach(function(p){ all.push(p); });
       Promise.all(all.map(function(p){ return PH.toData(p).then(function(dataUrl){ return [p.id, dataUrl]; }); })).then(function(pairs){ var photos = {}; pairs.forEach(function(x){ if (x[1]) photos[x[0]] = x[1]; });
         saveFile('JC-Diagnose_Backup_'+today()+'.json', JSON.stringify({app:'JC Diagnose', v:2, exported:new Date().toISOString(), mess:state.mess, fav:state.fav, photos:photos, archiv:state.archiv}), 'application/json'); }); };
-    $('#bakLoad').onchange = function(e){ var file = e.target.files[0]; if (!file) return; var rd = new FileReader(); rd.onload = function(){ try { var o = JSON.parse(rd.result); if (!o || !Array.isArray(o.mess)) throw 0; var n = 0; o.mess.forEach(function(m){ if (m && m.id && !state.mess.some(function(x){return x.id===m.id;})) { (m.photos||[]).forEach(function(p){ if (o.photos && o.photos[p.id]) PH.fromData(p, o.photos[p.id]); }); messPut(m); n++; } }); if (Array.isArray(o.archiv)) { o.archiv.forEach(function(r){ if (r && r.id && !state.archiv.some(function(x){ return x.id===r.id; })) state.archiv.push(r); }); archivSave(); }
+    $('#bakLoad').onchange = function(e){ var file = e.target.files[0]; if (!file) return; var rd = new FileReader(); rd.onload = function(){ try { var o = JSON.parse(rd.result); if (!o || !Array.isArray(o.mess)) throw 0; var n = 0; o.mess.forEach(function(m){ if (m && m.id && !state.mess.some(function(x){return x.id===m.id;})) { (m.photos||[]).forEach(function(p){ if (o.photos && o.photos[p.id]) PH.fromData(p, o.photos[p.id]); }); messPut(m); n++; } }); if (Array.isArray(o.archiv)) { o.archiv.forEach(function(r){ if (r && r.id && !state.archiv.some(function(x){ return x.id===r.id; })) { (r.files||[]).forEach(function(p){ if (o.photos && o.photos[p.id]) PH.fromData(p, o.photos[p.id]); }); state.archiv.push(r); } }); archivSave(); }
           if (Array.isArray(o.fav)) { o.fav.forEach(function(x){ if (byId[x] && state.fav.indexOf(x)<0) state.fav.push(x); }); lset('jc-fav', state.fav); } toast(n+' '+T('Messungen importiert','замеров загружено')); render(true); } catch(err){ toast(T('Datei nicht lesbar','Файл не читается')); } }; rd.readAsText(file); };
   });
   return h;
@@ -770,8 +775,11 @@ function bindPids(){
 /* Verlauf der Live-Werte (für Diagramme) */
 function liveNum(r){ if (typeof r.value === 'number' && isFinite(r.value)) return r.value; var m = String(r.text||'').match(/^\s*(-?\d+(?:[.,]\d+)?)/); return m ? parseFloat(m[1].replace(',','.')) : null; }
 function liveSet(r){ obd.live = r; var t = Date.now(); r.forEach(function(x){ var v = liveNum(x); if (v == null) return; var h = obd.hist[x.pid] || (obd.hist[x.pid] = []); h.push([t, v]); if (h.length > 300) h.shift(); }); }
-function liveChart(pid){
-  var h = obd.hist[pid]; if (!h || h.length < 2) return '<div class="lchart muted">'+T('Sammle Werte …','Собираю значения …')+'</div>';
+function liveChart(pid){ return chartSvg(obd.hist[pid]); }
+function histStat(h){ var mn = Infinity, mx = -Infinity, sum = 0; h.forEach(function(p){ if (p[1] < mn) mn = p[1]; if (p[1] > mx) mx = p[1]; sum += p[1]; }); return {mn:mn, mx:mx, avg:sum/h.length}; }
+function fmtV(v){ return (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(1)).replace('.',','); }
+function chartSvg(h){
+  if (!h || h.length < 2) return '<div class="lchart muted">'+T('Sammle Werte …','Собираю значения …')+'</div>';
   var W = 300, H = 76, t0 = h[0][0], t1 = h[h.length-1][0], dt = Math.max(1, t1-t0), mn = Infinity, mx = -Infinity, i;
   for (i=0;i<h.length;i++){ if (h[i][1] < mn) mn = h[i][1]; if (h[i][1] > mx) mx = h[i][1]; }
   var pad = (mx-mn) || Math.max(1, Math.abs(mx)*0.1); var flat = mx === mn, lo = flat ? mn - pad : mn - pad*0.08, hi = flat ? mx + pad : mx + pad*0.08;
@@ -809,7 +817,8 @@ function obdScanSave(what){
   s.proto = obd.info ? obd.info.name : ''; s.nsup = obd.sup ? obd.sup.length : 0;
   if (what === 'dtc' && obd.dtcs){ var d = obd.dtcs; s.dtc = {stored:(d.stored||[]).slice(), pending:(d.pending||[]).slice(), permanent:(d.permanent||[]).slice(), uds:(d.uds||[]).slice()}; s.dtcAt = now; delete s.cleared; }
   if (what === 'clear') s.cleared = now;
-  if (what === 'live' && obd.live.length){ s.live = obd.live.map(function(x){ return {pid:x.pid, label:x.label, text:x.text, note:x.note||''}; }); s.liveAt = now; }
+  if (what === 'live' && obd.live.length){ s.live = obd.live.map(function(x){ return {pid:x.pid, label:x.label, text:x.text, note:x.note||''}; }); s.liveAt = now;
+    s.hist = {}; obd.live.forEach(function(x){ var h = obd.hist[x.pid]; if (!h || h.length < 2) return; var st = Math.ceil(h.length/150), o = [], i; for (i = 0; i < h.length; i += st) o.push([h[i][0]-h[0][0], Math.round(h[i][1]*100)/100]); var l = h[h.length-1]; if (o[o.length-1][0] !== l[0]-h[0][0]) o.push([l[0]-h[0][0], Math.round(l[1]*100)/100]); s.hist[x.pid] = o; }); }
   archivSave(); if (cloudArch) cloudArch.doc(e.id).set(JSON.parse(JSON.stringify(e))).catch(function(){});
   return e;
 }
@@ -826,12 +835,67 @@ function obdReportText(r){
   else { L0.push(T('Fehlerspeicher: ','Память ошибок: ')+all.length+' '+T('Code(s)','код(ов)'));
     all.forEach(function(c){ var a = dtcAdvice(c.code), t = a && a.t; L0.push('■ '+c.code+' ('+diagSetLabel(c.set)+') – '+(t?t.title:T('Herstellercode','Код производителя'))); L0.push('  '+dtcMeaning(c.code)); }); }
   if (s.cleared) L0.push(T('Fehlerspeicher gelöscht: ','Память ошибок стёрта: ')+new Date(s.cleared).toLocaleTimeString(loc, {timeStyle:'short'}));
-  if (s.live && s.live.length){ L0.push(''); L0.push(T('Live-Werte:','Живые данные:')); s.live.forEach(function(x){ L0.push('  '+x.label+': '+x.text+(x.note?' ('+x.note+')':'')); }); }
+  if (s.live && s.live.length){ L0.push(''); L0.push(T('Live-Werte:','Живые данные:')); s.live.forEach(function(x){ var h = s.hist && s.hist[x.pid], st = h && h.length > 1 ? histStat(h) : null; L0.push('  '+x.label+': '+x.text+(x.note?' ('+x.note+')':'')+(st?' – min '+fmtV(st.mn)+' / max '+fmtV(st.mx)+' / Ø '+fmtV(st.avg)+' ('+Math.round(h[h.length-1][0]/1000)+' s)':'')); }); }
+  if (r.note) { L0.push(''); L0.push(T('Notiz: ','Заметка: ')+r.note); }
+  if (r.files && r.files.length) L0.push(T('Anhänge: ','Вложений: ')+r.files.length);
   return L0.join('\n');
 }
-function sendReport(title, text){
+function attFile(p, i){ return PH.url(p).then(function(u){ if (!u) return null; return fetch(u).then(function(r){ return r.blob(); }).then(function(b){ return new File([b], p.name || ('Foto-'+(i+1)+'.jpg'), {type: b.type || p.type || 'image/jpeg'}); }); }).catch(function(){ return null; }); }
+function sendReport(title, text, rec){
   var mail = function(){ location.href = 'mailto:?subject='+encodeURIComponent(title)+'&body='+encodeURIComponent(text.slice(0,1800)); };
-  if (navigator.share){ navigator.share({title:title, text:text}).catch(function(e){ if (!e || e.name !== 'AbortError') mail(); }); } else mail();
+  if (!navigator.share) return mail();
+  var fire = function(fl){ var data = {title:title, text:text}; if (fl.length && navigator.canShare && navigator.canShare({files:fl})) data.files = fl; navigator.share(data).catch(function(e){ if (!e || e.name !== 'AbortError') mail(); }); };
+  var files = (rec && rec.files) || [];
+  if (!files.length) return fire([]);
+  toast(T('Anhänge werden vorbereitet …','Готовлю вложения …'));
+  Promise.all(files.map(attFile)).then(function(a){ fire(a.filter(Boolean)); });
+}
+/* ---------- Notiz und Anhänge (für jeden Bericht) ---------- */
+function attHtml(D0){
+  var f = D0.files || [];
+  return '<section class="att"><h2>'+T('Notiz und Anhänge','Заметка и вложения')+'</h2>' +
+    '<div class="field"><label for="repNote">'+T('Notiz zum Bericht','Заметка к отчёту')+'</label><textarea id="repNote" rows="3" placeholder="'+T('z. B. Kundenwunsch, Ergebnis der Probefahrt …','напр. пожелание клиента, итог пробной поездки …')+'">'+esc(D0.note||'')+'</textarea></div>' +
+    '<div class="btn-row"><label class="btn" for="attAdd">+ '+T('Foto / Screenshot / PDF hinzufügen','Добавить фото / скриншот / PDF')+'</label><input type="file" id="attAdd" accept="image/*,application/pdf" multiple hidden></div>' +
+    (f.length ? '<div class="ph-grid">'+f.map(function(p,i){ var pdf = !/^image\//.test(p.type||'image/jpeg');
+      return '<figure class="ph"><button type="button" class="ph-img'+(pdf?' ph-pdf':'')+'" data-ph="'+esc(p.id)+'" aria-label="'+T('Öffnen','Открыть')+'"><span class="ph-load">…</span></button>' +
+        '<input class="ph-cap" data-acap="'+i+'" value="'+esc(p.cap||'')+'" placeholder="'+T('Beschriftung','Подпись')+'"><button type="button" class="btn small danger" data-fdel="'+i+'">'+T('Entfernen','Убрать')+'</button></figure>'; }).join('')+'</div>' : '<p class="meta">'+T('Auch nachträglich möglich, ohne Verbindung zum Fahrzeug.','Можно добавлять и позже, без подключения к машине.')+'</p>') +
+    '</section>';
+}
+function attFill(D0){
+  (D0.files||[]).forEach(function(p){
+    var b = main.querySelector('[data-ph="'+p.id+'"]'); if (!b) return;
+    PH.url(p).then(function(u){
+      if (!u) { b.innerHTML = '<span class="ph-load">'+T('nur auf anderem Gerät','только на другом устройстве')+'</span>'; return; }
+      if (/^image\//.test(p.type||'image/jpeg')) { b.innerHTML = '<img src="'+esc(u)+'" alt="" loading="lazy">'; b.onclick = function(){ lightbox(u, p.cap); }; }
+      else { b.innerHTML = '<span class="pdf-i">PDF</span><span class="pdf-n">'+esc(p.name||'')+'</span><span class="meta">'+p.kb+' KB</span>'; b.onclick = function(){ var a = document.createElement('a'); a.href = u; a.download = p.name || 'Anhang.pdf'; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); }; }
+    });
+  });
+}
+function attBind(D0){
+  attFill(D0);
+  var nt = $('#repNote'); if (nt) nt.onchange = function(){ D0.note = nt.value.trim(); if (!D0.note) delete D0.note; diagSaveAny(D0); toast(T('Notiz gespeichert','Заметка сохранена')); };
+  var ad = $('#attAdd'); if (ad) ad.onchange = function(){
+    var fl = Array.prototype.slice.call(ad.files || []); ad.value = ''; if (!fl.length) return;
+    D0.files = D0.files || []; var bad = 0;
+    toast(T('Wird gespeichert …','Сохраняю …'));
+    fl.reduce(function(pr, f){ return pr.then(function(){
+      if (!/^image\//.test(f.type) && f.type !== 'application/pdf') { bad++; return; }
+      if (f.type === 'application/pdf' && f.size > 20*1024*1024) { bad++; return; }
+      return PH.addFile(f).then(function(p){ D0.files.push(p); }, function(){ bad++; }); }); }, Promise.resolve()).then(function(){
+      diagSaveAny(D0); render(true); toast(bad ? T('Einige Dateien nicht übernommen (nur Bilder und PDF bis 20 MB)','Часть файлов не добавлена (только картинки и PDF до 20 МБ)') : T('Anhänge gespeichert','Вложения сохранены')); });
+  };
+  main.querySelectorAll('[data-acap]').forEach(function(i){ i.onchange = function(){ var p = (D0.files||[])[+i.dataset.acap]; if (p){ p.cap = i.value.trim(); diagSaveAny(D0); } }; });
+  main.querySelectorAll('[data-fdel]').forEach(function(b){ b.onclick = function(){ if (!b.dataset.sure){ b.dataset.sure = 1; b.textContent = T('Wirklich?','Точно?'); return; } var p = (D0.files||[])[+b.dataset.fdel]; if (!p) return; PH.del(p); D0.files.splice(+b.dataset.fdel, 1); if (!D0.files.length) delete D0.files; diagSaveAny(D0); render(true); }; });
+}
+/* ---------- Bericht komplett löschen ---------- */
+function repDelHtml(){ return '<section class="att danger-zone"><h2>'+T('Bericht löschen','Удалить отчёт')+'</h2><p class="meta">'+T('Entfernt den Bericht samt Notiz und Anhängen endgültig, z. B. auf Wunsch des Kunden. Messungen im Messprotokoll bleiben erhalten.','Полностью удаляет отчёт вместе с заметкой и вложениями, например по просьбе клиента. Замеры в журнале измерений остаются.')+'</p><div class="btn-row"><button class="btn danger" id="repDel">'+T('Bericht löschen','Удалить отчёт')+'</button></div></section>'; }
+function repDelBind(D0){
+  var b = $('#repDel'); if (!b) return;
+  b.onclick = function(){
+    if (!b.dataset.sure){ b.dataset.sure = 1; b.textContent = T('Wirklich endgültig löschen?','Точно удалить насовсем?'); clearTimeout(b.t); b.t = setTimeout(function(){ delete b.dataset.sure; b.textContent = T('Bericht löschen','Удалить отчёт'); }, 5000); return; }
+    if (state.diag && state.diag.id === D0.id){ (D0.files||[]).forEach(function(p){ PH.del(p); }); state.diag = null; diagSave(); } else archDel(D0.id);
+    toast(T('Bericht gelöscht','Отчёт удалён')); go('berichte');
+  };
 }
 function sheetList(arr, title){
   if (!arr || !arr.length) return '';
@@ -859,10 +923,11 @@ function vObdReport(r){
   else { h += dtcList(d.stored, T('Gespeichert (03)','Сохранённые (03)')) + dtcList(d.pending, T('Anstehend (07)','Ожидающие (07)')) + dtcList(d.permanent, T('Permanent (0A)','Постоянные (0A)')) + (d.uds && d.uds.length ? dtcList(d.uds, 'UDS (19 02)') : '');
     h += '<div class="btn-row"><button class="btn primary" id="oDiag"'+(state.diag?' disabled':'')+'>'+T('Geführte Diagnose starten','Начать пошаговую диагностику')+' ('+all.length+')</button></div>'; }
   if (s.cleared) h += '<p class="meta">'+T('Fehlerspeicher gelöscht um ','Память ошибок стёрта в ')+esc(new Date(s.cleared).toLocaleTimeString(loc, {timeStyle:'short'}))+'</p>';
-  if (s.live && s.live.length) h += '<h2>'+T('Live-Werte','Живые данные')+'</h2><p class="meta">'+esc(new Date(s.liveAt||r.started).toLocaleTimeString(loc, {timeStyle:'short'}))+'</p><div class="live-grid mini">'+s.live.map(function(x){ return '<div class="live"><span class="lbl"><span class="mono">'+(window.JCPID?JCPID.hex(x.pid):'')+'</span> '+esc(x.label)+'</span><b>'+esc(x.text)+'</b>'+(x.note?'<span class="meta">'+esc(x.note)+'</span>':'')+'</div>'; }).join('')+'</div>';
-  h += foot() + '</div>';
+  if (s.live && s.live.length) h += '<h2>'+T('Live-Werte','Живые данные')+'</h2><p class="meta">'+esc(new Date(s.liveAt||r.started).toLocaleTimeString(loc, {timeStyle:'short'}))+'</p><div class="live-grid mini'+(s.hist?' charts':'')+'">'+s.live.map(function(x){ var hh = s.hist && s.hist[x.pid], st = hh && hh.length > 1 ? histStat(hh) : null; return '<div class="live"><span class="lbl"><span class="mono">'+(window.JCPID?JCPID.hex(x.pid):'')+'</span> '+esc(x.label)+'</span><b>'+esc(x.text)+'</b>'+(st ? chartSvg(hh)+'<span class="meta">min '+fmtV(st.mn)+' · max '+fmtV(st.mx)+' · Ø '+fmtV(st.avg)+'</span>' : '')+(x.note?'<span class="meta">'+esc(x.note)+'</span>':'')+'</div>'; }).join('')+'</div>';
+  h += attHtml(r) + repDelHtml() + foot() + '</div>';
   after(function(){
-    $('#oSend').onclick = function(){ sendReport('JC Diagnose – '+(fzSummary(r.fz)||T('OBD-Auslesung','OBD-считывание')), obdReportText(r)); };
+    attBind(r); repDelBind(r);
+    $('#oSend').onclick = function(){ sendReport('JC Diagnose – '+(fzSummary(r.fz)||T('OBD-Auslesung','OBD-считывание')), obdReportText(r), r); };
     $('#oCopy').onclick = function(){ copyText(obdReportText(r)); };
     $('#oPrint').onclick = function(){ window.print(); };
     main.querySelectorAll('[data-ofz]').forEach(function(i){ i.onchange = function(){ r.fz = r.fz || {}; r.fz[i.dataset.ofz] = i.value.trim(); archivSave(); if (cloudArch) cloudArch.doc(r.id).set(JSON.parse(JSON.stringify(r))).catch(function(){}); }; });
@@ -954,7 +1019,7 @@ function vObd(){
     var sx = $('#shX'); if (sx) sx.onclick = shc; var sb = $('#shBg'); if (sb) sb.onclick = shc;
     var sd = $('#shDiag'); if (sd) sd.onclick = function(){ obd.sheet = false; diagStart(obdAllCodes(obd.dtcs), 'OBD'); };
     var so = $('#shOpen'); if (so) so.onclick = function(){ var id = obd.scanId; obd.sheet = false; go('bericht-'+id); };
-    var ss = $('#shSend'); if (ss) ss.onclick = function(){ var e = state.archiv.find(function(r){ return r.id === obd.scanId; }); if (e) sendReport('JC Diagnose – '+(fzSummary(e.fz)||T('OBD-Auslesung','OBD-считывание')), obdReportText(e)); };
+    var ss = $('#shSend'); if (ss) ss.onclick = function(){ var e = state.archiv.find(function(r){ return r.id === obd.scanId; }); if (e) sendReport('JC Diagnose – '+(fzSummary(e.fz)||T('OBD-Auslesung','OBD-считывание')), obdReportText(e), e); };
     var bl = $('#bLive'); if (bl) bl.onclick = function(){ obd.livePhase = 'select'; obd.liveOn = false; obd.sheet = false; go('obd-live'); };
     var bp = $('#bProbe'); if (bp) bp.onclick = function(){ obd.liveOn = false;
       obdRun(T('Adapter-Test …','Тест адаптера …'), async function(){
@@ -1146,7 +1211,7 @@ function diagArchive(){
   state.diag = null; diagSave();
   return copy.id;
 }
-function archDel(id){ state.archiv = state.archiv.filter(function(r){ return r.id!==id; }); archivSave(); if (cloudArch) cloudArch.doc(id).delete().catch(function(){}); }
+function archDel(id, keepFiles){ var old = state.archiv.find(function(r){ return r.id===id; }); if (old && !keepFiles) (old.files||[]).forEach(function(p){ PH.del(p); }); if (obd.scanId === id) obd.scanId = null; state.archiv = state.archiv.filter(function(r){ return r.id!==id; }); archivSave(); if (cloudArch) cloudArch.doc(id).delete().catch(function(){}); }
 function vBerichte(){
   var q = state.berQ || '', sort = state.berS || 'datum';
   var list = state.archiv.slice();
@@ -1176,9 +1241,9 @@ function vBerichte(){
   after(function(){
     var qi = $('#berQ'); qi.addEventListener('input', function(){ state.berQ = qi.value; clearTimeout(qi.t); qi.t = setTimeout(function(){ render(true); var n = $('#berQ'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); });
     $('#berS').onchange = function(){ state.berS = this.value; render(true); };
-    main.querySelectorAll('[data-osend]').forEach(function(b){ b.onclick = function(){ var e = state.archiv.find(function(x){ return x.id===b.dataset.osend; }); if (e) sendReport('JC Diagnose – '+(fzSummary(e.fz)||'OBD'), obdReportText(e)); }; });
+    main.querySelectorAll('[data-osend]').forEach(function(b){ b.onclick = function(){ var e = state.archiv.find(function(x){ return x.id===b.dataset.osend; }); if (e) sendReport('JC Diagnose – '+(fzSummary(e.fz)||'OBD'), obdReportText(e), e); }; });
     main.querySelectorAll('[data-adel]').forEach(function(b){ b.onclick = function(){ if (!b.dataset.sure){ b.dataset.sure = 1; b.textContent = T('Wirklich löschen?','Точно удалить?'); return; } archDel(b.dataset.adel); render(true); }; });
-    main.querySelectorAll('[data-reopen]').forEach(function(b){ b.onclick = function(){ if (state.diag){ toast(T('Erst die laufende Diagnose abschließen','Сначала заверши текущую диагностику')); return; } var r = state.archiv.find(function(x){ return x.id===b.dataset.reopen; }); if (!r) return; state.diag = JSON.parse(JSON.stringify(r)); delete state.diag.ended; archDel(r.id); diagSave(); go('diag'); }; });
+    main.querySelectorAll('[data-reopen]').forEach(function(b){ b.onclick = function(){ if (state.diag){ toast(T('Erst die laufende Diagnose abschließen','Сначала заверши текущую диагностику')); return; } var r = state.archiv.find(function(x){ return x.id===b.dataset.reopen; }); if (!r) return; state.diag = JSON.parse(JSON.stringify(r)); delete state.diag.ended; archDel(r.id, true); diagSave(); go('diag'); }; });
     main.querySelectorAll('[data-again]').forEach(function(b){ b.onclick = function(){ var r = state.archiv.find(function(x){ return x.id===b.dataset.again; }); if (!r) return; state.fzNext = JSON.parse(JSON.stringify(r.fz||{})); state.fzNext.km = ''; toast(T('Fahrzeugdaten übernommen – jetzt Fehler lesen oder Codes eingeben','Данные машины взяты — теперь прочитай ошибки или введи коды')); go('obd'); }; });
   });
   return h;
@@ -1190,7 +1255,7 @@ function vDiagReport(D0, archived){
   var loc = state.lang==='ru'?'ru-RU':'de-DE', tm = function(iso){ return iso ? new Date(iso).toLocaleDateString(loc, {day:'2-digit', month:'2-digit', year:'numeric'}) : ''; };
   var nDone = D0.codes.filter(function(c){return c.done;}).length;
   var h = '<div class="wrap rep">'+crumbs(['<a href="#diag">'+T('Diagnose','Диагностика')+'</a>', T('Bericht','Отчёт')])+
-    '<div class="detail-head"><h1>'+T('Diagnosebericht','Отчёт по диагностике')+'</h1><div class="actions"><button class="btn'+(state.repEdit?' primary':'')+'" id="rEdit">'+(state.repEdit?T('Auswahl fertig','Готово'):T('Schritte auswählen','Выбрать шаги'))+'</button><button class="btn" id="rCopy">'+T('Als Text kopieren','Копировать текстом')+'</button>'+(archived ? '<a class="btn primary" href="#berichte">← '+T('Alle Berichte','Все отчёты')+'</a>' : '<a class="btn primary" href="#diag">← '+T('Zur Diagnose','К диагностике')+'</a>')+'</div></div>' +
+    '<div class="detail-head"><h1>'+T('Diagnosebericht','Отчёт по диагностике')+'</h1><div class="actions"><button class="btn'+(state.repEdit?' primary':'')+'" id="rEdit">'+(state.repEdit?T('Auswahl fertig','Готово'):T('Schritte auswählen','Выбрать шаги'))+'</button><button class="btn primary" id="rSend">'+T('Senden','Отправить')+'</button><button class="btn" id="rCopy">'+T('Als Text kopieren','Копировать текстом')+'</button>'+(archived ? '<a class="btn primary" href="#berichte">← '+T('Alle Berichte','Все отчёты')+'</a>' : '<a class="btn primary" href="#diag">← '+T('Zur Diagnose','К диагностике')+'</a>')+'</div></div>' +
     fzHead(D0) + '<dl class="quick rep-head"><div><dt>'+T('Adapter','Адаптер')+'</dt><dd>'+esc(D0.car||T('manuelle Eingabe','ручной ввод'))+'</dd></div><div><dt>'+T('Datum','Дата')+'</dt><dd>'+esc(tm(D0.started))+'</dd></div><div><dt>'+T('Fehlercodes','Кодов ошибок')+'</dt><dd>'+D0.codes.length+' · '+nDone+' '+T('erledigt','закрыто')+'</dd></div></dl>';
   D0.codes.forEach(function(c, ci){
     var a = dtcAdvice(c.code), t = a && a.t, sv = t ? SEV[t.severity] : ['','','na'];
@@ -1212,8 +1277,10 @@ function vDiagReport(D0, archived){
     if (open.length && !c.done) h += '<details class="meta" style="margin-top:8px"><summary>'+T('Noch nicht geprüft: ','Ещё не проверено: ')+open.length+'</summary><ul>'+open.map(function(x){ return '<li>'+esc(diagStepTitle(x))+'</li>'; }).join('')+'</ul></details>';
     h += '</section><section class="rep-sec rep-res"><h3>'+T('Ergebnis','Результат')+'</h3><p>'+(cause?'<b>'+esc(cause)+'</b>':'<span class="muted">'+T('Ursache noch nicht festgelegt.','Причина пока не определена.')+'</span>')+'</p>'+(c.done&&c.doneAt?'<p class="meta">'+T('Abgeschlossen ','Закрыт ')+esc(tm(c.doneAt))+'</p>':'')+''+(archived ? '' : '<a class="btn small" href="#diag" data-goci="'+ci+'">'+T('Diesen Code in der Diagnose öffnen','Открыть код в диагностике')+'</a>')+'</section></article>';
   });
-  h += foot() + '</div>';
+  h += attHtml(D0) + repDelHtml() + foot() + '</div>';
   after(function(){
+    attBind(D0); repDelBind(D0);
+    $('#rSend').onclick = function(){ sendReport('JC Diagnose – '+(fzSummary(D0.fz)||T('Diagnosebericht','Отчёт по диагностике')), diagReport(D0), D0); };
     D0.codes.forEach(function(c){ c.steps.forEach(function(x){ x.mess.forEach(function(id){ var m = state.mess.find(function(q){return q.id===id;}); if (m && m.photos) fillThumbs(main, m.photos); }); }); });
     $('#rEdit').onclick = function(){ state.repEdit = !state.repEdit; render(true); };
     main.querySelectorAll('[data-rci]').forEach(function(cb){ cb.onchange = function(){ if (!D0.sel){ D0.codes.forEach(function(cc){ cc.steps.forEach(function(ss){ ss.rep = stepHas(ss); }); }); D0.sel = true; } D0.codes[+cb.dataset.rci].steps[+cb.dataset.rsi].rep = cb.checked; diagSaveAny(D0); cb.closest('li').classList.toggle('tl-off', !cb.checked); }; });
@@ -1238,6 +1305,8 @@ function diagReport(D0){
       s.mess.forEach(function(id){ var m = state.mess.find(function(q){return q.id===id;}); if (m) L0.push('       '+(m.punkt||T('Messung','Замер'))+': '+T('Ist ','факт ')+fmtN(m.ist)+' '+(m.einheit||'')+' / '+T('Soll ','норма ')+fmtN(m.lo)+'…'+fmtN(m.hi)+' → '+judge(m).t+((m.photos||[]).length?' ('+m.photos.length+' '+T('Fotos','фото')+')':'')); }); });
     if (!any) L0.push('   –');
     L0.push('  '+T('Ergebnis: ','Результат: ')+(c.cause||T('Ursache noch offen','причина не определена'))); L0.push(''); });
+  if (D0.note) L0.push(T('Notiz: ','Заметка: ')+D0.note);
+  if (D0.files && D0.files.length) L0.push(T('Anhänge: ','Вложений: ')+D0.files.length);
   return L0.join('\n');
 }
 
@@ -1617,6 +1686,40 @@ function render(keepScroll){
 }
 window.JCDBG = {obd:obd, state:state, archivSave:archivSave, render:render};
 window.addEventListener('hashchange', function(){ state.repEdit = false; render(); });
+
+/* ---------- Zurück-Taste: vorheriges Fenster, zum Beenden zweimal drücken ---------- */
+(function(){
+  var exitAt = 0, isApp = false, CP = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+  function closeTop(){
+    var lb = document.querySelector('.lb'); if (lb){ lb.remove(); return true; }
+    var sx = document.getElementById('shX'); if (sx){ sx.click(); return true; }
+    var sk = document.getElementById('skinMenu'); if (sk){ sk.remove(); return true; }
+    if (side.classList.contains('open')){ closeNav(); return true; }
+    return false;
+  }
+  function warn(){ exitAt = Date.now(); toast(T('Zum Beenden nochmal „Zurück“ drücken','Нажми «Назад» ещё раз, чтобы закрыть приложение')); }
+  window.JCBack = function(canGoBack){
+    if (closeTop()) return 'closed';
+    if (canGoBack) { history.back(); return 'back'; }
+    if (Date.now() - exitAt < 2500) return 'exit';
+    warn(); return 'warn';
+  };
+  if (CP && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()){
+    isApp = true;
+    CP.addListener('backButton', function(ev){ var a = window.JCBack(ev && ev.canGoBack); if (a === 'exit') CP.exitApp(); });
+  } else if ((window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone){
+    /* installierte Web-App (PWA): Wächter-Eintrag, damit „Zurück“ an der Startseite nicht sofort schließt */
+    try {
+      history.replaceState({jc:'base'}, ''); history.pushState({jc:'guard'}, '');
+      window.addEventListener('popstate', function(e){
+        if (!e.state || e.state.jc !== 'base') return;
+        if (closeTop()){ history.pushState({jc:'guard'}, ''); return; }
+        if (Date.now() - exitAt < 2500){ history.back(); return; }
+        warn(); history.pushState({jc:'guard'}, '');
+      });
+    } catch(err){}
+  }
+})();
 
 /* ---------- Kopfzeile ---------- */
 var sIn = $('#search'), sT;
