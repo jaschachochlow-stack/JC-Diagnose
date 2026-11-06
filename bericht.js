@@ -139,7 +139,7 @@
   function loadScript(src){ return new Promise(function(res, rej){ var s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = function(){ rej(new Error('Skript nicht geladen: '+src)); }; document.head.appendChild(s); }); }
   function loadPdfJs(){
     if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
-    if (!pdfReady) pdfReady = loadScript('pdf.min.js?v=0103').then(function(){ window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.min.js?v=0103'; return window.pdfjsLib; });
+    if (!pdfReady) pdfReady = loadScript('pdf.min.js?v=0104').then(function(){ window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.min.js?v=0104'; return window.pdfjsLib; });
     return pdfReady;
   }
   function groupLines(items, tol){
@@ -301,7 +301,7 @@
   var tessReady = null;
   function loadTess(){
     if (window.Tesseract) return Promise.resolve();
-    if (!tessReady) tessReady = loadScript('ocr/tesseract.min.js?v=0103');
+    if (!tessReady) tessReady = loadScript('ocr/tesseract.min.js?v=0104');
     return tessReady;
   }
   /* sources: Array aus Blob oder Canvas; lang z. B. 'deu+eng' */

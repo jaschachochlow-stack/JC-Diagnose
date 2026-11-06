@@ -180,12 +180,13 @@ async function supported(io, log){
   return out.filter(function(p){ return p % 0x20 !== 0; });
 }
 async function read(io, pids, onEach){
-  var out = [], diag = [];
+  var out = [], diag = [], woke = false;
   for (var i=0;i<pids.length;i++){
     var raw = null, b = null;
     for (var t=0;t<2 && !b;t++){   // einmal wiederholen (BLE-Adapter verlieren gern die erste Antwort)
       try { raw = await io.send('01'+hex(pids[i]), 4000); } catch(e){ raw = 'FEHLER: '+(e && e.message || e); if (!io || (io.closed)) throw e; }
       b = parse(raw, pids[i]);
+      if (!b && !woke && /NO DATA/i.test(String(raw))){ woke = true; try { await io.send('0100', 8000); } catch(e){} }   // Steuergerät wecken, dann nochmal
     }
     if (!b){ if (diag.length < 4) diag.push(hex(pids[i])+' → '+String(raw == null ? '–' : raw).replace(/\s+/g,' ').trim().slice(0,48)); continue; }
     var r = decode(pids[i], b);

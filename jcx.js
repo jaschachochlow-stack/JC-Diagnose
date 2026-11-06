@@ -2222,6 +2222,8 @@ var JCX = (() => {
     await io.send("ATS0");
     await io.send("ATH0");
     await io.send("ATCAF1");
+    await io.send("ATAT1");
+    await io.send("ATSTFF");
     if (protocol.kind === "stn" && protocol.stn) {
       const answer = await io.send("STP " + protocol.stn);
       if (answer.trim() === "?" || /^\?/.test(answer.trim())) {
