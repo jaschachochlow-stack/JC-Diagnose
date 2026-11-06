@@ -23,3 +23,11 @@ Berichte anderer Diagnosegeräte (Launch X431 getestet; Autel, Bosch, Foxwell u.
 
 ## Foto-/Scan-Erkennung (0.11.1)
 Fotos (Kamera oder Galerie), Screenshots und eingescannte PDFs werden offline per Tesseract (WebAssembly, Sprachen deu/eng/rus, Ordner `ocr/`, ca. 15 MB) gelesen. Schräg fotografierte Berichte werden über die erkannten Zeilen geradegerechnet. Die Erkennung ist auf Bildern naturgemäß unsicherer als bei PDF mit Textebene: Codes, Zustand und Beschreibung immer mit dem Bild vergleichen (typische Verwechslungen 0/O, 1/I, 8/B, 5/S werden in Codes automatisch korrigiert). Windows-App lädt die Oberfläche jetzt über ein eigenes `app://`-Schema, damit Web-Worker und WebAssembly zuverlässig laufen. Android: Kamera-Berechtigung für die Fotoaufnahme.
+
+## OBD-Berichte, Ergebnisfenster, Live-Fenster (0.11.9)
+- Jede OBD-Auslesung wird automatisch als Bericht im Archiv gespeichert: Fahrzeug, VIN, Kilometerstand, Adapter, Protokoll, Fehler (auch „keine Fehler“), gelöschter Fehlerspeicher und zuletzt gelesene Live-Werte. Fahrzeug- und Kundendaten sind im Bericht nachträglich editierbar.
+- Bericht senden: Teilen-Dialog des Geräts (Mail, Messenger …), sonst E-Mail-Entwurf; außerdem Text kopieren und Drucken/PDF.
+- Nach „Fehler lesen“ erscheint das Ergebnis sofort als Fenster von unten (Codes kompakt, Buttons: Geführte Diagnose, Bericht senden, Bericht öffnen).
+- „Live-Daten“ öffnet ein eigenes Fenster: erst Werte wählen, dann Anzeige mit Umschalter Zahlen/Diagramme.
+- Beschriftungen automatisch auf Überlauf geprüft (DE/RU, 360–1280 px).
+
