@@ -31,6 +31,7 @@ jobs:
             echo "$KS_B64" | base64 -d > android/release.jks
             echo "KS_PASS=$KS_PASS_SECRET" >> "$GITHUB_ENV"
           else
+            echo "::warning::Kein KEYSTORE_B64 Secret - APK nicht als Update installierbar"
             P=$(openssl rand -hex 16); echo "::add-mask::$P"
             keytool -genkeypair -keystore android/release.jks -alias jc -keyalg RSA -keysize 2048 -validity 12000 -storepass "$P" -keypass "$P" -dname "CN=JC Diagnose, C=DE"
             echo "KS_PASS=$P" >> "$GITHUB_ENV"
@@ -50,6 +51,6 @@ jobs:
           make_latest: true
           body: |
             Android-App mit Bluetooth LE, klassischem Bluetooth (SPP) und WLAN für ELM327-Adapter. Läuft ohne Chrome.
-            Installation: JC-Diagnose.apk herunterladen, öffnen, „Unbekannte Apps installieren“ erlauben. Eine ältere Version vorher deinstallieren.
+            Installation: JC-Diagnose.apk herunterladen, öffnen, „Unbekannte Apps installieren“ erlauben. Ab dieser Version mit festem Schlüssel signiert: Updates lassen sich direkt über die installierte App installieren (die erste Umstellung erfordert einmal Deinstallieren).
             Build ${{ github.run_number }}
           files: JC-Diagnose.apk
