@@ -2,7 +2,7 @@ name: APK bauen
 on:
   push:
     branches: [main]
-    paths: ['android/**', 'index.html', 'app.js', 'app.css', 'data.js', 'jcx.js', 'oszi.js', 'pids.js', 'package.json', 'capacitor.config.json', '.github/workflows/apk.yml']
+    paths: ['android/**', 'index.html', 'app.js', 'app.css', 'data.js', 'jcx.js', 'oszi.js', 'pids.js', 'bericht.js', 'pdf.min.js', 'pdf.worker.min.js', 'package.json', 'capacitor.config.json', '.github/workflows/apk.yml']
   workflow_dispatch:
 permissions:
   contents: write
@@ -19,7 +19,7 @@ jobs:
         run: |
           npm ci
           mkdir -p www
-          cp index.html app.js app.css data.js jcx.js oszi.js pids.js sw.js manifest.json icon-192.png icon-512.png www/
+          cp index.html app.js app.css data.js jcx.js oszi.js pids.js bericht.js pdf.min.js pdf.worker.min.js sw.js manifest.json icon-192.png icon-512.png www/
           npx cap sync android
       - name: Signaturschlüssel
         env:

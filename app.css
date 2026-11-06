@@ -575,3 +575,7 @@ html[data-skin=field] .dg-res .btn{height:auto;min-height:84px}
 .pick-box h2{margin:0;font-size:var(--text-lg)}
 .pick-list{display:flex;flex-direction:column;gap:var(--space-2);overflow:auto}
 .pick-list .btn{justify-content:flex-start;text-align:left}
+.imp-row{display:block;cursor:pointer}
+.imp-row input[type=checkbox]{width:20px;height:20px;vertical-align:middle;margin-right:6px}
+dl.quick dd,.imp-row p{overflow-wrap:anywhere}
+dl.quick dd.mono{font-size:var(--text-sm)}

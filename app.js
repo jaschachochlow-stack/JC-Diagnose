@@ -228,6 +228,7 @@ function renderSide(r){
     link('diag', T('Geführte Diagnose','Пошаговая диагностика'), state.diag ? state.diag.codes.filter(function(x){return !x.done;}).length : '') +
     link('berichte', T('Berichte (Archiv)','Отчёты (архив)'), state.archiv.length || '') +
     link('dtc', T('Fehlercodes','Коды ошибок'), '') +
+    link('import', T('Bericht importieren','Импорт отчёта'), '') +
     link('oszi', T('Oszillogramme','Осциллограммы'), Object.keys(OSZ.waves).length) +
     link('systemtests', T('Systemtests','Системные тесты'), X.systemtests.rows.length) +
     link('tab-overview', T('Tabellen','Таблицы'), '') +
@@ -252,16 +253,16 @@ function card(it){
 }
 function hvCallout(){ return '<div class="callout hv"><b>'+T('Hochvolt','Высокое напряжение')+'</b><p>'+T('Arbeiten an HV-Systemen nur mit Qualifikation nach DGUV Information 209-093. Spannungsfreiheit mit zweipoligem Spannungsprüfer feststellen. Messgeräte mindestens CAT III 1000 V.','Работы с ВВ-системами только при наличии допуска по DGUV Information 209-093. Отсутствие напряжения проверять двухполюсным указателем. Приборы не ниже CAT III 1000 В.')+'</p></div>'; }
 function deNote(){ return state.lang==='ru' ? '<p class="note">Текст главы пока на немецком. Перевод — следующий этап.</p>' : ''; }
-function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.10.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
+function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.11.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
 function crumbs(parts){ return '<p class="eyebrow"><a href="#start">'+T('Start','Главная')+'</a>'+parts.map(function(p){ return ' / '+p; }).join('')+'</p>'; }
 
 /* ---------- Start ---------- */
 var PANNE = ['k102','k103','k29','k28','k109','k119','k111','k110','k45'];
 function vHome(){
   var m = D.meta, v = m.verify;
-  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.10.0 · Stand','Версия 0.8.2 · состояние')+' '+esc(m.stand)+'</p>' +
+  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.11.0 · Stand','Версия 0.8.2 · состояние')+' '+esc(m.stand)+'</p>' +
     '<h1>JC Diagnose</h1><p class="lead">'+T('Sollwerte, Pinbelegung, Multimeter- und Oszilloskop-Prüfschritte für Sensoren, Aktoren, Bordnetz, Bussysteme und Hochvolt – plus Systemtests und dein eigenes Soll/Ist-Messprotokoll.','Нормы, распиновка, проверки мультиметром и осциллографом для датчиков, исполнительных механизмов, бортсети, шин и ВВ — плюс системные тесты и твой собственный журнал замеров «норма/факт».')+'</p>' +
-    '<div class="chips"><a class="chip" href="#mess-neu">+ '+T('Neue Messung','Новый замер')+'</a><a class="chip" href="#obd">'+T('Fahrzeug verbinden','Подключить машину')+'</a><a class="chip" href="#dtc">'+T('Fehlercode prüfen','Проверить код ошибки')+'</a><a class="chip" href="#oszi">'+T('Oszillogramme','Осциллограммы')+'</a><a class="chip" href="#tab-oszi">'+T('Oszi-Startwerte','Настройки осциллографа')+'</a><a class="chip" href="#systemtests">'+T('Systemtests','Системные тесты')+'</a><a class="chip" href="#rechner">'+T('Rechner','Калькуляторы')+'</a><a class="chip" href="#tab-fehler">'+T('Fehlerbilder','Неисправности')+'</a></div></div>' +
+    '<div class="chips"><a class="chip" href="#mess-neu">+ '+T('Neue Messung','Новый замер')+'</a><a class="chip" href="#obd">'+T('Fahrzeug verbinden','Подключить машину')+'</a><a class="chip" href="#dtc">'+T('Fehlercode prüfen','Проверить код ошибки')+'</a><a class="chip" href="#import">'+T('Bericht importieren','Импорт отчёта')+'</a><a class="chip" href="#oszi">'+T('Oszillogramme','Осциллограммы')+'</a><a class="chip" href="#tab-oszi">'+T('Oszi-Startwerte','Настройки осциллографа')+'</a><a class="chip" href="#systemtests">'+T('Systemtests','Системные тесты')+'</a><a class="chip" href="#rechner">'+T('Rechner','Калькуляторы')+'</a><a class="chip" href="#tab-fehler">'+T('Fehlerbilder','Неисправности')+'</a></div></div>' +
     '<div class="stats"><div class="stat"><b>'+m.n_items+'</b><span>'+T('Kapitel','глав')+'</span></div><div class="stat"><b>'+X.systemtests.rows.length+'</b><span>'+T('Systemtests','системных тестов')+'</span></div><div class="stat"><b>'+state.mess.length+'</b><span>'+T('eigene Messungen','своих замеров')+'</span></div></div></section>';
   h += '<div class="callout"><b>'+T('Hinweis','Важно')+'</b><p>'+T('Alle Werte sind typische Richtwerte. Verbindlich sind Sollwerte und Schaltpläne des Fahrzeugherstellers (HaynesPro, Carmin). Pinbelegungen sind typische Beispiele.','Все значения — типовые ориентиры. Обязательны нормы и схемы производителя (HaynesPro, Carmin). Распиновки — типовые примеры.')+'</p></div>';
   h += '<h2>'+T('Pannenhilfe: schnell zur Hand','Выезд: быстрый доступ')+'</h2><div class="item-list">'+PANNE.map(function(id){ return byId[id] ? card(byId[id]) : ''; }).join('')+'</div>';
@@ -791,6 +792,7 @@ function vObd(){
   if (!obd.io){
     h += '<fieldset class="fs"><legend>'+T('Protokoll','Протокол')+'</legend><div class="form-grid"><div class="field wide"><label for="obdProto">'+T('Protokoll (Automatisch passt fast immer)','Протокол («автоматически» подходит почти всегда)')+'</label><select id="obdProto">'+(ok?JCX.protocolGroups().map(function(g){ return '<optgroup label="'+esc(g.group)+'">'+g.items.map(function(p){ return '<option value="'+p.id+'"'+(p.id===obd.proto?' selected':'')+'>'+esc(p.label)+'</option>'; }).join('')+'</optgroup>'; }).join(''):'')+'</select></div></div><p class="meta" id="protoDetail">'+(ok?esc(JCX.protocolById(obd.proto).detail):'')+'</p></fieldset>' +
       '<div class="cat-grid">' +
+      '<a class="cat-card" href="#import"><div class="top"><b>'+T('Bericht importieren','Импорт отчёта')+'</b></div><p>'+T('PDF oder Text eines anderen Diagnosegeräts (Launch, Autel …) einlesen und prüfen.','PDF или текст отчёта другого прибора (Launch, Autel …): разобрать и проверить.')+'</p></a>' +
       '<button class="cat-card conn" data-conn="demo"><div class="top"><b>'+T('Demo-Fahrzeug','Демо-автомобиль')+'</b></div><p>'+T('Ohne Adapter testen: Codes P0118, P0301 … und Live-Daten.','Проверка без адаптера: коды P0118, P0301 … и живые данные.')+'</p></button>' +
       '<button class="cat-card conn" data-conn="ble"'+(bleWhy?' disabled':'')+'><div class="top"><b>Bluetooth LE</b></div><p>'+(bleWhy?esc(bleWhy):T('Vgate iCar Pro BLE, OBDLink CX, Veepeak BLE, Carista, Konnwei u. a.','Vgate iCar Pro BLE, OBDLink CX, Veepeak BLE, Carista, Konnwei и др.'))+'</p>'+((bleWhy||c.ble)?'':'<span class="meta"><a href="#obd" data-conn="bleall">'+T('Adapter nicht gefunden? Alle Geräte zeigen','Адаптер не найден? Показать все устройства')+'</a></span>')+'</button>' +
       '<button class="cat-card conn" data-conn="spp"'+(sppWhy?' disabled':'')+'><div class="top"><b>'+T('Bluetooth klassisch (SPP)','Bluetooth классический (SPP)')+'</b></div><p>'+(sppWhy?esc(sppWhy):T('Gekoppelter ELM327 (die meisten günstigen Adapter, Name „OBDII“, „ELM327“). Vorher in den Android-Einstellungen koppeln, PIN 1234 oder 0000.','Сопряжённый ELM327 (большинство дешёвых адаптеров, имя «OBDII», «ELM327»). Заранее сопрягай в настройках Android, PIN 1234 или 0000.'))+'</p></button>' +
@@ -839,9 +841,14 @@ function archivSave(){ lset('jc-archiv', state.archiv); }
 var cloudArch = null;
 function diagSave(){ lset('jc-diag', state.diag); }
 var SEVR = {hoch:0, mittel:1, niedrig:2};
-function diagRank(c){ var a = dtcAdvice(c.code); var first = /^U0/.test(c.code) || /^P056[0-3]$/.test(c.code) ? 0 : 1; var sv = a && a.t ? SEVR[a.t.severity] : 3; var st = {stored:0, permanent:1, pending:2, uds:3, manual:0}[c.set]; return [first, sv==null?3:sv, st==null?4:st]; }
-function diagBuild(code, set){
+function diagRank(c){ var a = dtcAdvice(c.code); var first = /^U0/.test(c.code) || /^P056[0-3]$/.test(c.code) || c.code==="P00FD" ? 0 : 1; var sv = a && a.t ? SEVR[a.t.severity] : 3; var st = {active:0, stored:0, permanent:1, pending:2, uds:3, manual:0}[c.set]; return [first, sv==null?3:sv, st==null?4:st]; }
+function diagBuild(code, set, ex){
   var a = dtcAdvice(code), steps = [];
+  if (ex && (ex.desc || ex.ftb)){
+    var fi = ex.ftb && window.JCREP ? JCREP.ftbInfo(ex.ftb) : null;
+    steps.push({k:'check', t:T('Laut Bericht: ','Согласно отчёту: ')+(ex.desc||code)+(fi ? ' · '+T('Fehlerart ','Тип ошибки ')+ex.ftb+': '+T(fi.de,fi.ru) : '')+(ex.set ? ' · '+diagSetLabel(ex.set) : '')});
+    if (fi && fi.hint) steps.push({k:'check', t:T(fi.hint.de, fi.hint.ru)});
+  }
   if (a && a.t){
     a.t.steps.forEach(function(x){ steps.push({k:'check', t:x}); });
     a.t.chapters.forEach(function(c){ if (byId[c.id]) steps.push({k:'comp', ch:c.id, why:c.why, kind:c.kind}); });
@@ -852,20 +859,20 @@ function diagBuild(code, set){
   }
   steps.push({k:'end'});
   steps.forEach(function(x){ x.st = ''; x.note = ''; x.mess = []; });
-  return {code:code, set:set||'manual', steps:steps, si:0, done:false, cause:''};
+  return {code:code, set:set||'manual', steps:steps, si:0, done:false, cause:'', desc:(ex&&ex.desc)||'', ftb:(ex&&ex.ftb)||'', modul:(ex&&ex.module)||''};
 }
-function diagStart(list, src){
+function diagStart(list, src, opts){
   var seen = {}, codes = [];
-  list.forEach(function(x){ if (!seen[x.code]) { seen[x.code] = 1; codes.push(diagBuild(x.code, x.set)); } });
+  list.forEach(function(x){ if (!seen[x.code]) { seen[x.code] = 1; codes.push(diagBuild(x.code, x.set, x)); } });
   codes.sort(function(a,b){ var ra = diagRank(a), rb = diagRank(b); for (var i=0;i<3;i++) if (ra[i]!==rb[i]) return ra[i]-rb[i]; return a.code.localeCompare(b.code); });
-  state.diag = {id:newId(), started:new Date().toISOString(), src:src, car:(obd && obd.io ? obd.name+(obd.info?' · '+obd.info.name:'') : ''), codes:codes, ci:0, sel:true, fz:vehToFz(src==='OBD' && obd.veh ? obd.veh : null, state.fzNext || {kz:'', marke:'', modell:'', vin:'', km:'', kunde:'', tel:''})};
+  state.diag = {id:newId(), started:new Date().toISOString(), src:src, car:(opts && opts.car ? opts.car : (obd && obd.io ? obd.name+(obd.info?' · '+obd.info.name:'') : '')), codes:codes, ci:0, sel:true, fz:vehToFz(src==='OBD' && obd.veh ? obd.veh : null, state.fzNext || {kz:'', marke:'', modell:'', vin:'', km:'', kunde:'', tel:''})};
   state.fzNext = null;
   diagSave(); go('diag');
 }
 function stepHas(x){ return !!(x.st || x.note || (x.mess && x.mess.length)); }
 function inRep(D0, x){ if (x.k==='end') return false; return D0.sel ? !!x.rep : stepHas(x); }
 function diagSaveAny(D0){ if (state.diag && D0.id===state.diag.id) { diagSave(); return; } archivSave(); if (cloudArch) cloudArch.doc(D0.id).set(JSON.parse(JSON.stringify(D0))).catch(function(){}); }
-function diagSetLabel(set){ return {stored:T('gespeichert','сохранённый'), pending:T('anstehend','ожидающий'), permanent:T('permanent','постоянный'), uds:'UDS', manual:T('manuell','вручную')}[set] || set; }
+function diagSetLabel(set){ return {active:T('aktiv','активный'), stored:T('gespeichert','сохранённый'), pending:T('anstehend','ожидающий'), permanent:T('permanent','постоянный'), uds:'UDS', manual:T('manuell','вручную')}[set] || set; }
 function diagExtra(x, it){
   var h = '<aside class="dg-extra">';
   if (obd && obd.io) {
@@ -904,7 +911,7 @@ function vDiag(){
   if (D0.codes.length>1) h += '<p class="note">'+T('Reihenfolge: Spannungs- und Kommunikationsfehler zuerst (lösen oft Folgefehler aus), danach nach Priorität. Jeder Code ist jederzeit anwählbar.','Порядок: сначала ошибки питания и связи (часто вызывают другие ошибки), затем по приоритету. Любой код можно выбрать в любой момент.')+'</p>';
   var sh = diagShared(ci); if (sh.length) h += '<p class="note">'+T('Gemeinsame Bauteile mit ','Общие компоненты с ')+sh.join(', ')+T(' – mögliche gemeinsame Ursache.',' — возможна общая причина.')+'</p>';
   // Code-Kopf
-  h += '<div class="dg-grid"><aside class="dg-side"><div class="mess"><b class="mono" style="font-size:var(--text-lg)">'+esc(c.code)+'</b>'+(a&&a.t?'<b>'+esc(a.t.title)+'</b><span class="meta">'+esc(a.t.system)+' · '+T('Priorität ','Приоритет: ')+esc(T(SEV[a.t.severity][0],SEV[a.t.severity][1]))+'</span>'+(a.mirror?'<span class="meta">'+T('Herstellercode, Orientierung an ','Код производителя, ориентир ')+esc(a.mirror)+'</span>':''):'<span class="meta">'+T('Kein genormter Eintrag','Нет стандартной записи')+'</span>')+'</div>' +
+  h += '<div class="dg-grid"><aside class="dg-side"><div class="mess"><b class="mono" style="font-size:var(--text-lg)">'+esc(c.code)+'</b>'+(c.ftb?'<span class="meta mono">'+T('Fehlerart ','Тип ошибки ')+esc(c.ftb)+'</span>':'')+(c.desc?'<span class="meta">'+T('Bericht: ','Отчёт: ')+esc(c.desc)+'</span>':'')+(a&&a.t?'<b>'+esc(a.t.title)+'</b><span class="meta">'+esc(a.t.system)+' · '+T('Priorität ','Приоритет: ')+esc(T(SEV[a.t.severity][0],SEV[a.t.severity][1]))+'</span>'+(a.mirror?'<span class="meta">'+T('Herstellercode, Orientierung an ','Код производителя, ориентир ')+esc(a.mirror)+'</span>':''):'<span class="meta">'+T('Kein genormter Eintrag','Нет стандартной записи')+'</span>')+'</div>' +
     '<p class="meta dg-hint">'+T('☑ = kommt in den Bericht','☑ = попадёт в отчёт')+'</p><ol class="dg-steps">'+c.steps.map(function(s,i){ return '<li class="dg-li">'+(s.k!=='end'?'<input type="checkbox" class="dg-rep" data-rep="'+i+'"'+(inRep(D0,s)?' checked':'')+' aria-label="'+T('In Bericht übernehmen','В отчёт')+'" title="'+T('In Bericht übernehmen','В отчёт')+'">':'<span class="dg-rep-sp"></span>')+'<button class="dg-step'+(i===c.si?' on':'')+' s-'+(s.st||'none')+'" data-si="'+i+'"><span class="dot"></span>'+(s.own?'<span class="badge">'+T('eigen','свой')+'</span> ':'')+esc(diagStepTitle(s,i))+'</button></li>'; }).join('')+'</ol>' +
     '<form id="ownForm" class="own-step"><input id="ownIn" placeholder="'+T('Eigener Prüfschritt, z. B. Stecker G28 gereinigt','Свой шаг, напр. зачистил разъём G28')+'"><button class="btn small" type="submit">+ '+T('Eigener Schritt','Свой шаг')+'</button></form></aside><section class="dg-main">';
   h += '<p class="eyebrow">'+T('Schritt ','Шаг ')+(c.si+1)+' / '+c.steps.length+'</p>';
@@ -1091,6 +1098,82 @@ function diagReport(D0){
     if (!any) L0.push('   –');
     L0.push('  '+T('Ergebnis: ','Результат: ')+(c.cause||T('Ursache noch offen','причина не определена'))); L0.push(''); });
   return L0.join('\n');
+}
+
+
+/* ---------- Bericht importieren (andere Diagnosegeräte) ---------- */
+var imp = {res:null, items:[], sel:{}, busy:'', err:'', file:''};
+var IMP_ST = {active:['aktiv','активный','hi'], pending:['anstehend','ожидающий','na'], permanent:['permanent','постоянный','hi'], stored:['gespeichert','сохранённый','ok']};
+function impDone(res, name){
+  imp.busy = ''; imp.file = name || '';
+  if (!res || !res.codes || !res.codes.length){ imp.res = null; imp.items = []; imp.err = T('Keine Fehlercodes gefunden. Ist es ein Bericht mit Codes wie P0301, C0035, B1234, U0100? Bei Fotos oder gescannten PDFs den Text hier einfügen.','Коды ошибок не найдены. Это отчёт с кодами вроде P0301, C0035, B1234, U0100? Для фото и сканов вставь текст вручную.'); render(true); return; }
+  var rank = {active:0, pending:1, permanent:2, stored:3};
+  imp.res = res; imp.err = '';
+  imp.items = res.codes.map(function(c,i){ c.i = i; return c; }).sort(function(a,b){ return (rank[a.status]-rank[b.status]) || (a.i-b.i); });
+  imp.sel = {}; imp.items.forEach(function(c){ imp.sel[c.code] = true; });
+  render(true);
+}
+function impFail(e){ imp.busy = ''; imp.err = (e && e.message) || String(e); render(true); }
+function impLoad(file){
+  if (!file || !window.JCREP) return;
+  imp.busy = T('Lese Bericht …','Читаю отчёт …'); imp.err = ''; render(true);
+  var rd = new FileReader(), name = file.name || '';
+  if (/\.pdf$/i.test(name) || file.type === 'application/pdf'){
+    rd.onload = function(){ JCREP.fromPdf(rd.result).then(function(r){ impDone(r, name); }, impFail); };
+    rd.onerror = function(){ impFail(new Error(T('Datei nicht lesbar.','Файл не читается.'))); };
+    rd.readAsArrayBuffer(file);
+  } else if (/^image\//.test(file.type) || /\.(jpe?g|png|webp|heic)$/i.test(name)){
+    impFail(new Error(T('Fotos kann die App noch nicht lesen. Bitte den PDF-Bericht des Geräts nehmen oder den Text hier einfügen.','Фото приложение пока не читает. Возьми PDF-отчёт прибора или вставь текст.')));
+  } else {
+    rd.onload = function(){
+      var t = String(rd.result||'');
+      if (/\.html?$/i.test(name) || /<html|<table/i.test(t.slice(0,600))) t = t.replace(/<(script|style)[\s\S]*?<\/\1>/gi,' ').replace(/<br\s*\/?>|<\/(p|div|tr|li|h\d)>/gi,'\n').replace(/<\/t[dh]>/gi,'  ').replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&');
+      impDone(JCREP.parseText(t), name);
+    };
+    rd.onerror = function(){ impFail(new Error(T('Datei nicht lesbar.','Файл не читается.'))); };
+    rd.readAsText(file);
+  }
+}
+function impFz(fz){
+  fz = fz || {};
+  return {kz:fz.kz||'', marke:fz.marke||'', modell:[fz.modell, fz.jahr ? '('+fz.jahr+')' : ''].filter(Boolean).join(' '), vin:fz.vin||'', km:fz.km||'', kunde:'', tel:''};
+}
+function vImport(){
+  var ok = !!window.JCREP;
+  var h = '<div class="wrap">'+crumbs([T('Bericht importieren','Импорт отчёта')])+'<h1>'+T('Bericht importieren','Импорт отчёта')+'</h1><p class="lead">'+T('Bericht eines anderen Diagnosegeräts (Launch, Autel, Bosch, Foxwell, Thinkdiag …) einlesen: Fahrzeug, Fehlercodes und Zustand werden übernommen, dazu gibt es die Prüfreihenfolge und die geführte Diagnose.','Загрузи отчёт другого диагностического прибора (Launch, Autel, Bosch, Foxwell, Thinkdiag …): машина, коды ошибок и их состояние подтянутся, плюс порядок проверки и пошаговая диагностика.')+'</p>';
+  h += '<fieldset class="fs"><legend>'+T('Bericht laden','Загрузить отчёт')+'</legend><div class="form-grid"><div class="field wide"><label for="impFile">'+T('Datei (PDF, TXT, CSV, HTML)','Файл (PDF, TXT, CSV, HTML)')+'</label><input id="impFile" type="file" accept=".pdf,.txt,.csv,.htm,.html,.log,.json,.xml,application/pdf,text/*"></div>' +
+    '<div class="field wide"><label for="impTxt">'+T('… oder Text des Berichts einfügen','… или вставь текст отчёта')+'</label><textarea id="impTxt" rows="4" placeholder="P0301 Zylinder 1 Fehlzündung aktiv&#10;U0100 ..."></textarea></div></div>' +
+    '<div class="btn-row"><button class="btn primary" id="impGo"'+(ok?'':' disabled')+'>'+T('Text auswerten','Разобрать текст')+'</button></div></fieldset>';
+  if (imp.busy) h += '<p class="note">'+esc(imp.busy)+'</p>';
+  if (imp.err) h += '<div class="callout hv"><b>'+T('Fehler','Ошибка')+'</b><p>'+esc(imp.err)+'</p></div>';
+  if (imp.res){
+    var r = imp.res, fz = r.fz || {}, n = imp.items.filter(function(c){ return imp.sel[c.code]; }).length;
+    var rows = [[T('Marke','Марка'),fz.marke],[T('Modell','Модель'),fz.modell],[T('Modelljahr','Модельный год'),fz.jahr],['VIN',fz.vin],[T('Motor','Двигатель'),fz.motor],[T('Kilometerstand','Пробег'),fz.km],[T('Prüfzeit','Время проверки'),fz.datum],[T('Software','ПО'),fz.sw],[T('Steuergerät','Блок'),(imp.items[0]||{}).module],[T('Gerät','Прибор'),fz.geraet]].filter(function(x){ return x[1]; });
+    h += '<h2>'+T('Fahrzeug laut Bericht','Автомобиль по отчёту')+'</h2><div class="mess"><dl class="quick">'+rows.map(function(x){ return '<div><dt>'+esc(x[0])+'</dt><dd'+(x[0]==='VIN'?' class="mono"':'')+'>'+esc(x[1])+'</dd></div>'; }).join('')+'</dl>'+(imp.file?'<p class="meta">'+esc(imp.file)+'</p>':'')+'</div>';
+    var ins = JCREP.insights(imp.items);
+    if (ins.length) h += '<h2>'+T('Gesamtbild: was zuerst','Общая картина: что сначала')+'</h2>' + ins.map(function(x){ return '<div class="callout"><b>'+esc(T(x.t[0],x.t[1]))+'</b><p>'+esc(T(x.de,x.ru))+'</p></div>'; }).join('');
+    var act = imp.items.filter(function(c){ return c.status==='active'; }).length;
+    h += '<h2>'+T('Fehlercodes','Коды ошибок')+' ('+imp.items.length+(act?' · '+act+' '+T('aktiv','активных'):'')+')</h2><div class="mess-list">' + imp.items.map(function(c,i){
+      var a = dtcAdvice(c.code), st = IMP_ST[c.status] || IMP_ST.stored, fi = c.ftb ? JCREP.ftbInfo(c.ftb) : null;
+      var db = a && a.t ? esc(a.t.title)+' · '+esc(a.t.system)+' · '+T('Priorität ','Приоритет: ')+esc(T(SEV[a.t.severity][0],SEV[a.t.severity][1])) : (a && a.mfr ? T('Herstellercode: keine genormte Entsprechung, Herstellerdaten (HaynesPro) nötig.','Код производителя: нет стандартного аналога, нужны данные производителя (HaynesPro).') : T('kein Eintrag in der Datenbank','нет записи в базе'));
+      return '<label class="mess imp-row"><div class="r1"><span><input type="checkbox" data-ic="'+esc(c.code)+'"'+(imp.sel[c.code]?' checked':'')+'> <b class="mono" style="font-size:var(--text-lg)">'+esc(c.code)+(c.ftb?'-'+esc(c.ftb):'')+'</b></span><span class="st '+st[2]+'">'+esc(T(st[0],st[1]))+'</span></div>' +
+        (c.desc?'<p style="margin:4px 0">'+esc(c.desc)+'</p>':'') + (fi?'<p class="meta">'+T('Fehlerart ','Тип ошибки ')+esc(c.ftb)+': '+esc(T(fi.de,fi.ru))+'</p>':'') + '<p class="meta">'+db+'</p></label>';
+    }).join('') + '</div>';
+    h += '<div class="callout"><b>'+T('Diagnose','Диагностика')+'</b><p>'+T('Die gewählten Codes Schritt für Schritt abarbeiten: erst aktive Codes, mit den Angaben aus dem Bericht, den Prüfschritten und Kapiteln.','Пройти выбранные коды по шагам: сначала активные, с данными из отчёта, проверками и главами.')+'</p><button class="btn primary" id="impDiag"'+(n?'':' disabled')+'>'+T('Geführte Diagnose starten','Начать пошаговую диагностику')+' ('+n+')</button></div>';
+  }
+  h += foot() + '</div>';
+  after(function(){
+    var f = $('#impFile'); if (f) f.onchange = function(){ if (f.files && f.files[0]) impLoad(f.files[0]); };
+    var g = $('#impGo'); if (g) g.onclick = function(){ var t = ($('#impTxt').value||'').trim(); if (!t) return; impDone(JCREP.parseText(t), T('eingefügter Text','вставленный текст')); };
+    main.querySelectorAll('[data-ic]').forEach(function(cb){ cb.onchange = function(){ imp.sel[cb.dataset.ic] = cb.checked; var n = imp.items.filter(function(c){ return imp.sel[c.code]; }).length, b = $('#impDiag'); if (b){ b.disabled = !n; b.textContent = T('Geführte Diagnose starten','Начать пошаговую диагностику')+' ('+n+')'; } }; });
+    var d = $('#impDiag'); if (d) d.onclick = function(){
+      if (state.diag && state.diag.codes.length){ toast(T('Erst die laufende Diagnose abschließen','Сначала заверши текущую диагностику')); return; }
+      var fz = imp.res.fz || {}, list = imp.items.filter(function(c){ return imp.sel[c.code]; }).map(function(c){ return {code:c.code, set:c.status, desc:c.desc, ftb:c.ftb, module:c.module}; });
+      state.fzNext = impFz(fz);
+      diagStart(list, T('Bericht','Отчёт'), {car:T('Import','Импорт')+': '+(fz.geraet||T('Diagnosegerät','прибор'))+(fz.datum?' · '+fz.datum:'')});
+    };
+  });
+  return h;
 }
 
 /* ---------- Fehlercodes (DTC) ---------- */
@@ -1344,6 +1427,7 @@ function render(keepScroll){
   else if (r==='mess-neu') html = vMessForm();
   else if (r==='systemtests') html = vSystemtests();
   else if (r==='dtc') html = vDtc();
+  else if (r==='import') html = vImport();
   else if (r==='oszi') html = vOszi();
   else if (r==='obd') html = vObd();
   else if (r==='diag') html = vDiag();
