@@ -2256,6 +2256,11 @@ var JCX = (() => {
         if (!/NO DATA|UNABLE|\?/i.test(raw2) || /59/.test(raw2)) uds = parseUdsDtcs(raw2);
       } catch {
         uds = [];
+      } finally {
+        try {
+          await io.send("ATSH7DF");
+        } catch {
+        }
       }
     }
     return { stored, pending, permanent, uds };
