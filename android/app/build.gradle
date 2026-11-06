@@ -1,26 +1,63 @@
-plugins { id 'com.android.application' }
-def ksFile = rootProject.file('release.jks')
+apply plugin: 'com.android.application'
+
 android {
-    namespace 'de.jc.diagnose'
-    compileSdk 34
+    namespace "de.jc.diagnose"
+    compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId 'de.jc.diagnose'
-        minSdk 21
-        targetSdk 34
-        versionCode Integer.parseInt(System.getenv('VERSION_CODE') ?: '1')
-        versionName '0.9.' + (System.getenv('VERSION_CODE') ?: '1')
+        applicationId "de.jc.diagnose"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode (System.getenv("VERSION_CODE") ?: "1").toInteger()
+        versionName "0.10.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
     }
     signingConfigs {
         release {
-            storeFile ksFile
-            storePassword System.getenv('KS_PASS')
-            keyAlias 'jc'
-            keyPassword System.getenv('KS_PASS')
+            storeFile file(System.getenv("KS_FILE") ?: "../release.jks")
+            storePassword System.getenv("KS_PASS")
+            keyAlias "jc"
+            keyPassword System.getenv("KS_PASS")
         }
     }
     buildTypes {
-        release { minifyEnabled false; signingConfig signingConfigs.release }
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
     }
-    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }
-dependencies { implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0' }
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

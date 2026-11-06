@@ -3,6 +3,7 @@ import { traces } from "./kfz/scope.ts";
 import { PROTOCOLS, protocolGroups, protocolById } from "./obd/protocols.ts";
 import { initAdapter, readAllDtcs, clearDtcs, readLive, createDemoElm, PromptSession, type ElmIo } from "./obd/elm.ts";
 import { connectBluetooth, bluetoothUnavailableReason } from "./obd/bluetooth.ts";
+import { nativeCaps, connectTcpNative, connectSppNative, connectBleNative } from "./obd/native.ts";
 import { connectWifi, parseWifiTarget, hasWebBluetooth, hasTcpSocket } from "./obd/link.ts";
 
 /** USB- oder per Bluetooth gekoppelte ELM327 als COM-Port (Chrome/Edge am Rechner, Web Serial). */
@@ -51,5 +52,6 @@ export async function connectSerial(baud = 38400): Promise<{ io: ElmIo; name: st
 
 export {
   traces, PROTOCOLS, protocolGroups, protocolById, initAdapter, readAllDtcs, clearDtcs, readLive, createDemoElm,
+  nativeCaps, connectTcpNative, connectSppNative, connectBleNative,
   connectBluetooth, bluetoothUnavailableReason, connectWifi, parseWifiTarget, hasWebBluetooth, hasTcpSocket,
 };

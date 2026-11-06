@@ -252,14 +252,14 @@ function card(it){
 }
 function hvCallout(){ return '<div class="callout hv"><b>'+T('Hochvolt','Высокое напряжение')+'</b><p>'+T('Arbeiten an HV-Systemen nur mit Qualifikation nach DGUV Information 209-093. Spannungsfreiheit mit zweipoligem Spannungsprüfer feststellen. Messgeräte mindestens CAT III 1000 V.','Работы с ВВ-системами только при наличии допуска по DGUV Information 209-093. Отсутствие напряжения проверять двухполюсным указателем. Приборы не ниже CAT III 1000 В.')+'</p></div>'; }
 function deNote(){ return state.lang==='ru' ? '<p class="note">Текст главы пока на немецком. Перевод — следующий этап.</p>' : ''; }
-function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.9.6 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/latest/download/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a></footer>'; }
+function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.10.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
 function crumbs(parts){ return '<p class="eyebrow"><a href="#start">'+T('Start','Главная')+'</a>'+parts.map(function(p){ return ' / '+p; }).join('')+'</p>'; }
 
 /* ---------- Start ---------- */
 var PANNE = ['k102','k103','k29','k28','k109','k119','k111','k110','k45'];
 function vHome(){
   var m = D.meta, v = m.verify;
-  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.9.6 · Stand','Версия 0.8.2 · состояние')+' '+esc(m.stand)+'</p>' +
+  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.10.0 · Stand','Версия 0.8.2 · состояние')+' '+esc(m.stand)+'</p>' +
     '<h1>JC Diagnose</h1><p class="lead">'+T('Sollwerte, Pinbelegung, Multimeter- und Oszilloskop-Prüfschritte für Sensoren, Aktoren, Bordnetz, Bussysteme und Hochvolt – plus Systemtests und dein eigenes Soll/Ist-Messprotokoll.','Нормы, распиновка, проверки мультиметром и осциллографом для датчиков, исполнительных механизмов, бортсети, шин и ВВ — плюс системные тесты и твой собственный журнал замеров «норма/факт».')+'</p>' +
     '<div class="chips"><a class="chip" href="#mess-neu">+ '+T('Neue Messung','Новый замер')+'</a><a class="chip" href="#obd">'+T('Fahrzeug verbinden','Подключить машину')+'</a><a class="chip" href="#dtc">'+T('Fehlercode prüfen','Проверить код ошибки')+'</a><a class="chip" href="#oszi">'+T('Oszillogramme','Осциллограммы')+'</a><a class="chip" href="#tab-oszi">'+T('Oszi-Startwerte','Настройки осциллографа')+'</a><a class="chip" href="#systemtests">'+T('Systemtests','Системные тесты')+'</a><a class="chip" href="#rechner">'+T('Rechner','Калькуляторы')+'</a><a class="chip" href="#tab-fehler">'+T('Fehlerbilder','Неисправности')+'</a></div></div>' +
     '<div class="stats"><div class="stat"><b>'+m.n_items+'</b><span>'+T('Kapitel','глав')+'</span></div><div class="stat"><b>'+X.systemtests.rows.length+'</b><span>'+T('Systemtests','системных тестов')+'</span></div><div class="stat"><b>'+state.mess.length+'</b><span>'+T('eigene Messungen','своих замеров')+'</span></div></div></section>';
@@ -682,9 +682,10 @@ function obdRun(label, fn){
 }
 function obdConnect(kind){
   if (!JCX) return;
+  if (kind==='wifi'){ var wi = $('#wifiAddr'); if (wi && wi.value.trim()) lset('jc-wifi', wi.value.trim()); }
   var proto = JCX.protocolById(obd.proto);
   obdRun(T('Verbinde …','Подключение …'), function(){
-    var p = kind==='demo' ? Promise.resolve({io:demoIo(), name:T('Demo-Fahrzeug','Демо-автомобиль')}) : kind==='ble' ? JCX.connectBluetooth(false) : kind==='bleall' ? JCX.connectBluetooth(true) : JCX.connectSerial(38400);
+    var p = connectBy(kind);
     return p.then(function(c){ obd.io = c.io; obd.name = c.name; obdLog(T('Verbunden: ','Подключено: ')+c.name); return JCX.initAdapter(c.io, proto); })
       .then(function(info){ obd.info = info; obd.dtcs = null; obd.live = []; obdLog(T('Protokoll: ','Протокол: ')+info.name+(info.warning?' · '+info.warning:''));
         obd.busy = T('Lese VIN und Kilometerstand …','Читаю VIN и пробег …'); obdRefresh();
@@ -694,6 +695,38 @@ function obdConnect(kind){
         return JCPID.supported(obd.io, obdLog).then(function(l){ obd.sup = l; obdLog(T('Unterstützte PIDs: ','Поддерживаемых PID: ')+l.length+' ('+l.map(JCPID.hex).join(' ')+')'); }, function(e){ obd.sup = null; obdLog('PID-Liste: '+e.message); }); });
   });
 }
+
+var WIFI_DEF = '192.168.0.10:35000';
+function nc(){ return (JCX && JCX.nativeCaps) ? JCX.nativeCaps() : {app:null,spp:false,tcp:false,ble:false}; }
+function connectBy(kind){
+  var c = nc();
+  if (kind==='demo') return Promise.resolve({io:demoIo(), name:T('Demo-Fahrzeug','Демо-автомобиль')});
+  if (kind==='ble' || kind==='bleall') return c.ble ? JCX.connectBleNative() : JCX.connectBluetooth(kind==='bleall');
+  if (kind==='spp') return JCX.connectSppNative(window.JCPICK);
+  if (kind==='wifi'){
+    var v = String(lget('jc-wifi', WIFI_DEF)).trim() || WIFI_DEF;
+    var t = JCX.parseWifiTarget(v, 35000);
+    if (t.error) return Promise.reject(new Error(t.error));
+    if (c.tcp) return JCX.connectTcpNative(t.host, t.port);
+    return JCX.connectWifi(v, 35000).then(function(io){ return {io:io, name:'WLAN '+v}; });
+  }
+  return JCX.connectSerial(38400);
+}
+/* Auswahl-Fenster (gekoppelte Bluetooth-Geräte, Windows-Geräteliste, COM-Ports) */
+var pickUI = null;
+function pickOpen(title, items, onChoose){
+  if (!pickUI){ var ov = document.createElement('div'); ov.className = 'pick-ov'; document.body.appendChild(ov); pickUI = {ov:ov}; }
+  pickUI.onChoose = onChoose;
+  var ov = pickUI.ov;
+  ov.innerHTML = '<div class="pick-box" role="dialog" aria-modal="true"><h2>'+esc(title)+'</h2><div class="pick-list">'+(items.length ? items.map(function(it,i){ return '<button class="btn" data-pi="'+i+'"><b>'+esc(it.label)+'</b>'+(it.sub?'<span class="meta"> · '+esc(it.sub)+'</span>':'')+'</button>'; }).join('') : '<p class="muted">'+T('Suche läuft … Adapter einschalten und in der Nähe halten.','Идёт поиск … включи адаптер и держи рядом.')+'</p>')+'</div><button class="btn" data-pi="-1">'+T('Abbrechen','Отмена')+'</button></div>';
+  ov.querySelectorAll('[data-pi]').forEach(function(b){ b.onclick = function(){ var i = +b.dataset.pi, cb = pickUI.onChoose; ov.remove(); pickUI = null; cb(i<0 ? null : items[i].id); }; });
+}
+window.JCPICK = function(title, items){ return new Promise(function(res){ pickOpen(title, items, res); }); };
+if (window.JCDesktop && window.JCDesktop.onPick) window.JCDesktop.onPick(function(m){
+  pickOpen(m.kind==='serial' ? T('COM-Port wählen (Bluetooth-Adapter erscheint hier, wenn er in Windows gekoppelt ist)','Выбери COM-порт (Bluetooth-адаптер появится здесь, если он сопряжён в Windows)') : T('Bluetooth-Gerät wählen','Выбери Bluetooth-устройство'),
+    (m.list||[]).map(function(d){ return {id:d.id, label:d.name||d.id, sub:d.sub||''}; }),
+    function(id){ window.JCDesktop.pick(m.kind, id||''); });
+});
 function demoIo(){
   var base = JCX.createDemoElm('obd');
   return { send:function(cmd, t){ var c = cmd.replace(/\s/g,'').toUpperCase();
@@ -750,16 +783,23 @@ function vehCard(v){
     '</dl><p class="meta">'+T('Werden beim Start der Diagnose automatisch in „Fahrzeug und Kunde“ eingetragen.','При запуске диагностики автоматически заносятся в «Автомобиль и клиент».')+'</p>';
 }
 function vObd(){
-  var ok = !!JCX;
-  var bleWhy = ok ? JCX.bluetoothUnavailableReason() : 'Modul fehlt', serWhy = ok ? JCX.serialUnavailableReason() : 'Modul fehlt';
+  var ok = !!JCX, c = nc();
+  var bleWhy = ok ? (c.ble ? null : JCX.bluetoothUnavailableReason()) : 'Modul fehlt', serWhy = ok ? JCX.serialUnavailableReason() : 'Modul fehlt';
+  var sppWhy = !c.spp ? (c.app==='desktop' ? T('Am Rechner: Adapter in Windows koppeln (Einstellungen → Bluetooth), dann „USB / COM“ wählen.','На ПК: сопрями адаптер в Windows (Параметры → Bluetooth), затем выбери «USB / COM».') : T('Klassisches Bluetooth (die meisten günstigen ELM327) geht nur in der Android-App.','Классический Bluetooth (большинство дешёвых ELM327) работает только в Android-приложении.')) : null;
+  var wifiOk = ok && (c.tcp || (typeof TCPSocket==='function'));
   var h = '<div class="wrap">'+crumbs(['OBD'])+'<h1>'+T('Fahrzeug verbinden (OBD)','Подключение к машине (OBD)')+'</h1><p class="lead">'+T('ELM327 / STN-Adapter: Fehlerspeicher lesen und löschen, Live-Daten, Werte direkt ins Messprotokoll.','Адаптер ELM327 / STN: чтение и сброс ошибок, живые данные, значения сразу в журнал замеров.')+'</p>';
   if (!obd.io){
     h += '<fieldset class="fs"><legend>'+T('Protokoll','Протокол')+'</legend><div class="form-grid"><div class="field wide"><label for="obdProto">'+T('Protokoll (Automatisch passt fast immer)','Протокол («автоматически» подходит почти всегда)')+'</label><select id="obdProto">'+(ok?JCX.protocolGroups().map(function(g){ return '<optgroup label="'+esc(g.group)+'">'+g.items.map(function(p){ return '<option value="'+p.id+'"'+(p.id===obd.proto?' selected':'')+'>'+esc(p.label)+'</option>'; }).join('')+'</optgroup>'; }).join(''):'')+'</select></div></div><p class="meta" id="protoDetail">'+(ok?esc(JCX.protocolById(obd.proto).detail):'')+'</p></fieldset>' +
       '<div class="cat-grid">' +
       '<button class="cat-card conn" data-conn="demo"><div class="top"><b>'+T('Demo-Fahrzeug','Демо-автомобиль')+'</b></div><p>'+T('Ohne Adapter testen: Codes P0118, P0301 … und Live-Daten.','Проверка без адаптера: коды P0118, P0301 … и живые данные.')+'</p></button>' +
-      '<button class="cat-card conn" data-conn="ble"'+(bleWhy?' disabled':'')+'><div class="top"><b>Bluetooth LE</b></div><p>'+(bleWhy?esc(bleWhy):T('Vgate iCar Pro BLE, OBDLink CX, Veepeak BLE u. a. (Chrome/Edge, Android oder Rechner).','Vgate iCar Pro BLE, OBDLink CX, Veepeak BLE и др. (Chrome/Edge на Android или ПК).'))+'</p>'+(bleWhy?'':'<span class="meta"><a href="#obd" data-conn="bleall">'+T('Adapter nicht gefunden? Alle Geräte zeigen','Адаптер не найден? Показать все устройства')+'</a></span>')+'</button>' +
-      '<button class="cat-card conn" data-conn="serial"'+(serWhy?' disabled':'')+'><div class="top"><b>USB / COM</b></div><p>'+(serWhy?esc(serWhy):T('USB-ELM327 oder klassisch gekoppeltes Bluetooth (COM-Port) am Rechner, 38400 Baud.','USB-ELM327 или сопряжённый классический Bluetooth (COM-порт) на ПК, 38400 бод.'))+'</p></button>' +
-      '</div><div class="callout"><b>'+T('Gut zu wissen','Полезно знать')+'</b><p>'+T('Klassische Bluetooth-Adapter (SPP) und WLAN-Adapter (TCP 35000) kann ein Browser nicht direkt öffnen. Am iPhone geht Bluetooth im Browser nicht. In der veröffentlichten Ansicht kann der Rahmen Bluetooth sperren – dann die lokale index.html in Chrome öffnen.','Классические Bluetooth-адаптеры (SPP) и Wi-Fi-адаптеры (TCP 35000) браузер напрямую не открывает. На iPhone Bluetooth в браузере не работает. В опубликованной странице рамка может блокировать Bluetooth — тогда открой локальный index.html в Chrome.')+'</p></div>';
+      '<button class="cat-card conn" data-conn="ble"'+(bleWhy?' disabled':'')+'><div class="top"><b>Bluetooth LE</b></div><p>'+(bleWhy?esc(bleWhy):T('Vgate iCar Pro BLE, OBDLink CX, Veepeak BLE, Carista, Konnwei u. a.','Vgate iCar Pro BLE, OBDLink CX, Veepeak BLE, Carista, Konnwei и др.'))+'</p>'+((bleWhy||c.ble)?'':'<span class="meta"><a href="#obd" data-conn="bleall">'+T('Adapter nicht gefunden? Alle Geräte zeigen','Адаптер не найден? Показать все устройства')+'</a></span>')+'</button>' +
+      '<button class="cat-card conn" data-conn="spp"'+(sppWhy?' disabled':'')+'><div class="top"><b>'+T('Bluetooth klassisch (SPP)','Bluetooth классический (SPP)')+'</b></div><p>'+(sppWhy?esc(sppWhy):T('Gekoppelter ELM327 (die meisten günstigen Adapter, Name „OBDII“, „ELM327“). Vorher in den Android-Einstellungen koppeln, PIN 1234 oder 0000.','Сопряжённый ELM327 (большинство дешёвых адаптеров, имя «OBDII», «ELM327»). Заранее сопрягай в настройках Android, PIN 1234 или 0000.'))+'</p></button>' +
+      '<button class="cat-card conn" data-conn="serial"'+(serWhy?' disabled':'')+'><div class="top"><b>USB / COM</b></div><p>'+(serWhy?esc(serWhy):T('USB-ELM327 oder in Windows gekoppeltes Bluetooth (COM-Port), 38400 Baud.','USB-ELM327 или сопряжённый в Windows Bluetooth (COM-порт), 38400 бод.'))+'</p></button>' +
+      '</div>' +
+      '<fieldset class="fs"><legend>WLAN / Wi-Fi</legend><div class="form-grid"><div class="field wide"><label for="wifiAddr">'+T('Adresse des WLAN-Adapters (Host:Port)','Адрес Wi-Fi-адаптера (хост:порт)')+'</label><input id="wifiAddr" type="text" inputmode="url" autocomplete="off" value="'+esc(lget('jc-wifi', WIFI_DEF))+'"></div></div>' +
+      '<div class="btn-row"><button class="btn primary conn" data-conn="wifi"'+(wifiOk?'':' disabled')+'>'+T('Per WLAN verbinden','Подключиться по Wi-Fi')+'</button><button class="btn" data-wq="192.168.0.10:35000">192.168.0.10:35000</button><button class="btn" data-wq="192.168.4.1:35000">192.168.4.1:35000</button><button class="btn" data-wq="192.168.0.74:23">192.168.0.74:23</button></div>' +
+      '<p class="meta">'+(wifiOk?T('Erst mit dem WLAN des Adapters verbinden (Name oft „OBDII“, „WiFi_OBDII“, „V-LINK“), dann hier verbinden. Standard: 192.168.0.10, Port 35000.','Сначала подключись к Wi-Fi адаптера (имя часто «OBDII», «WiFi_OBDII», «V-LINK»), потом жми здесь. По умолчанию: 192.168.0.10, порт 35000.'):T('WLAN-Adapter spricht rohes TCP – das kann nur die Android-App oder die Windows-App, kein Browser.','Wi-Fi-адаптер говорит по чистому TCP — это умеет только Android-приложение или Windows-приложение, не браузер.'))+'</p></fieldset>' +
+      '<div class="callout"><b>'+T('Gut zu wissen','Полезно знать')+'</b><p>'+(c.app ? T('Du nutzt die App: Bluetooth LE, klassisches Bluetooth und WLAN werden direkt unterstützt (Windows: Bluetooth über COM-Port).','Ты в приложении: Bluetooth LE, классический Bluetooth и Wi-Fi поддерживаются напрямую (Windows: Bluetooth через COM-порт).') : T('Im Browser gehen nur Bluetooth LE und USB/COM. Für klassisches Bluetooth und WLAN die Android-App oder die Windows-App aus den Downloads unten verwenden. Am iPhone geht Bluetooth im Browser nicht.','В браузере работают только Bluetooth LE и USB/COM. Для классического Bluetooth и Wi-Fi используй Android-приложение или приложение для Windows (ссылки внизу). На iPhone Bluetooth в браузере не работает.'))+'</p></div>';
   } else {
     var i = obd.info || {};
     h += '<div class="mess"><div class="r1"><b>'+esc(obd.name)+'</b><span class="st ok">'+T('verbunden','подключено')+'</span></div><div class="meta">'+esc(i.name||'')+(i.number?' · '+esc(i.number):'')+(i.can?' · CAN':'')+'</div>'+(i.warning?'<p class="note">'+esc(i.warning)+'</p>':'')+
@@ -779,6 +819,7 @@ function vObd(){
   h += '<p class="muted" style="font-size:var(--text-xs)">'+T('Code: eigener OBD-Kern aus kfz-diagnose (12 Tests bestanden) + Web-Serial-Anbindung.','Код: собственное OBD-ядро из kfz-diagnose (12 тестов пройдено) + подключение Web Serial.')+'</p>' + foot() + '</div>';
   after(function(){
     var ps = $('#obdProto'); if (ps) ps.onchange = function(){ obd.proto = ps.value; $('#protoDetail').textContent = JCX.protocolById(ps.value).detail; };
+    main.querySelectorAll('[data-wq]').forEach(function(b){ b.onclick = function(){ var i = $('#wifiAddr'); if (i) i.value = b.dataset.wq; }; });
     main.querySelectorAll('[data-conn]').forEach(function(b){ b.onclick = function(e){ e.preventDefault(); e.stopPropagation(); obdConnect(b.dataset.conn); }; });
     var br = $('#bRead'); if (br) br.onclick = function(){ obdRun(T('Lese Fehlerspeicher …','Чтение ошибок …'), function(){ var pr = JCX.protocolById(obd.proto); return JCX.readAllDtcs(obd.io, !!(obd.info&&obd.info.can), pr.uds).then(function(d){ obd.dtcs = d; obdLog(T('Codes: ','Коды: ')+([].concat(d.stored,d.pending,d.permanent,d.uds).join(', ')||'–')); }); }); };
     ['#bLive','#bLive2'].forEach(function(id){ var bl = $(id); if (bl) bl.onclick = function(){ obd.liveOn = !obd.liveOn; obd.err = ''; if (obd.liveOn) obdLiveLoop(); render(true); }; });

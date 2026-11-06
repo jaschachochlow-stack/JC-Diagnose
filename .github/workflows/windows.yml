@@ -1,0 +1,35 @@
+name: Windows-App bauen
+on:
+  push:
+    branches: [main]
+    paths: ['desktop/**', 'index.html', 'app.js', 'app.css', 'data.js', 'jcx.js', 'oszi.js', 'pids.js', '.github/workflows/windows.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Web-Dateien kopieren
+        shell: bash
+        run: |
+          mkdir -p desktop/app
+          cp index.html app.js app.css data.js jcx.js oszi.js pids.js sw.js manifest.json icon-192.png icon-512.png desktop/app/
+      - name: Bauen
+        working-directory: desktop
+        run: |
+          npm install
+          npx electron-builder --win portable --x64 --publish never
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: windows
+          name: JC Diagnose (Windows-App)
+          make_latest: false
+          body: |
+            Windows-App (portable .exe, ohne Installation): Bluetooth LE, USB/COM (auch gekoppeltes Bluetooth) und WLAN für ELM327-Adapter.
+            Beim ersten Start meldet Windows SmartScreen eine unbekannte App: „Weitere Informationen“, „Trotzdem ausführen“.
+            Build ${{ github.run_number }}
+          files: desktop/dist/JC-Diagnose-Windows.exe

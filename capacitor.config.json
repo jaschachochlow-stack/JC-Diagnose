@@ -1,0 +1,7 @@
+{
+  "appId": "de.jc.diagnose",
+  "appName": "JC Diagnose",
+  "webDir": "www",
+  "backgroundColor": "#161a1f",
+  "android": { "allowMixedContent": true }
+}

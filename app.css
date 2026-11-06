@@ -570,3 +570,8 @@ html[data-skin=field] .dg-res .btn{height:auto;min-height:84px}
   .callout>p{flex:1 1 60%}
   .callout>.btn,.callout>.btn-row{flex:1 1 100%;justify-content:center}
 }
+.pick-ov{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+.pick-box{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-5);max-width:520px;width:100%;max-height:80dvh;display:flex;flex-direction:column;gap:var(--space-3)}
+.pick-box h2{margin:0;font-size:var(--text-lg)}
+.pick-list{display:flex;flex-direction:column;gap:var(--space-2);overflow:auto}
+.pick-list .btn{justify-content:flex-start;text-align:left}

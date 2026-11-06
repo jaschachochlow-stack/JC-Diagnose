@@ -11,3 +11,9 @@ Berichte, Fahrzeugakte und Oszillogramm-Referenzen.
 - Messungen, Berichte und Fotos bleiben lokal auf dem Gerät.
 
 Richtwerte ohne Gewähr – Herstellerdaten gehen vor.
+
+
+## Apps (0.10.0)
+- **Android-App** (Capacitor): Bluetooth LE, klassisches Bluetooth (SPP) und WLAN-TCP für ELM327. Download: Release „apk“ → JC-Diagnose.apk.
+- **Windows-App** (Electron, portable .exe): Bluetooth LE, COM-Port (USB oder in Windows gekoppeltes Bluetooth) und WLAN-TCP. Download: Release „windows“ → JC-Diagnose-Windows.exe.
+- Web/PWA (GitHub Pages): Bluetooth LE und USB/COM in Chrome/Edge; kein klassisches Bluetooth, kein WLAN-TCP.

@@ -2,7 +2,7 @@ name: APK bauen
 on:
   push:
     branches: [main]
-    paths: ['android/**', '.github/workflows/apk.yml']
+    paths: ['android/**', 'index.html', 'app.js', 'app.css', 'data.js', 'jcx.js', 'oszi.js', 'pids.js', 'package.json', 'capacitor.config.json', '.github/workflows/apk.yml']
   workflow_dispatch:
 permissions:
   contents: write
@@ -13,8 +13,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17' }
-      - uses: gradle/actions/setup-gradle@v4
-        with: { gradle-version: '8.7' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Web-Dateien und Plugins
+        run: |
+          npm ci
+          mkdir -p www
+          cp index.html app.js app.css data.js jcx.js oszi.js pids.js sw.js manifest.json icon-192.png icon-512.png www/
+          npx cap sync android
       - name: Signaturschlüssel
         env:
           KS_B64: ${{ secrets.KEYSTORE_B64 }}
@@ -31,15 +37,18 @@ jobs:
       - name: Bauen
         env:
           VERSION_CODE: ${{ github.run_number }}
-        run: gradle -p android assembleRelease --no-daemon
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
       - run: cp android/app/build/outputs/apk/release/app-release.apk JC-Diagnose.apk
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: apk
-          name: JC Diagnose (Android-APK)
+          name: JC Diagnose (Android-App)
           make_latest: true
           body: |
-            Android-App für Tablet und Handy. Öffnet https://jaschachochlow-stack.github.io/JC-Diagnose/ in Chrome (Bluetooth-OBD funktioniert).
-            Installation: JC-Diagnose.apk herunterladen → öffnen → „Unbekannte Apps installieren“ für Chrome/Dateien erlauben.
+            Android-App mit Bluetooth LE, klassischem Bluetooth (SPP) und WLAN für ELM327-Adapter. Läuft ohne Chrome.
+            Installation: JC-Diagnose.apk herunterladen, öffnen, „Unbekannte Apps installieren“ erlauben. Eine ältere Version vorher deinstallieren.
             Build ${{ github.run_number }}
           files: JC-Diagnose.apk
