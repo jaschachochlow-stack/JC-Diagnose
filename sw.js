@@ -1,11 +1,16 @@
 /* JC Diagnose – Offline-Cache. Bei jeder neuen Version VER erhöhen. */
-var VER = 'jc-0108';
-var FILES = ['./', './index.html', './app.css?v=0108', './data.js?v=0108', './jcx.js?v=0108', './oszi.js?v=0108', './pids.js?v=0108', './bericht.js?v=0108', './app.js?v=0108', './manifest.json', './icon-192.png', './icon-512.png'];
+var VER = 'jc-0109';
+var FILES = ['./', './index.html', './app.css?v=0109', './data.js?v=0109', './jcx.js?v=0109', './oszi.js?v=0109', './pids.js?v=0109', './bericht.js?v=0109', './app.js?v=0109', './manifest.json', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', function(e){ e.waitUntil(caches.open(VER).then(function(c){ return c.addAll(FILES); }).then(function(){ return self.skipWaiting(); })); });
 self.addEventListener('activate', function(e){ e.waitUntil(caches.keys().then(function(ks){ return Promise.all(ks.filter(function(k){ return k!==VER; }).map(function(k){ return caches.delete(k); })); }).then(function(){ return self.clients.claim(); })); });
 self.addEventListener('fetch', function(e){
   if (e.request.method !== 'GET') return;
   var u = new URL(e.request.url);
   if (u.origin !== location.origin) { e.respondWith(caches.match(e.request).then(function(r){ return r || fetch(e.request).then(function(res){ var cp = res.clone(); caches.open(VER).then(function(c){ c.put(e.request, cp); }); return res; }); })); return; }
-  e.respondWith(caches.match(e.request, {ignoreSearch: u.pathname.endsWith('/') || u.pathname.endsWith('index.html')}).then(function(r){ return r || fetch(e.request); }));
+  var isPage = e.request.mode === 'navigate' || u.pathname.endsWith('/') || u.pathname.endsWith('index.html');
+  if (isPage){   // Startseite zuerst aus dem Netz, damit neue Versionen sofort erscheinen; offline aus dem Cache
+    e.respondWith(fetch(e.request).then(function(res){ var cp = res.clone(); caches.open(VER).then(function(c){ c.put('./index.html', cp); }); return res; }).catch(function(){ return caches.match('./index.html'); }));
+    return;
+  }
+  e.respondWith(caches.match(e.request).then(function(r){ return r || fetch(e.request); }));
 });
