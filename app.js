@@ -18,6 +18,7 @@ var state = {
   q: '', sys: '', draft: null, synced: false
 };
 var SKINS = [
+  {id:'cockpit', de:'Cockpit (neu)', ru:'Кокпит (новый)', theme:'dark', dot:'#ffb020'},
   {id:'std-dark', de:'Standard dunkel', ru:'Стандарт тёмный', theme:'dark', dot:'#f2b705'},
   {id:'std-light', de:'Standard hell', ru:'Стандарт светлый', theme:'light', dot:'#9a6a00'},
   {id:'instrument', de:'Messgerät', ru:'Прибор', theme:'dark', dot:'#39ff88'},
@@ -26,6 +27,7 @@ var SKINS = [
   {id:'workshop', de:'Werkstatt (Tablet)', ru:'Мастерская (планшет)', theme:'light', dot:'#e8590c'}
 ];
 state.skin = lget('jc-skin', state.theme==='light' ? 'std-light' : 'std-dark');
+if (!lget('jc-design13', false)) { state.skin = 'cockpit'; lset('jc-skin', 'cockpit'); lset('jc-design13', true); }
 function applySkin(){
   var sk = SKINS.find(function(x){ return x.id===state.skin; }) || SKINS[0];
   state.theme = sk.theme;
@@ -221,8 +223,16 @@ function renderQuick(r){
 (function(){ var hd = document.querySelector('.topbar'); function sync(){ document.documentElement.style.setProperty('--topbar', hd.offsetHeight + 'px'); } if (window.ResizeObserver) new ResizeObserver(sync).observe(hd); window.addEventListener('resize', sync); setTimeout(sync, 0); })();
 function renderBottom(r){
   var bn = $('#bottomNav'); if (!bn) return;
-  var it = [['obd','OBD','M7 4v6M17 4v6M5 10h14v4a7 7 0 0 1-14 0zM12 21v-2'],['diag',T('Diagnose','Диагностика'),'M3 12h4l3-7 4 14 3-7h4'],['mess',T('Messungen','Замеры'),'M6 3h12v18H6zM9 8h6M9 12h6M9 16h3'],['berichte',T('Berichte','Отчёты'),'M4 5h16v14H4zM8 9h8M8 13h5']];
-  bn.innerHTML = it.map(function(x){ var on = r.indexOf(x[0])===0 || (x[0]==='berichte' && r.indexOf('bericht')===0); return '<a href="#'+x[0]+'"'+(on?' aria-current="page"':'')+'><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="'+x[2]+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>'+esc(x[1])+'</span></a>'; }).join('');
+  var ik = function(p, sw){ return '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="'+p+'" fill="none" stroke="currentColor" stroke-width="'+(sw||2)+'" stroke-linecap="round" stroke-linejoin="round"/></svg>'; };
+  if (state.skin === 'cockpit'){
+    var it = [['start',T('Start','Главная'),'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z'],['obd','OBD','M9 2v5M15 2v5M6 7h12v4a6 6 0 0 1-12 0zM12 17v5'],['kat-sensoren',T('Nachschlagewerk','Справочник'),'M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4zM8 4v16'],['berichte',T('Berichte','Отчёты'),'M6 2h8l5 5v15H6zM14 2v5h5M9 13h7M9 17h7']];
+    var act = function(k){ if (k==='start') return r==='start'||r===''; if (k==='obd') return r.indexOf('obd')===0; if (k==='kat-sensoren') return r.indexOf('kat-')===0 || r.indexOf('b-')===0 || r.indexOf('tab-')===0; return r.indexOf('bericht')===0; };
+    bn.innerHTML = it.map(function(x){ return '<a href="#'+x[0]+'" aria-label="'+esc(x[1])+'"'+(act(x[0])?' aria-current="page"':'')+'>'+ik(x[2])+'<span>'+esc(x[1])+'</span></a>'; }).join('') + '<button type="button" id="bnMore" aria-label="'+T('Mehr','Ещё')+'">'+ik('M5 12h.01M12 12h.01M19 12h.01', 3)+'<span>'+T('Mehr','Ещё')+'</span></button>';
+    var mb = $('#bnMore'); if (mb) mb.onclick = function(){ var o = !side.classList.contains('open'); side.classList.toggle('open', o); scrim.hidden = !o; };
+    return;
+  }
+  var it2 = [['obd','OBD','M7 4v6M17 4v6M5 10h14v4a7 7 0 0 1-14 0zM12 21v-2'],['diag',T('Diagnose','Диагностика'),'M3 12h4l3-7 4 14 3-7h4'],['mess',T('Messungen','Замеры'),'M6 3h12v18H6zM9 8h6M9 12h6M9 16h3'],['berichte',T('Berichte','Отчёты'),'M4 5h16v14H4zM8 9h8M8 13h5']];
+  bn.innerHTML = it2.map(function(x){ var on = r.indexOf(x[0])===0 || (x[0]==='berichte' && r.indexOf('bericht')===0); return '<a href="#'+x[0]+'"'+(on?' aria-current="page"':'')+'>'+ik(x[2])+'<span>'+esc(x[1])+'</span></a>'; }).join('');
 }
 function renderSide(r){
   var h = '<div class="nav-group"><div class="nav-label">'+T('Übersicht','Обзор')+'</div>' +
@@ -258,14 +268,14 @@ function card(it){
 }
 function hvCallout(){ return '<div class="callout hv"><b>'+T('Hochvolt','Высокое напряжение')+'</b><p>'+T('Arbeiten an HV-Systemen nur mit Qualifikation nach DGUV Information 209-093. Spannungsfreiheit mit zweipoligem Spannungsprüfer feststellen. Messgeräte mindestens CAT III 1000 V.','Работы с ВВ-системами только при наличии допуска по DGUV Information 209-093. Отсутствие напряжения проверять двухполюсным указателем. Приборы не ниже CAT III 1000 В.')+'</p></div>'; }
 function deNote(){ return state.lang==='ru' ? '<p class="note">Текст главы пока на немецком. Перевод — следующий этап.</p>' : ''; }
-function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.12.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
+function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.13.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
 function crumbs(parts){ return '<p class="eyebrow"><a href="#start">'+T('Start','Главная')+'</a>'+parts.map(function(p){ return ' / '+p; }).join('')+'</p>'; }
 
 /* ---------- Start ---------- */
 var PANNE = ['k102','k103','k29','k28','k109','k119','k111','k110','k45'];
 function vHome(){
   var m = D.meta, v = m.verify;
-  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.12.0 · Stand','Версия 0.12.0 · состояние')+' '+esc(m.stand)+'</p>' +
+  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.13.0 · Stand','Версия 0.13.0 · состояние')+' '+esc(m.stand)+'</p>' +
     '<h1>JC Diagnose</h1><p class="lead">'+T('Sollwerte, Pinbelegung, Multimeter- und Oszilloskop-Prüfschritte für Sensoren, Aktoren, Bordnetz, Bussysteme und Hochvolt – plus Systemtests und dein eigenes Soll/Ist-Messprotokoll.','Нормы, распиновка, проверки мультиметром и осциллографом для датчиков, исполнительных механизмов, бортсети, шин и ВВ — плюс системные тесты и твой собственный журнал замеров «норма/факт».')+'</p>' +
     '<div class="chips"><a class="chip" href="#mess-neu">+ '+T('Neue Messung','Новый замер')+'</a><a class="chip" href="#obd">'+T('Fahrzeug verbinden','Подключить машину')+'</a><a class="chip" href="#dtc">'+T('Fehlercode prüfen','Проверить код ошибки')+'</a><a class="chip" href="#import">'+T('Bericht importieren','Импорт отчёта')+'</a><a class="chip" href="#oszi">'+T('Oszillogramme','Осциллограммы')+'</a><a class="chip" href="#tab-oszi">'+T('Oszi-Startwerte','Настройки осциллографа')+'</a><a class="chip" href="#systemtests">'+T('Systemtests','Системные тесты')+'</a><a class="chip" href="#rechner">'+T('Rechner','Калькуляторы')+'</a><a class="chip" href="#tab-fehler">'+T('Fehlerbilder','Неисправности')+'</a></div></div>' +
     '<div class="stats"><div class="stat"><b>'+m.n_items+'</b><span>'+T('Kapitel','глав')+'</span></div><div class="stat"><b>'+X.systemtests.rows.length+'</b><span>'+T('Systemtests','системных тестов')+'</span></div><div class="stat"><b>'+state.mess.length+'</b><span>'+T('eigene Messungen','своих замеров')+'</span></div></div></section>';
@@ -678,7 +688,7 @@ function vehKnown(vin){ return vin ? state.archiv.filter(function(r){ return r.f
 
 /* ---------- OBD-Verbindung (eigener ELM327-Code aus kfz-diagnose) ---------- */
 var PID_RU = {5:'Температура ОЖ',12:'Обороты',13:'Скорость',15:'Темп. впускного воздуха',4:'Нагрузка',6:'Краткосрочная коррекция',11:'Давление во впуске',17:'Положение дросселя',66:'Напряжение блока'};
-var obd = {livePhase:'select', sheet:false, scanId:null, hist:{}, view:lget('jc-liveview','num'), io:null, name:'', info:null, proto:'auto', dtcs:null, live:[], liveOn:false, busy:'', err:'', log:[], sup:null, sel:lget('jc-pids', null), cyc:0};
+var obd = {cmpOff:{}, cmpWin:60, cmpSnap:null, cmpT:null, livePhase:'select', sheet:false, scanId:null, hist:{}, view:lget('jc-liveview','num'), io:null, name:'', info:null, proto:'auto', dtcs:null, live:[], liveOn:false, busy:'', err:'', log:[], sup:null, sel:lget('jc-pids', null), cyc:0};
 if (!obd.sel && window.JCPID) obd.sel = JCPID.presets.basis.p.slice();
 function obdLog(t){ obd.log.unshift(new Date().toLocaleTimeString()+' · '+t); obd.log = obd.log.slice(0,60); }
 function obdRefresh(){ var c = cur(); if (c==='obd' || c==='obd-live') render(true); }
@@ -789,10 +799,63 @@ function chartSvg(h){
     '<span class="lmax">'+fmt(mx)+'</span><span class="lmin">'+fmt(mn)+'</span><span class="lspan">'+Math.round(dt/1000)+' s</span></div>';
 }
 function liveTiles(){
+  if (obd.view === 'cmp') return cmpHtml();
   if (!obd.live.length) return '<p class="muted">'+T('Noch keine Werte.','Значений пока нет.')+'</p>';
   return (obd.cyc ? '<p class="meta">'+obd.live.length+' '+T('Werte','значений')+' · '+T('Zyklus','цикл')+' '+obd.cyc.toFixed(1).replace('.',',')+' s</p>' : '')+'<div class="live-grid'+(obd.view==='chart'?' charts':'')+'">'+obd.live.map(function(r,i){ var it = r.chapter && byId[r.chapter]; return '<div class="live'+(r.warn?' warn':'')+'"><span class="lbl"><span class="mono">'+(window.JCPID?JCPID.hex(r.pid):'')+'</span> '+esc(r.label)+'</span><b>'+esc(r.text)+'</b>'+(obd.view==='chart' && liveNum(r)!=null ? liveChart(r.pid) : '')+'<span class="meta">'+esc(r.note)+'</span><span class="btn-row" style="margin:4px 0 0"><button class="btn small" data-take="'+i+'">'+T('→ Messung','→ Замер')+'</button>'+(it?'<a class="btn small" href="#b-'+it.id+'">'+T('Kapitel','Глава')+'</a>':'')+'</span></div>'; }).join('')+'</div>';
 }
-function drawLive(){ var el = $('#liveBox'); if (!el) return; el.innerHTML = liveTiles(); bindTake(); }
+function drawLive(){ var el = $('#liveBox'); if (!el) return; if (obd.view === 'cmp' && $('#cmpLg')){ if (!obd.cmpSnap) cmpRefresh(); return; } el.innerHTML = liveTiles(); bindTake(); }
+/* ---------- Live: alle Werte in einem Diagramm (Vergleich) ---------- */
+var CMPCOL = ['#ffb020','#4cc9f0','#7be08c','#ff6b9a','#b49cff','#ff8a4c','#5eead4','#e0e04a'], CMPW = 320, CMPH = 220, CML = 34, CMT = 8, CMR = 8, CMB = 18;
+function liveUnit(r){ var m = String(r.text||'').match(/^\s*-?\d+(?:[.,]\d+)?\s*(.*)$/); return m ? m[1].trim() : ''; }
+function cmpNorm(h){ var mn = Infinity, mx = -Infinity; h.forEach(function(p){ if (p[1] < mn) mn = p[1]; if (p[1] > mx) mx = p[1]; }); if (!isFinite(mn)) return [0,1]; var pad = (mx-mn)*0.06 || Math.max(1, Math.abs(mx)*0.1); return [mn-pad, mx+pad]; }
+function cmpCompute(){
+  var win = obd.cmpWin == null ? 60 : obd.cmpWin, items = obd.live.filter(function(r){ return liveNum(r) != null && (obd.hist[r.pid]||[]).length > 1; }), tEnd = 0, tFirst = Infinity;
+  items.forEach(function(r){ var h = obd.hist[r.pid]; tEnd = Math.max(tEnd, h[h.length-1][0]); tFirst = Math.min(tFirst, h[0][0]); });
+  var t1 = tEnd, t0 = win ? Math.max(tFirst, tEnd - win*1000) : tFirst; if (t1 - t0 < 1000) t0 = t1 - 1000;
+  var ser = obd.live.filter(function(r){ return liveNum(r) != null; }).map(function(r, i){ var h = obd.hist[r.pid] || [], nr = cmpNorm(h); return {pid:r.pid, label:r.label, unit:liveUnit(r), text:r.text, col:CMPCOL[i % CMPCOL.length], pts:h.filter(function(p){ return p[0] >= t0; }), lo:nr[0], hi:nr[1], off:!!obd.cmpOff[r.pid]}; });
+  return {ser:ser, t0:t0, t1:t1};
+}
+function cmpAt(sr, t){ var best = null, bd = Infinity; sr.pts.forEach(function(p){ var d = Math.abs(p[0]-t); if (d < bd){ bd = d; best = p; } }); return best; }
+function cmpInner(d, t){
+  var pw = CMPW-CML-CMR, ph = CMPH-CMT-CMB, span = Math.max(1, d.t1-d.t0), o = '', k;
+  for (k = 0; k < 5; k++){ var y = CMT+ph*k/4; o += '<line class="g" x1="'+CML+'" x2="'+(CMPW-CMR)+'" y1="'+y+'" y2="'+y+'"/><text x="'+(CML-5)+'" y="'+(y+3)+'" text-anchor="end">'+(100-25*k)+'%</text>'; }
+  for (k = 0; k < 5; k++){ var xx = CML+pw*k/4; o += '<text x="'+xx+'" y="'+(CMPH-4)+'" text-anchor="'+(k===0?'start':k===4?'end':'middle')+'">'+Math.round((d.t0+span*k/4-d.t1)/1000)+' s</text>'; }
+  d.ser.forEach(function(sr){ if (sr.off || sr.pts.length < 2) return; var pts = sr.pts.map(function(p){ return (CML+pw*(p[0]-d.t0)/span).toFixed(1)+','+(CMT+ph*(1-Math.max(0,Math.min(1,(p[1]-sr.lo)/(sr.hi-sr.lo))))).toFixed(1); }).join(' '); o += '<polyline points="'+pts+'" fill="none" stroke="'+sr.col+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'; });
+  if (t != null){ var cx = CML+pw*(t-d.t0)/span; o += '<line class="cur" x1="'+cx+'" x2="'+cx+'" y1="'+CMT+'" y2="'+(CMT+ph)+'"/>';
+    d.ser.forEach(function(sr){ if (sr.off) return; var p = cmpAt(sr, t); if (!p) return; o += '<circle cx="'+cx+'" cy="'+(CMT+ph*(1-Math.max(0,Math.min(1,(p[1]-sr.lo)/(sr.hi-sr.lo)))))+'" r="4" fill="'+sr.col+'" stroke="var(--color-bg)" stroke-width="2"/>'; }); }
+  return o;
+}
+function cmpLegend(d, t, live){
+  return d.ser.map(function(sr){ var txt = sr.text; if (t != null){ var p = cmpAt(sr, t); txt = p ? fmtV(p[1])+(sr.unit?' '+sr.unit:'') : '–'; }
+    return '<div class="cmp-lg'+(sr.off?' off':'')+'" style="border-left-color:'+sr.col+'"'+(live?' data-cmp="'+sr.pid+'" role="button" tabindex="0"':'')+'><small>'+esc(sr.label)+'</small><b>'+esc(txt)+'</b></div>'; }).join('');
+}
+function cmpBar(){
+  var w = obd.cmpWin == null ? 60 : obd.cmpWin;
+  return [[30,'30 s'],[60,'60 s'],[0,T('Alles','Всё')]].map(function(x){ return '<button type="button" class="btn small'+(w===x[0]?' primary':'')+'" data-cwin="'+x[0]+'">'+x[1]+'</button>'; }).join('') + (obd.cmpSnap ? '<button type="button" class="btn small" data-ccl="1">✕ '+T('Cursor aus','Курсор выкл.')+'</button>' : '');
+}
+function cmpHtml(){
+  var d = obd.cmpSnap || cmpCompute();
+  if (!d.ser.length || !d.ser.some(function(x){ return x.pts.length > 1; })) return '<p class="muted">'+T('Sammle Werte …','Собираю значения …')+'</p>';
+  var t = obd.cmpSnap ? obd.cmpT : null;
+  return '<div class="cmp-bar" id="cmpBar">'+cmpBar()+'</div><div class="cmp-card"><svg class="cmp-svg" viewBox="0 0 '+CMPW+' '+CMPH+'">'+cmpInner(d, t)+'</svg></div><p class="meta">'+T('Jede Linie ist auf ihren eigenen Bereich normiert (0–100 %). Finger auf das Diagramm: Werte zum gleichen Zeitpunkt. Karte antippen: Linie ein/aus.','Каждая линия растянута на свой диапазон (0–100 %). Палец на графике: значения в один момент. Тап по карточке: линия вкл/выкл.')+'</p><div class="cmp-leg" id="cmpLg">'+cmpLegend(d, t, true)+'</div>';
+}
+function cmpRefresh(){
+  var d = obd.cmpSnap || cmpCompute(), sv = main.querySelector('.cmp-svg'), lg = $('#cmpLg'), bar = $('#cmpBar'); if (!sv || !lg) { var el = $('#liveBox'); if (el) el.innerHTML = cmpHtml(); return; }
+  var t = obd.cmpSnap ? obd.cmpT : null; sv.innerHTML = cmpInner(d, t); lg.innerHTML = cmpLegend(d, t, true); if (bar) bar.innerHTML = cmpBar();
+}
+function bindCmpBox(){
+  var box = $('#liveBox'); if (!box || box._cmp) return; box._cmp = true; var drag = false;
+  function at(e){ var sv = box.querySelector('.cmp-svg'); if (!sv) return; var rc = sv.getBoundingClientRect(), x = (e.clientX-rc.left)/rc.width*CMPW, d = obd.cmpSnap || (obd.cmpSnap = cmpCompute());
+    obd.cmpT = Math.max(d.t0, Math.min(d.t1, d.t0 + (x-CML)/(CMPW-CML-CMR)*(d.t1-d.t0))); cmpRefresh(); }
+  box.addEventListener('pointerdown', function(e){ if (obd.view !== 'cmp' || !e.target.closest || !e.target.closest('.cmp-svg')) return; drag = true; at(e); });
+  box.addEventListener('pointermove', function(e){ if (drag) at(e); });
+  ['pointerup','pointercancel','pointerleave'].forEach(function(n){ box.addEventListener(n, function(){ drag = false; }); });
+  box.addEventListener('click', function(e){
+    var c = e.target.closest('[data-cmp]'); if (c){ var pid = c.dataset.cmp; obd.cmpOff[pid] = !obd.cmpOff[pid]; if (obd.cmpSnap) obd.cmpSnap.ser.forEach(function(sr){ if (String(sr.pid) === String(pid)) sr.off = !!obd.cmpOff[pid]; }); cmpRefresh(); return; }
+    var w = e.target.closest('[data-cwin]'); if (w){ obd.cmpWin = +w.dataset.cwin; obd.cmpSnap = null; obd.cmpT = null; cmpRefresh(); return; }
+    if (e.target.closest('[data-ccl]')){ obd.cmpSnap = null; obd.cmpT = null; cmpRefresh(); }
+  });
+}
 function bindTake(){ main.querySelectorAll('[data-take]').forEach(function(b){ b.onclick = function(){ var r = obd.live[+b.dataset.take]; if (!r) return; var isNum = r.value != null || (r.value === undefined && /^-?\d/.test(r.text)), m = isNum ? String(r.text).match(/-?\d+(?:[.,]\d+)?/) : null, u = m ? String(r.text).slice(m.index+m[0].length).trim() : ''; obd.liveOn = false; startDraft({comp:r.chapter||'', punkt:r.label+' (PID '+r.pid.toString(16).toUpperCase()+')', mittel:'Diagnosetester (Istwert)', ist:m?m[0].replace('.',','):'', einheit:m?u:'', notiz:'OBD: '+obd.name+(m?'':' · '+r.text)}); }; }); }
 function dtcList(arr, title){ if (!arr || !arr.length) return '<p class="meta">'+esc(title)+': '+T('keine','нет')+'</p>'; return '<h3>'+esc(title)+' ('+arr.length+')</h3><div class="mess-list">'+arr.map(function(c){ return dtcCard(dtcAdvice(c)); }).join('')+'</div>'; }
 function vehCard(v){
@@ -923,7 +986,7 @@ function vObdReport(r){
   else { h += dtcList(d.stored, T('Gespeichert (03)','Сохранённые (03)')) + dtcList(d.pending, T('Anstehend (07)','Ожидающие (07)')) + dtcList(d.permanent, T('Permanent (0A)','Постоянные (0A)')) + (d.uds && d.uds.length ? dtcList(d.uds, 'UDS (19 02)') : '');
     h += '<div class="btn-row"><button class="btn primary" id="oDiag"'+(state.diag?' disabled':'')+'>'+T('Geführte Diagnose starten','Начать пошаговую диагностику')+' ('+all.length+')</button></div>'; }
   if (s.cleared) h += '<p class="meta">'+T('Fehlerspeicher gelöscht um ','Память ошибок стёрта в ')+esc(new Date(s.cleared).toLocaleTimeString(loc, {timeStyle:'short'}))+'</p>';
-  if (s.live && s.live.length) h += '<h2>'+T('Live-Werte','Живые данные')+'</h2><p class="meta">'+esc(new Date(s.liveAt||r.started).toLocaleTimeString(loc, {timeStyle:'short'}))+'</p><div class="live-grid mini'+(s.hist?' charts':'')+'">'+s.live.map(function(x){ var hh = s.hist && s.hist[x.pid], st = hh && hh.length > 1 ? histStat(hh) : null; return '<div class="live"><span class="lbl"><span class="mono">'+(window.JCPID?JCPID.hex(x.pid):'')+'</span> '+esc(x.label)+'</span><b>'+esc(x.text)+'</b>'+(st ? chartSvg(hh)+'<span class="meta">min '+fmtV(st.mn)+' · max '+fmtV(st.mx)+' · Ø '+fmtV(st.avg)+'</span>' : '')+(x.note?'<span class="meta">'+esc(x.note)+'</span>':'')+'</div>'; }).join('')+'</div>';
+  if (s.live && s.live.length) h += '<h2>'+T('Live-Werte','Живые данные')+'</h2><p class="meta">'+esc(new Date(s.liveAt||r.started).toLocaleTimeString(loc, {timeStyle:'short'}))+'</p>'+repCmp(s)+'<div class="live-grid mini'+(s.hist?' charts':'')+'">'+s.live.map(function(x){ var hh = s.hist && s.hist[x.pid], st = hh && hh.length > 1 ? histStat(hh) : null; return '<div class="live"><span class="lbl"><span class="mono">'+(window.JCPID?JCPID.hex(x.pid):'')+'</span> '+esc(x.label)+'</span><b>'+esc(x.text)+'</b>'+(st ? chartSvg(hh)+'<span class="meta">min '+fmtV(st.mn)+' · max '+fmtV(st.mx)+' · Ø '+fmtV(st.avg)+'</span>' : '')+(x.note?'<span class="meta">'+esc(x.note)+'</span>':'')+'</div>'; }).join('')+'</div>';
   h += attHtml(r) + repDelHtml() + foot() + '</div>';
   after(function(){
     attBind(r); repDelBind(r);
@@ -934,6 +997,12 @@ function vObdReport(r){
     var od = $('#oDiag'); if (od) od.onclick = function(){ diagStart(all, 'OBD', {car:r.car}); if (state.diag){ state.diag.fz = JSON.parse(JSON.stringify(r.fz||{})); diagSave(); } };
   });
   return h;
+}
+function repCmp(s){
+  if (!s.hist) return '';
+  var ser = [], tm = 0; (s.live||[]).forEach(function(x, i){ var hh = s.hist[x.pid]; if (!hh || hh.length < 2) return; var nr = cmpNorm(hh); tm = Math.max(tm, hh[hh.length-1][0]); ser.push({pid:x.pid, label:x.label, unit:'', text:x.text, col:CMPCOL[ser.length % CMPCOL.length], pts:hh, lo:nr[0], hi:nr[1], off:false}); });
+  if (ser.length < 2) return '';
+  return '<div class="cmp-card"><svg class="cmp-svg" viewBox="0 0 '+CMPW+' '+CMPH+'">'+cmpInner({ser:ser, t0:0, t1:Math.max(1000, tm)}, null)+'</svg></div><div class="cmp-leg">'+cmpLegend({ser:ser}, null, false)+'</div>';
 }
 function obdBerCard(r){
   var fz = r.fz||{}, s = r.scan||{}, all = obdAllCodes(s.dtc), loc = state.lang==='ru'?'ru-RU':'de-DE';
@@ -952,7 +1021,7 @@ function vObdLive(){
       '<div class="btn-row sticky-act"><button class="btn primary" id="lvStart">▶ '+T('Starten','Запустить')+' ('+livePids().length+')</button><button class="btn" id="lvSnap">'+T('Alle einmal lesen','Прочитать все один раз')+'</button><a class="btn" href="#obd">← OBD</a></div>';
   } else {
     h += '<div class="btn-row"><button class="btn'+(obd.liveOn?'':' primary')+'" id="lvToggle">'+(obd.liveOn?'■ '+T('Stopp','Стоп'):'▶ '+T('Weiter','Продолжить'))+'</button><button class="btn" id="lvPick">'+T('Werte wählen','Выбрать значения')+'</button><a class="btn" href="#obd">← OBD</a></div>' +
-      '<div class="btn-row seg"><button class="btn small'+(obd.view!=='chart'?' primary':'')+'" id="vNum">'+T('Zahlen','Числа')+'</button><button class="btn small'+(obd.view==='chart'?' primary':'')+'" id="vChart">'+T('Diagramme','Графики')+'</button><button class="btn small" id="vClr">'+T('Verlauf leeren','Очистить историю')+'</button></div><div id="liveBox">'+liveTiles()+'</div>';
+      '<div class="btn-row seg"><button class="btn small'+(obd.view==='num'||(obd.view!=='chart'&&obd.view!=='cmp')?' primary':'')+'" id="vNum">'+T('Zahlen','Числа')+'</button><button class="btn small'+(obd.view==='chart'?' primary':'')+'" id="vChart">'+T('Einzeln','По одному')+'</button><button class="btn small'+(obd.view==='cmp'?' primary':'')+'" id="vCmp">'+T('Vergleich','Сравнение')+'</button><button class="btn small" id="vClr">'+T('Verlauf leeren','Очистить историю')+'</button></div><div id="liveBox">'+liveTiles()+'</div>';
   }
   if (obd.busy) h += '<p class="note">'+esc(obd.busy)+'</p>';
   if (obd.err) h += '<div class="callout hv"><b>'+T('Fehler','Ошибка')+'</b><p>'+esc(obd.err)+'</p></div>';
@@ -965,7 +1034,8 @@ function vObdLive(){
       obdRun(T('Lese alle unterstützten Werte …','Читаю все доступные значения …'), function(){ var t0 = Date.now(); return JCPID.read(obd.io, list).then(function(r){ liveSet(r); obd.cyc = (Date.now()-t0)/1000; obdLog(T('Momentaufnahme: ','Снимок: ')+r.length+' '+T('Werte','значений')); if (!r.length && r.diag && r.diag.length) obdLog(T('Keine Werte. Antworten des Adapters: ','Нет значений. Ответы адаптера: ')+r.diag.join(' | ')); obdScanSave('live'); }); }); });
     q('#lvToggle', function(){ if (obd.liveOn){ obd.liveOn = false; obdScanSave('live'); } else { obd.liveOn = true; obd.err = ''; obdLiveLoop(); } render(true); });
     q('#lvPick', function(){ obd.liveOn = false; if (obd.live.length) obdScanSave('live'); obd.livePhase = 'select'; render(true); });
-    [['#vNum','num'],['#vChart','chart']].forEach(function(x){ q(x[0], function(){ obd.view = x[1]; lset('jc-liveview', x[1]); render(true); }); });
+    [['#vNum','num'],['#vChart','chart'],['#vCmp','cmp']].forEach(function(x){ q(x[0], function(){ obd.view = x[1]; obd.cmpSnap = null; obd.cmpT = null; lset('jc-liveview', x[1]); render(true); }); });
+    bindCmpBox();
     q('#vClr', function(){ obd.hist = {}; drawLive(); });
     bindTake();
   });
