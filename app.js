@@ -268,14 +268,14 @@ function card(it){
 }
 function hvCallout(){ return '<div class="callout hv"><b>'+T('Hochvolt','Высокое напряжение')+'</b><p>'+T('Arbeiten an HV-Systemen nur mit Qualifikation nach DGUV Information 209-093. Spannungsfreiheit mit zweipoligem Spannungsprüfer feststellen. Messgeräte mindestens CAT III 1000 V.','Работы с ВВ-системами только при наличии допуска по DGUV Information 209-093. Отсутствие напряжения проверять двухполюсным указателем. Приборы не ниже CAT III 1000 В.')+'</p></div>'; }
 function deNote(){ return state.lang==='ru' ? '<p class="note">Текст главы пока на немецком. Перевод — следующий этап.</p>' : ''; }
-function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.13.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
+function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.14.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
 function crumbs(parts){ return '<p class="eyebrow"><a href="#start">'+T('Start','Главная')+'</a>'+parts.map(function(p){ return ' / '+p; }).join('')+'</p>'; }
 
 /* ---------- Start ---------- */
 var PANNE = ['k102','k103','k29','k28','k109','k119','k111','k110','k45'];
 function vHome(){
   var m = D.meta, v = m.verify;
-  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.13.0 · Stand','Версия 0.13.0 · состояние')+' '+esc(m.stand)+'</p>' +
+  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.14.0 · Stand','Версия 0.14.0 · состояние')+' '+esc(m.stand)+'</p>' +
     '<h1>JC Diagnose</h1><p class="lead">'+T('Sollwerte, Pinbelegung, Multimeter- und Oszilloskop-Prüfschritte für Sensoren, Aktoren, Bordnetz, Bussysteme und Hochvolt – plus Systemtests und dein eigenes Soll/Ist-Messprotokoll.','Нормы, распиновка, проверки мультиметром и осциллографом для датчиков, исполнительных механизмов, бортсети, шин и ВВ — плюс системные тесты и твой собственный журнал замеров «норма/факт».')+'</p>' +
     '<div class="chips"><a class="chip" href="#mess-neu">+ '+T('Neue Messung','Новый замер')+'</a><a class="chip" href="#obd">'+T('Fahrzeug verbinden','Подключить машину')+'</a><a class="chip" href="#dtc">'+T('Fehlercode prüfen','Проверить код ошибки')+'</a><a class="chip" href="#import">'+T('Bericht importieren','Импорт отчёта')+'</a><a class="chip" href="#oszi">'+T('Oszillogramme','Осциллограммы')+'</a><a class="chip" href="#tab-oszi">'+T('Oszi-Startwerte','Настройки осциллографа')+'</a><a class="chip" href="#systemtests">'+T('Systemtests','Системные тесты')+'</a><a class="chip" href="#rechner">'+T('Rechner','Калькуляторы')+'</a><a class="chip" href="#tab-fehler">'+T('Fehlerbilder','Неисправности')+'</a></div></div>' +
     '<div class="stats"><div class="stat"><b>'+m.n_items+'</b><span>'+T('Kapitel','глав')+'</span></div><div class="stat"><b>'+X.systemtests.rows.length+'</b><span>'+T('Systemtests','системных тестов')+'</span></div><div class="stat"><b>'+state.mess.length+'</b><span>'+T('eigene Messungen','своих замеров')+'</span></div></div></section>';
@@ -890,7 +890,7 @@ function obdReportText(r){
   L0.push('JC Diagnose – '+T('OBD-Auslesung','OBD-считывание'));
   var fzl = [fz.kz, [fz.marke, fz.modell].filter(Boolean).join(' '), fz.vin?'VIN '+fz.vin:'', fz.km?fz.km+' km':''].filter(Boolean).join(' · ');
   L0.push(T('Fahrzeug: ','Автомобиль: ')+(fzl||'–'));
-  if (fz.kunde || fz.tel) L0.push(T('Kunde: ','Клиент: ')+[fz.kunde, fz.tel].filter(Boolean).join(' · '));
+  if (fz.kunde || fz.tel || fz.email) L0.push(T('Kunde: ','Клиент: ')+[fz.kunde, fz.tel, fz.email].filter(Boolean).join(' · '));
   L0.push(new Date(r.started).toLocaleString(loc, {dateStyle:'short', timeStyle:'short'})+(r.car?' · '+r.car:'')); L0.push('');
   var all = obdAllCodes(s.dtc);
   if (!s.dtc) L0.push(T('Fehlerspeicher: nicht gelesen','Память ошибок: не читалась'));
@@ -904,15 +904,115 @@ function obdReportText(r){
   return L0.join('\n');
 }
 function attFile(p, i){ return PH.url(p).then(function(u){ if (!u) return null; return fetch(u).then(function(r){ return r.blob(); }).then(function(b){ return new File([b], p.name || ('Foto-'+(i+1)+'.jpg'), {type: b.type || p.type || 'image/jpeg'}); }); }).catch(function(){ return null; }); }
-function sendReport(title, text, rec){
-  var mail = function(){ location.href = 'mailto:?subject='+encodeURIComponent(title)+'&body='+encodeURIComponent(text.slice(0,1800)); };
-  if (!navigator.share) return mail();
-  var fire = function(fl){ var data = {title:title, text:text}; if (fl.length && navigator.canShare && navigator.canShare({files:fl})) data.files = fl; navigator.share(data).catch(function(e){ if (!e || e.name !== 'AbortError') mail(); }); };
-  var files = (rec && rec.files) || [];
-  if (!files.length) return fire([]);
-  toast(T('Anhänge werden vorbereitet …','Готовлю вложения …'));
-  Promise.all(files.map(attFile)).then(function(a){ fire(a.filter(Boolean)); });
+/* ---------- Senden: alle Wege (Teilen, WhatsApp, E-Mail, SMS, Telegram, PDF, Bild, Text, Druck) ---------- */
+function CAPP(n){ return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins[n]; }
+function isNativeApp(){ return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
+function blobB64(b){ return new Promise(function(res, rej){ var fr = new FileReader(); fr.onload = function(){ res(String(fr.result).split(',')[1]); }; fr.onerror = rej; fr.readAsDataURL(b); }); }
+function dlBlob(name, blob){ var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
+function shareFail(e){ var m = String((e && (e.message || e.name)) || e || ''); if (/cancel|abort/i.test(m)) return; toast(T('Senden nicht möglich: ','Не удалось отправить: ')+m.slice(0, 80)); }
+function shareOut(title, text, files){
+  files = files || [];
+  if (isNativeApp() && CAPP('Share')){
+    var FS = CAPP('Filesystem'), go = function(uris){ var o = {title:title, dialogTitle:T('Bericht senden','Отправить отчёт')}; if (text) o.text = text; if (uris.length) o.files = uris; return CAPP('Share').share(o); };
+    if (!files.length || !FS) return go([]).catch(shareFail);
+    return Promise.all(files.map(function(f){ return blobB64(f).then(function(b64){ return FS.writeFile({path:'jc-send/'+f.name, data:b64, directory:'CACHE', recursive:true}); }).then(function(r){ return r.uri; }); })).then(go).catch(shareFail);
+  }
+  if (navigator.share){
+    var d = {title:title}; if (text) d.text = text;
+    if (files.length){ if (navigator.canShare && navigator.canShare({files:files})) d.files = files; else { files.forEach(function(f){ dlBlob(f.name, f); }); toast(T('Dateien wurden gespeichert','Файлы сохранены')); return Promise.resolve(); } }
+    return navigator.share(d).catch(shareFail);
+  }
+  if (files.length){ files.forEach(function(f){ dlBlob(f.name, f); }); toast(T('Dateien wurden gespeichert','Файлы сохранены')); } else { copyText(text || title); }
+  return Promise.resolve();
 }
+function openLink(url){ if (/^https?:/.test(url)){ var w = window.open(url, '_blank'); if (!w) location.href = url; } else location.href = url; }
+function waNum(t){ var d = String(t||'').replace(/[^\d+]/g, ''); if (!d) return ''; if (d[0] === '+') return d.slice(1); if (d.slice(0,2) === '00') return d.slice(2); if (d[0] === '0') return '49'+d.slice(1); return d; }
+function repFileBase(rec){ var fz = (rec && rec.fz) || {}, nm = [fz.kz, fz.marke].filter(Boolean).join('-').replace(/[^\wäöüÄÖÜß-]+/g, '_'); return 'JC-Bericht'+(nm ? '_'+nm : '')+'_'+today(); }
+/* Bericht als Seiten (Canvas) -> Bild und PDF, funktioniert mit allen Schriften (auch Kyrillisch) */
+function repPages(rec, text){
+  var W = 1240, H = 1754, M = 84, pages = [], c, g, y, LH = 38;
+  function newPage(){ c = document.createElement('canvas'); c.width = W; c.height = H; g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); g.fillStyle = '#ffb020'; g.fillRect(0, 0, W, 18); g.fillStyle = '#9aa0a6'; g.font = '22px sans-serif'; g.fillText('JC Diagnose', M, H-40); g.fillText(String(pages.length+1), W-M-20, H-40); y = M+24; pages.push(c); }
+  function wrap(str, font, maxW){ g.font = font; var words = str.split(' '), line = '', out = []; words.forEach(function(w){ var t = line ? line+' '+w : w; if (g.measureText(t).width > maxW && line){ out.push(line); line = w; } else line = t; }); out.push(line); return out; }
+  newPage();
+  text.split('\n').forEach(function(ln, idx){
+    if (!ln.trim()){ y += 18; return; }
+    var lead = (ln.match(/^\s*/)[0].length), x = M + lead*9, body = ln.trim(), head = idx === 0, bold = /^■/.test(body) || /^(Fehlerspeicher|Live-Werte|Notiz|Anhänge|Память ошибок|Живые данные|Заметка|Вложений)/.test(body);
+    var font = (head ? 'bold 46px' : bold ? 'bold 30px' : '28px')+' sans-serif', lh = head ? 60 : LH;
+    wrap(body, font, W-M-x).forEach(function(w, k){ if (y+lh > H-M-30) newPage(); g.font = font; g.fillStyle = head ? '#14181f' : bold ? '#14181f' : '#2b3036'; g.fillText(w, x, y+lh-10); y += lh; });
+    if (head) y += 8;
+  });
+  /* Diagramm der Live-Werte */
+  var sc = rec && rec.scan, ser = [], tm = 0;
+  if (sc && sc.hist) (sc.live||[]).forEach(function(x){ var hh = sc.hist[x.pid]; if (!hh || hh.length < 2) return; var nr = cmpNorm(hh); tm = Math.max(tm, hh[hh.length-1][0]); ser.push({label:x.label, text:x.text, col:CMPCOL[ser.length % CMPCOL.length], pts:hh, lo:nr[0], hi:nr[1]}); });
+  if (ser.length > 1){
+    var ch = 440, legRows = Math.ceil(ser.length/2); if (y + ch + legRows*34 + 70 > H-M) newPage();
+    y += 24; var x0 = M+70, w0 = W-2*M-70, y0 = y+10, k;
+    g.font = 'bold 30px sans-serif'; g.fillStyle = '#14181f'; g.fillText(T('Live-Werte im Vergleich','Живые данные: сравнение'), M, y0-0); y0 += 24;
+    g.strokeStyle = '#e1e4e8'; g.lineWidth = 1; g.fillStyle = '#6b7280'; g.font = '20px sans-serif';
+    for (k = 0; k < 5; k++){ var yy = y0+ch*k/4; g.beginPath(); g.moveTo(x0, yy); g.lineTo(x0+w0, yy); g.stroke(); g.fillText((100-25*k)+'%', M, yy+7); }
+    var span = Math.max(1000, tm); g.textAlign = 'center'; for (k = 0; k < 5; k++){ g.fillText(Math.round(span*k/4000)+' s', x0+w0*k/4, y0+ch+28); } g.textAlign = 'left';
+    ser.forEach(function(sr){ g.strokeStyle = sr.col; g.lineWidth = 3; g.lineJoin = 'round'; g.beginPath(); sr.pts.forEach(function(p, i){ var px = x0+w0*p[0]/span, py = y0+ch*(1-Math.max(0, Math.min(1, (p[1]-sr.lo)/(sr.hi-sr.lo)))); i ? g.lineTo(px, py) : g.moveTo(px, py); }); g.stroke(); });
+    y = y0+ch+56; g.font = '24px sans-serif';
+    ser.forEach(function(sr, i){ var lx = M+(i%2)*((W-2*M)/2), ly = y+Math.floor(i/2)*34; g.fillStyle = sr.col; g.fillRect(lx, ly-18, 22, 22); g.fillStyle = '#2b3036'; g.fillText((sr.label+': '+sr.text).slice(0, 38), lx+32, ly); });
+    y += legRows*34+10;
+  }
+  /* Fotos und Screenshots */
+  var imgs = ((rec && rec.files) || []).filter(function(p){ return /^image\//.test(p.type || 'image/jpeg'); });
+  return imgs.reduce(function(pr, p){ return pr.then(function(){ return PH.url(p).then(function(u){ if (!u) return; return new Promise(function(res){ var im = new Image(); im.onload = function(){ newPage(); g.fillStyle = '#14181f'; g.font = 'bold 30px sans-serif'; g.fillText(p.cap || T('Anhang','Вложение'), M, M+30); var bw = W-2*M, bh = H-2*M-110, k = Math.min(bw/im.naturalWidth, bh/im.naturalHeight, 1.5); g.drawImage(im, M, M+60, im.naturalWidth*k, im.naturalHeight*k); res(); }; im.onerror = function(){ res(); }; im.src = u; }); }); }); }, Promise.resolve()).then(function(){ return pages; });
+}
+function canvasBlob(c, type, q){ return new Promise(function(res){ c.toBlob(res, type, q); }); }
+function buildPdf(jpegs){
+  var enc = new TextEncoder(), parts = [], offs = [], len = 0, n = jpegs.length;
+  function push(x){ var b = typeof x === 'string' ? enc.encode(x) : x; parts.push(b); len += b.length; }
+  function begin(num){ offs[num] = len; push(num+' 0 obj\n'); }
+  push('%PDF-1.4\n');
+  begin(1); push('<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+  begin(2); push('<< /Type /Pages /Count '+n+' /Kids ['+jpegs.map(function(_, i){ return (3+3*i)+' 0 R'; }).join(' ')+'] >>\nendobj\n');
+  jpegs.forEach(function(j, i){ var pg = 3+3*i, ct = 4+3*i, im = 5+3*i, cs = 'q 595 0 0 842 0 0 cm /Im0 Do Q';
+    begin(pg); push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /XObject << /Im0 '+im+' 0 R >> >> /Contents '+ct+' 0 R >>\nendobj\n');
+    begin(ct); push('<< /Length '+cs.length+' >>\nstream\n'+cs+'\nendstream\nendobj\n');
+    begin(im); push('<< /Type /XObject /Subtype /Image /Width '+j.w+' /Height '+j.h+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+j.bytes.length+' >>\nstream\n'); push(j.bytes); push('\nendstream\nendobj\n'); });
+  var xr = len, total = 3+3*n; push('xref\n0 '+total+'\n0000000000 65535 f \n'); for (var k = 1; k < total; k++) push(String(offs[k]).padStart(10, '0')+' 00000 n \n');
+  push('trailer\n<< /Size '+total+' /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF');
+  return new Blob(parts, {type:'application/pdf'});
+}
+function repPdf(rec, text){ return repPages(rec, text).then(function(pages){ return Promise.all(pages.map(function(c){ return canvasBlob(c, 'image/jpeg', 0.88).then(function(b){ return b.arrayBuffer().then(function(ab){ return {bytes:new Uint8Array(ab), w:c.width, h:c.height}; }); }); })); }).then(function(j){ return new File([buildPdf(j)], repFileBase(rec)+'.pdf', {type:'application/pdf'}); }); }
+function repPngs(rec, text){ return repPages(rec, text).then(function(pages){ return Promise.all(pages.map(function(c, i){ return canvasBlob(c, 'image/png').then(function(b){ return new File([b], repFileBase(rec)+(pages.length > 1 ? '_'+(i+1) : '')+'.png', {type:'image/png'}); }); })); }); }
+function sendSheet(title, text, rec){
+  var old = document.getElementById('sdSheet'); if (old) old.remove();
+  var fz = (rec && rec.fz) || {}, nat = isNativeApp();
+  var ic = {share:'M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v14', wa:'M21 12a9 9 0 0 1-13.4 7.8L3 21l1.3-4.4A9 9 0 1 1 21 12z', mail:'M3 5h18v14H3zM3 6l9 7 9-7', sms:'M4 4h16v12H8l-4 4z', tg:'M22 2L11 13M22 2l-7 20-4-9-9-4z', pdf:'M6 2h8l5 5v15H6zM14 2v5h5M9 14h7M9 18h5', png:'M3 4h18v16H3zM3 16l5-5 4 4 3-3 6 6', copy:'M9 9h11v11H9zM5 15H4V4h11v1', txt:'M6 2h8l5 5v15H6zM9 13h7M9 17h5', print:'M6 9V2h12v7M6 18H4v-7h16v7h-2M8 14h8v8H8z'};
+  var col = {share:'#ffb020', wa:'#25d366', mail:'#4cc9f0', sms:'#7be08c', tg:'#2aabee', pdf:'#ff7a6b', png:'#b49cff', copy:'#9aa6b5', txt:'#9aa6b5', print:'#9aa6b5'};
+  var opts = [['share',T('Teilen …','Поделиться …'),T('PDF + Anhänge, alle Apps','PDF + вложения, любые приложения')],['wa','WhatsApp',T('Text an Kunden','текст клиенту')],['mail',T('E-Mail','E-mail'),T('Text im Mail-Programm','текст в почтовом приложении')],['sms','SMS',T('Kurztext','краткий текст')],['tg','Telegram',T('Text teilen','поделиться текстом')],['pdf','PDF',T('Datei teilen / speichern','файл: отправить / сохранить')],['png',T('Bild','Картинка'),T('Screenshot des Berichts','«скриншот» отчёта')],['copy',T('Text kopieren','Копировать текст'),T('in Zwischenablage','в буфер обмена')],['txt',T('Textdatei','Текстовый файл'),'.txt']];
+  if (!nat) opts.push(['print',T('Drucken','Печать'),T('Druckdialog','диалог печати')]);
+  var el = document.createElement('div'); el.id = 'sdSheet';
+  el.innerHTML = '<div class="sheet-bg" id="sdBg"></div><section class="sheet" role="dialog" aria-label="'+T('Bericht senden','Отправить отчёт')+'"><div class="sheet-grip"></div><header class="sheet-head"><div><h2>'+T('Bericht senden','Отправить отчёт')+'</h2><p class="meta">'+esc(title)+'</p></div><button class="btn small" id="sdX" aria-label="'+T('Schließen','Закрыть')+'">✕</button></header><div class="sheet-body">' +
+    '<div class="form-grid"><div class="field"><label for="sdTel">'+T('Telefon (WhatsApp, SMS)','Телефон (WhatsApp, SMS)')+'</label><input id="sdTel" inputmode="tel" value="'+esc(fz.tel||'')+'" autocomplete="off"></div><div class="field"><label for="sdMail">'+T('E-Mail des Kunden','E-mail клиента')+'</label><input id="sdMail" inputmode="email" value="'+esc(fz.email||'')+'" autocomplete="off"></div></div>' +
+    '<div class="send-grid">'+opts.map(function(o){ return '<button type="button" class="send-btn" data-send="'+o[0]+'"><span class="send-ic" style="color:'+col[o[0]]+'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="'+ic[o[0]]+'"/></svg></span><span><b>'+esc(o[1])+'</b><small>'+esc(o[2])+'</small></span></button>'; }).join('')+'</div>' +
+    '<p class="meta">'+T('WhatsApp, SMS, E-Mail und Telegram senden den Berichtstext. Fotos und PDF gehen über „Teilen“ oder „PDF“.','WhatsApp, SMS, e-mail и Telegram отправляют текст отчёта. Фото и PDF — через «Поделиться» или «PDF».')+'</p></div></section>';
+  document.body.appendChild(el);
+  var close = function(){ el.remove(); };
+  $('#sdBg').onclick = close; $('#sdX').onclick = close;
+  var tel = $('#sdTel'), mail = $('#sdMail');
+  var keep = function(){ if (!rec) return; rec.fz = rec.fz || {}; var ch = false; [['tel', tel], ['email', mail]].forEach(function(x){ var v = x[1].value.trim(); if ((rec.fz[x[0]]||'') !== v){ rec.fz[x[0]] = v; ch = true; } }); if (ch) diagSaveAny(rec); };
+  tel.onchange = keep; mail.onchange = keep;
+  var busy = function(){ toast(T('Wird erstellt …','Создаю …')); };
+  var nonImg = function(){ return Promise.all(((rec && rec.files) || []).map(function(p, i){ return /^image\//.test(p.type || 'image/jpeg') ? null : attFile(p, i); })).then(function(a){ return a.filter(Boolean); }); };
+  var act = {
+    share: function(){ busy(); return Promise.all([repPdf(rec, text), nonImg()]).then(function(r){ return shareOut(title, text.length < 1500 ? text : '', [r[0]].concat(r[1])); }); },
+    wa: function(){ var n = waNum(tel.value); openLink('https://wa.me/'+n+'?text='+encodeURIComponent(text.slice(0, 3500))); },
+    mail: function(){ openLink('mailto:'+encodeURIComponent(mail.value.trim()).replace(/%40/g, '@')+'?subject='+encodeURIComponent(title)+'&body='+encodeURIComponent(text.slice(0, 3500))); },
+    sms: function(){ openLink('sms:'+tel.value.replace(/[^\d+]/g, '')+'?body='+encodeURIComponent(text.slice(0, 600))); },
+    tg: function(){ openLink('https://t.me/share/url?url='+encodeURIComponent(' ')+'&text='+encodeURIComponent(text.slice(0, 3500))); },
+    pdf: function(){ busy(); return repPdf(rec, text).then(function(f){ return shareOut(title, '', [f]); }); },
+    png: function(){ busy(); return repPngs(rec, text).then(function(fs){ return shareOut(title, '', fs); }); },
+    copy: function(){ copyText(text); },
+    txt: function(){ var f = new File(['﻿'+text], repFileBase(rec)+'.txt', {type:'text/plain'}); return shareOut(title, '', [f]); },
+    print: function(){ close(); setTimeout(function(){ window.print(); }, 200); }
+  };
+  el.querySelectorAll('[data-send]').forEach(function(b){ b.onclick = function(){ keep(); var f = act[b.dataset.send]; if (!f) return; if (['wa','sms'].indexOf(b.dataset.send) >= 0 && !tel.value.trim() && b.dataset.send === 'sms'){ toast(T('Bitte Telefonnummer eintragen','Укажи номер телефона')); tel.focus(); return; } var r = f(); if (r && r.then) r.then(function(){}, shareFail); }; });
+}
+function sendReport(title, text, rec){ sendSheet(title, text, rec); }
 /* ---------- Notiz und Anhänge (für jeden Bericht) ---------- */
 function attHtml(D0){
   var f = D0.files || [];
@@ -1256,7 +1356,7 @@ function dtcMeaning(code){
   var range = a.seg[0]===a.seg[1] ? a.seg[0] : a.seg[0]+'–'+a.seg[1];
   return code+T(' ist ein ',' — ')+mfr+T(' Code der Gruppe ',' код группы «')+grp+T('. Thema: ','». Тема: ')+a.t.title+' ('+T('System ','система ')+a.t.system+T(', Codebereich ',', диапазон ')+range+').' + (a.mirror ? T(' Herstellercode – Bedeutung hier am genormten ',' Код производителя — значение дано по стандартному ')+a.mirror+T(' angelehnt, genaue Bezeichnung laut Hersteller prüfen.',', точное название сверить с производителем.') : '');
 }
-var FZ_FIELDS = [['kz','Kennzeichen','Госномер'],['marke','Marke','Марка'],['modell','Modell / Baujahr','Модель / год'],['vin','VIN','VIN'],['km','Kilometerstand','Пробег, км'],['kunde','Kunde (Name)','Клиент (имя)'],['tel','Telefon','Телефон']];
+var FZ_FIELDS = [['kz','Kennzeichen','Госномер'],['marke','Marke','Марка'],['modell','Modell / Baujahr','Модель / год'],['vin','VIN','VIN'],['km','Kilometerstand','Пробег, км'],['kunde','Kunde (Name)','Клиент (имя)'],['tel','Telefon','Телефон'],['email','E-Mail','E-mail']];
 function fzSummary(fz){ fz = fz || {}; return [fz.kz, [fz.marke, fz.modell].filter(Boolean).join(' '), fz.kunde].filter(Boolean).join(' · '); }
 function fzForm(fz){
   var canObd = obd && obd.io && obd.veh && (obd.veh.vin || obd.veh.km);
@@ -1363,7 +1463,7 @@ function diagReport(D0){
   D0 = D0 || state.diag; var L0 = [], loc = state.lang==='ru'?'ru-RU':'de-DE', fz = D0.fz || {};
   L0.push('JC Diagnose – '+T('Diagnosebericht','Отчёт по диагностике'));
   var fzl = [fz.kz, [fz.marke, fz.modell].filter(Boolean).join(' '), fz.vin?'VIN '+fz.vin:'', fz.km?fz.km+' km':''].filter(Boolean).join(' · '); if (fzl) L0.push(T('Fahrzeug: ','Автомобиль: ')+fzl);
-  if (fz.kunde || fz.tel) L0.push(T('Kunde: ','Клиент: ')+[fz.kunde, fz.tel].filter(Boolean).join(' · '));
+  if (fz.kunde || fz.tel || fz.email) L0.push(T('Kunde: ','Клиент: ')+[fz.kunde, fz.tel, fz.email].filter(Boolean).join(' · '));
   L0.push(new Date(D0.started).toLocaleDateString(loc, {day:'2-digit', month:'2-digit', year:'numeric'})+(D0.car?' · '+D0.car:'')); L0.push('');
   D0.codes.forEach(function(c){ var a = dtcAdvice(c.code), t = a && a.t;
     L0.push('■ '+c.code+' – '+(t?t.title:T('Herstellercode','Код производителя'))+' ['+(c.done?T('erledigt','закрыт'):T('offen','открыт'))+']');
@@ -1762,6 +1862,7 @@ window.addEventListener('hashchange', function(){ state.repEdit = false; render(
   var exitAt = 0, isApp = false, CP = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
   function closeTop(){
     var lb = document.querySelector('.lb'); if (lb){ lb.remove(); return true; }
+    var sd = document.getElementById('sdSheet'); if (sd){ sd.remove(); return true; }
     var sx = document.getElementById('shX'); if (sx){ sx.click(); return true; }
     var sk = document.getElementById('skinMenu'); if (sk){ sk.remove(); return true; }
     if (side.classList.contains('open')){ closeNav(); return true; }

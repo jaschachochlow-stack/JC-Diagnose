@@ -24,6 +24,11 @@ Berichte anderer Diagnosegeräte (Launch X431 getestet; Autel, Bosch, Foxwell u.
 ## Foto-/Scan-Erkennung (0.11.1)
 Fotos (Kamera oder Galerie), Screenshots und eingescannte PDFs werden offline per Tesseract (WebAssembly, Sprachen deu/eng/rus, Ordner `ocr/`, ca. 15 MB) gelesen. Schräg fotografierte Berichte werden über die erkannten Zeilen geradegerechnet. Die Erkennung ist auf Bildern naturgemäß unsicherer als bei PDF mit Textebene: Codes, Zustand und Beschreibung immer mit dem Bild vergleichen (typische Verwechslungen 0/O, 1/I, 8/B, 5/S werden in Codes automatisch korrigiert). Windows-App lädt die Oberfläche jetzt über ein eigenes `app://`-Schema, damit Web-Worker und WebAssembly zuverlässig laufen. Android: Kamera-Berechtigung für die Fotoaufnahme.
 
+## Berichte senden (0.14.0)
+- „Senden“ öffnet ein Fenster: Teilen (PDF + Anhänge, alle Apps), WhatsApp (an die Kundennummer), E-Mail, SMS, Telegram, PDF, Bild (Screenshot des Berichts), Text kopieren, Textdatei, Drucken (am PC).
+- Der Bericht wird als PDF/Bild selbst erzeugt (inkl. Diagramm der Live-Werte und Fotos), auch mit kyrillischer Schrift. Neues Kundenfeld „E-Mail“.
+- Android nutzt dafür @capacitor/share und @capacitor/filesystem.
+
 ## Cockpit-Design und Vergleichsdiagramm (0.13.0)
 - Neues Standard-Aussehen „Cockpit“: dunkel, Kacheln, Amber-Akzent; auf dem Handy schwebende Leiste unten (Start, OBD, Nachschlagewerk, Berichte, Mehr) statt doppelter Navigation. Alte Aussehen bleiben wählbar.
 - Live-Daten: neuer Modus „Vergleich“ – alle gewählten Werte in einem farbigen Diagramm (je Linie auf 0–100 % normiert), Legendenkarten mit aktuellem Wert, Finger auf dem Diagramm zeigt alle Werte zum gleichen Zeitpunkt, Karte antippen blendet Linie aus, Fenster 30 s / 60 s / Alles. Das Vergleichsdiagramm steht auch im OBD-Bericht.
