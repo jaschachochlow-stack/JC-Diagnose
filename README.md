@@ -47,6 +47,13 @@ Fotos (Kamera oder Galerie), Screenshots und eingescannte PDFs werden offline pe
 - Beschriftungen automatisch auf Überlauf geprüft (DE/RU, 360–1280 px).
 
 
+## 0.15.2 – Namen für alle Marken
+
+- Namenserkennung ohne Markentabelle: aus dem genormten OBD-Namen (Modus 09 PID 0A) und dem Systemnamen (UDS F197) erkennt die App Airbag, ABS/ESP, Getriebe, Motor, Kombiinstrument, Gateway, Lenkung, Klima, Fahrwerk, Tür, Sitz usw. bei jeder Marke.
+- Zusätzliche Adresstabellen: Ford/Lincoln (7E0, 7E1, 760 ABS, 720 IPC, 726 BCM) und Hyundai/Kia/Genesis (7E0, 7E1, 7A0 BCM, 7D1 ABS/ESP); VAG und PSA wie bisher.
+- Mehr Kennungen pro Steuergerät (Zulieferer, Software-/Hardware-Version).
+- Grenzen: BMW/Mini (erweiterte Adressierung) und Hersteller mit 29-Bit-Adressen werden nicht gefunden.
+
 ## 0.15.1 – Alle Steuergeräte in einem Schritt
 
 - Ein Knopf: sucht alle Steuergeräte, liest Kennungen und den kompletten Fehlerspeicher aller Steuergeräte und benennt sie automatisch (Motor, Getriebe, ABS/ESP, Airbag, Kombiinstrument, Fahrwerk, Klima, Lenkung, Türen …).

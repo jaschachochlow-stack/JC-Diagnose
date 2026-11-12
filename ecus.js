@@ -79,8 +79,40 @@ var PSA = [
 ['6AF','68F','Doppelkupplungsgetriebe','Робот с двойным сцеплением'],['6A9','689','Getriebesteuerung','ЭБУ КПП'],['6B5','695','Lenkung','Рулевое управление'],['6B8','698','Reifendruckkontrolle','Контроль давления в шинах'],
 ['765','665','Anzeige / Display','Дисплей'],['764','664','Telematik','Телематика'],['7E0','7E8','Motorsteuerung','ЭБУ двигателя']
 ];
+// Ford: Modul-Adressen aus FORScan/Ford-Werkstatthandbuch (7E0 PCM, 760 ABS, 720 IPC, 726 BCM/SJB); Hyundai/Kia: Kona-PID-Tabelle (7A0 BCM, 7D1 ABS/ESP).
+var FORD = [['7E0','7E8','Motorsteuerung (PCM)','ЭБУ двигателя (PCM)'],['7E1','7E9','Getriebesteuerung (TCM)','ЭБУ КПП (TCM)'],['760','768','ABS-Modul','Модуль ABS'],['720','728','Kombiinstrument (IPC)','Приборная панель (IPC)'],['726','72E','Karosseriemodul (BCM/SJB)','Блок кузова (BCM/SJB)']];
+var HK = [['7E0','7E8','Motorsteuerung (ECM)','ЭБУ двигателя (ECM)'],['7E1','7E9','Getriebesteuerung (TCU)','ЭБУ КПП (TCU)'],['7A0','7A8','Karosseriemodul (BCM)','Блок кузова (BCM)'],['7D1','7D9','ABS/ESP','ABS/ESP']];
+// Erkennung aus der Kennung des Steuergeräts (OBD-Name 09 0A, Systemname F197): gilt für alle Marken
+var GUESS = [
+[/airbag|srs|restraint|occupant|\borc\b|\bocs\b|\bacu\b/i,'Airbag','Airbag (подушки безопасности)'],
+[/abs|esp|\besc\b|brake|bremse|skid|\bvsc\b|\bdsc\b|\bhcu\b/i,'Bremsen (ABS/ESP)','Тормоза (ABS/ESP)'],
+[/transm|\btcm\b|\btcu\b|getriebe|gearbox|\bdsg\b|\btcc\b|gear ?shift/i,'Getriebesteuerung','ЭБУ КПП'],
+[/engine|\becm\b|\bpcm\b|\bdme\b|\bede\b|\bmed\b|motor(?!ized)|\bdde\b/i,'Motorsteuerung','ЭБУ двигателя'],
+[/cluster|kombi|instrument|meter|\bipc\b|\bdash/i,'Kombiinstrument','Приборная панель'],
+[/gateway|\bgw\b|\bcgw\b/i,'Gateway','Шлюз (Gateway)'],
+[/steer|lenk|\beps\b|\bpas\b/i,'Lenkung','Рулевое управление'],
+[/climat|hvac|klima|air ?con|\bclim\b|\bac\b|heater/i,'Klimaanlage','Климат-контроль'],
+[/park|\bpdc\b|\bpts\b|sonar|rear ?view|camera|kamera/i,'Einparkhilfe / Kamera','Парктроник / камера'],
+[/radar|\bacc\b|cruise|adas|lane|spur|abstand/i,'Fahrerassistenz','Системы помощи водителю'],
+[/radio|infot|head ?unit|navi|\bmmi\b|media|audio|sound|tuner|multimedia/i,'Infotainment / Radio','Мультимедиа / радио'],
+[/tpms|tire|reifen|\brdk\b/i,'Reifendruckkontrolle','Контроль давления в шинах'],
+[/hybrid|\bhv\b|battery|batter|\bbms\b|\bbecm\b|inverter|charger|\bobc\b|dcdc|e-?drive|traction|\bvcu\b/i,'Hybrid / Batterie / Antrieb','Гибрид / батарея / привод'],
+[/immo|kessy|keyless|smart ?key|access|\bkey\b|schl[uü]ssel/i,'Zugang / Wegfahrsperre','Доступ / иммобилайзер'],
+[/door|t[uü]r|\bdoor\b/i,'Tür','Дверь'],
+[/seat|sitz/i,'Sitz','Сиденье'],
+[/light|lamp|leucht|headl|licht|\bahl\b|\bafs\b/i,'Beleuchtung','Освещение'],
+[/wiper|wisch|rain/i,'Wischer / Regensensor','Дворники / датчик дождя'],
+[/suspens|damp|fahrwerk|\bdcc\b|\bcdc\b|air ?susp|\bpasm\b/i,'Fahrwerk / Dämpfer','Подвеска / амортизаторы'],
+[/awd|4wd|allrad|transfer|haldex|xdrive|quattro/i,'Allradantrieb','Полный привод'],
+[/park ?brake|\bepb\b|feststell/i,'Elektr. Parkbremse','Электр. стояночный тормоз'],
+[/body|\bbcm\b|\bsjb\b|\bbsi\b|\bbdc\b|comfort|komfort|bordnetz|zentral|central|\bgem\b|\bfem\b|\bcas\b/i,'Karosserie / Komfort','Кузов / комфорт'],
+[/telem|\btcu\b|phone|telefon|connect|\bbluetooth/i,'Telematik / Telefon','Телематика / телефон']
+];
+function guess(idn){ if (!idn) return null; var t = [idn['090A'], idn.F197, idn.F18A].filter(Boolean).join(' '); if (!t) return null; for (var i = 0; i < GUESS.length; i++) if (GUESS[i][0].test(t)) return [GUESS[i][1], GUESS[i][2]]; return null; }
 var BR = {
   vag:{n:['VAG (VW, Audi, Seat, Škoda, Cupra, Porsche)','VAG (VW, Audi, Seat, Škoda, Cupra, Porsche)'], t:VAG, re:/volkswagen|\bvw\b|audi|seat|cupra|skoda|škoda|porsche|bentley|lamborghini/i},
+  ford:{n:['Ford / Lincoln','Ford / Lincoln'], t:FORD, re:/ford|lincoln|mercury/i},
+  hk:{n:['Hyundai / Kia / Genesis','Hyundai / Kia / Genesis'], t:HK, re:/hyundai|\bkia\b|genesis/i},
   psa:{n:['Peugeot / Citroën / DS','Peugeot / Citroën / DS'], t:PSA, re:/peugeot|citro|^ds\b/i},
   other:{n:['Andere Marke (nur Standard-Namen)','Другая марка (только стандартные названия)'], t:[[ '7E0','7E8','Motorsteuerung','ЭБУ двигателя'],['7E1','7E9','Getriebesteuerung','ЭБУ КПП']], re:null}
 };
@@ -153,7 +185,7 @@ async function clearDtcs(io, ecu){
 }
 
 // ---- Kennungen und Rohwerte ----------------------------------------------------------------
-var IDENT = [[0xF190,'VIN','VIN'],[0xF187,'Teilenummer','Номер детали'],[0xF189,'Software-Version','Версия ПО'],[0xF197,'Systemname','Название системы'],[0xF18C,'Seriennummer','Серийный номер'],[0xF191,'Hardware-Nr.','Номер железа']];
+var IDENT = [[0xF190,'VIN','VIN'],[0xF18A,'Hersteller (Zulieferer)','Поставщик'],[0xF194,'Software-Nr.','Номер ПО'],[0xF193,'Hardware-Version','Версия железа'],[0xF187,'Teilenummer','Номер детали'],[0xF189,'Software-Version','Версия ПО'],[0xF197,'Systemname','Название системы'],[0xF18C,'Seriennummer','Серийный номер'],[0xF191,'Hardware-Nr.','Номер железа']];
 function ascii(d){ return d.map(function(c){ return c >= 32 && c < 127 ? String.fromCharCode(c) : ''; }).join('').trim(); }
 function isText(d){ return d.length > 2 && d.every(function(c){ return c >= 32 && c < 127; }); }
 function uintOf(d){ if (!d.length || d.length > 4) return null; var v = 0; d.forEach(function(c){ v = v*256 + c; }); return v; }
@@ -166,6 +198,8 @@ async function ident(io, ecu){
   return withBus(io, async function(){
     var out = {}, i;
     for (i = 0; i < IDENT.length; i++){ var r = await readDid(io, ecu, IDENT[i][0]); if (r.data && r.data.length) out[IDENT[i][0].toString(16).toUpperCase()] = r.text || r.hex; }
+    if (/^7E[0-7]$/.test(ecu.req)){ // genormter OBD-Name des Steuergeräts (Modus 09, PID 0A)
+      try { var o = await request(io, ecu, '090A', 0x09, 4000); if (o.ok && o.data.length > 2){ var nm = ascii(o.data.slice(2).filter(function(c){ return c; })); if (nm) out['090A'] = nm; } } catch(e){ if (io.closed) throw e; } }
     return out;
   });
 }
@@ -206,6 +240,7 @@ function demo(c){
   var e = DEMO[ds.req]; if (!e) return 'NO DATA';
   var b = pairs(c), t = Date.now(), k;
   if (c === '3E00') return dframe(e.res, [0x7E, 0x00]);
+  if (c === '090A' && ds.req === '7E0') return dframe(e.res, [0x49, 0x0A, 0x01].concat('ECM-EngineControl'.split('').map(function(ch){ return ch.charCodeAt(0); }), [0, 0, 0]));
   if (c === '1902FF'){ var o = [0x59, 0x02, 0xFF]; e.dtc.forEach(function(x){ o = o.concat(x); }); return dframe(e.res, o); }
   if (c === '14FFFFFF'){ if (ds.req === '7C0') return dframe(e.res, [0x7F, 0x14, 0x22]); e.dtc = []; return dframe(e.res, [0x54]); }
   if (b[0] === 0x22 && b.length === 3){ k = hx(b[1])+hx(b[2]); var v = e.did[k];
@@ -216,6 +251,6 @@ function demo(c){
 }
 
 window.JCECU = {scan:scan, readDtcs:readDtcs, clearDtcs:clearDtcs, ident:ident, readDid:readDid, readDids:readDids, scanDids:scanDids, restore:restore, demo:demo, IDENT:IDENT, flagText:flagText, dtc3:dtc3, payload:payload, frames:frames, hx:hx, sleep:sleep,
-  label:function(req, brand){ var k = known(brand || 'other', req); return k ? [k[2], k[3]] : null; }, brands:BR, brandOf:brandOf,
+  label:function(req, brand){ var k = known(brand || 'other', req); return k ? [k[2], k[3]] : null; }, guess:guess, brands:BR, brandOf:brandOf,
   kinds:[['ABS / ESP','ABS / ESP'],['Airbag','Airbag'],['Kombiinstrument','Приборная панель'],['Komfort / Zentralelektrik','Комфорт / ЦЭ'],['Klima','Климат'],['Lenkung','Рулевое'],['Getriebe','КПП'],['Motor','Двигатель'],['Gateway','Шлюз'],['Sonstiges','Прочее']]};
 })();
