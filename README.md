@@ -13,6 +13,11 @@ Berichte, Fahrzeugakte und Oszillogramm-Referenzen.
 Richtwerte ohne Gewähr – Herstellerdaten gehen vor.
 
 
+## Alle Protokolle prüfen und Aktive Tests (0.17.0)
+- Standard beim Verbinden: **alle Protokolle nacheinander prüfen** (CAN 11/29 Bit 500/250 kbit, KWP, ISO 9141, J1850 PWM/VPW, Benutzer 1/2, J1939), danach das Protokoll mit den meisten Antworten (Steuergeräte + unterstützte PIDs) wählen. Ergebnis als Tabelle, jederzeit per Knopf „Alle Protokolle prüfen“, einzeln umschaltbar.
+- **Aktive Tests** je Steuergerät: Folge aus UDS-Befehlen (10 03, 31 Routinen, 2F Stellglieder, 3E, 08) mit Wartezeit, Tester-Present und immer ausgeführter Stopp-Folge; Vorlagen, eigene gespeicherte Tests, Protokoll im Bericht. Gesperrt: Programmieren, Löschen, Reset, Sicherheitszugriff, Schreiben.
+- Hinweis XTool A30X: ein eigener Adapter für die Anyscan+-App; ob er ELM327-Befehle versteht, ist nicht dokumentiert. Antwortet er nicht auf AT-Befehle, kann die App ihn nicht nutzen.
+
 ## Apps (0.10.0)
 - **Android-App** (Capacitor): Bluetooth LE, klassisches Bluetooth (SPP) und WLAN-TCP für ELM327. Download: Release „apk“ → JC-Diagnose.apk.
 - **Windows-App** (Electron, portable .exe): Bluetooth LE, COM-Port (USB oder in Windows gekoppeltes Bluetooth) und WLAN-TCP. Download: Release „windows“ → JC-Diagnose-Windows.exe.

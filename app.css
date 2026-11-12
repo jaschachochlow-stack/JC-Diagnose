@@ -709,3 +709,5 @@ html[data-skin=cockpit] .ck-big{box-shadow:0 8px 30px rgba(255,176,32,.12)}
 .ecu-tab{width:100%;border-collapse:collapse;font-size:.9em;display:block;overflow-x:auto;max-width:100%}
 .ecu-tab th,.ecu-tab td{text-align:left;padding:5px 8px;border-bottom:1px solid rgba(127,127,127,.25);white-space:nowrap}
 .ecu-rep{margin:0 0 10px}
+.pro-box{margin:14px 0}.pro-box tr.on td{background:var(--surface-2,rgba(0,128,0,.08))}
+.wrap textarea.mono{width:100%;box-sizing:border-box;font-family:var(--mono,monospace)}

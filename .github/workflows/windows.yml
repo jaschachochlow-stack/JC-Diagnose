@@ -2,7 +2,7 @@ name: Windows-App bauen
 on:
   push:
     branches: [main]
-    paths: ['desktop/**', 'index.html', 'app.js', 'app.css', 'data.js', 'jcx.js', 'oszi.js', 'pids.js', 'ecus.js', 'bericht.js', 'pdf.min.js', 'pdf.worker.min.js', '.github/workflows/windows.yml']
+    paths: ['desktop/**', 'index.html', 'app.js', 'app.css', 'data.js', 'jcx.js', 'oszi.js', 'pids.js', 'ecus.js', 'protos.js', 'bericht.js', 'pdf.min.js', 'pdf.worker.min.js', '.github/workflows/windows.yml']
   workflow_dispatch:
 permissions:
   contents: write
@@ -17,7 +17,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p desktop/app
-          cp index.html app.js app.css data.js jcx.js oszi.js pids.js ecus.js bericht.js pdf.min.js pdf.worker.min.js sw.js manifest.json icon-192.png icon-512.png desktop/app/
+          cp index.html app.js app.css data.js jcx.js oszi.js pids.js ecus.js protos.js bericht.js pdf.min.js pdf.worker.min.js sw.js manifest.json icon-192.png icon-512.png desktop/app/
           cp -r ocr desktop/app/
       - name: Bauen
         working-directory: desktop

@@ -177,6 +177,15 @@ async function request(io, ecu, hexReq, svc, to){
   if (b && ecu.mode === 'bmw' && b[0] === 0xF1) b = b.slice(1);
   return check(b, svc);
 }
+async function rawReq(io, ecu, hexReq, to){ // beliebige Anfrage an ein Steuergerät (ohne Auswertung des Dienstes)
+  await setup(io, ecu);
+  var raw = await io.send(hexReq, to || 4000), b = payload(raw);
+  if (b && ecu.mode === 'bmw' && b[0] === 0xF1) b = b.slice(1);
+  if (!b || !b.length) return {none:true, raw:String(raw||'').replace(/\s+/g, ' ').trim()};
+  var hex = b.map(function(c){ return hx(c); }).join(' ');
+  if (b[0] === 0x7F) return {neg:true, nrc:b[2], svc:b[1], text:nrcText(b[2]), bytes:b, hex:hex};
+  return {ok:true, bytes:b, hex:hex};
+}
 async function withBus(io, fn){ await begin(io); try { return await fn(); } finally { await end(io); } }
 
 // Suche: Test-Anfrage 3E 00 an jede Adresse; wer antwortet, ist ein Steuergerät.
@@ -331,6 +340,9 @@ function demo(c){
   if (c === '090A' && ds.req === '7E0') return dframe(e.res, [0x49, 0x0A, 0x01].concat('ECM-EngineControl'.split('').map(function(ch){ return ch.charCodeAt(0); }), [0, 0, 0]));
   if (c === '1902FF'){ var o = [0x59, 0x02, 0xFF]; e.dtc.forEach(function(x){ o = o.concat(x); }); return dframe(e.res, o); }
   if (c === '14FFFFFF'){ if (ds.req === '7C0') return dframe(e.res, [0x7F, 0x14, 0x22]); e.dtc = []; return dframe(e.res, [0x54]); }
+  if (b[0] === 0x10){ if (ds.req === '7C0') return dframe(e.res, [0x7F, 0x10, 0x22]); return dframe(e.res, [0x50, b[1], 0x00, 0x32, 0x01, 0xF4]); }
+  if (b[0] === 0x31 && b.length >= 4){ if (b[2] === 0xFF) return dframe(e.res, [0x7F, 0x31, 0x31]); return dframe(e.res, [0x71, b[1], b[2], b[3]]); }
+  if (b[0] === 0x2F && b.length >= 4) return dframe(e.res, [0x6F, b[1], b[2], b[3]]);
   if (b[0] === 0x22 && b.length === 3){ k = hx(b[1])+hx(b[2]); var v = e.did[k];
     if (v) return dframe(e.res, [0x62, b[1], b[2]].concat(v.split('').map(function(ch){ return ch.charCodeAt(0); })));
     if (e.live[k]) return dframe(e.res, [0x62, b[1], b[2]].concat(e.live[k](t)));
@@ -338,7 +350,7 @@ function demo(c){
   return dframe(e.res, [0x7F, b[0] || 0, 0x11]);
 }
 
-window.JCECU = {scan:scan, readDtcs:readDtcs, clearDtcs:clearDtcs, ident:ident, readDid:readDid, readDids:readDids, scanDids:scanDids, restore:restore, demo:demo, IDENT:IDENT, flagText:flagText, dtc3:dtc3, payload:payload, frames:frames, hx:hx, sleep:sleep,
+window.JCECU = {rawReq:rawReq, scan:scan, readDtcs:readDtcs, clearDtcs:clearDtcs, ident:ident, readDid:readDid, readDids:readDids, scanDids:scanDids, restore:restore, demo:demo, IDENT:IDENT, flagText:flagText, dtc3:dtc3, payload:payload, frames:frames, hx:hx, sleep:sleep,
   label:function(req, brand, mode){ var k = knownM(brand || 'other', req, mode || '11'); return k ? [k[2], k[3]] : null; }, MODES:MODES, begin:begin, end:end, guess:guess, brands:BR, brandOf:brandOf,
   kinds:[['ABS / ESP','ABS / ESP'],['Airbag','Airbag'],['Kombiinstrument','Приборная панель'],['Komfort / Zentralelektrik','Комфорт / ЦЭ'],['Klima','Климат'],['Lenkung','Рулевое'],['Getriebe','КПП'],['Motor','Двигатель'],['Gateway','Шлюз'],['Sonstiges','Прочее']]};
 })();
