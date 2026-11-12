@@ -18,6 +18,7 @@ var state = {
   q: '', sys: '', draft: null, synced: false
 };
 var SKINS = [
+  {id:'glas', de:'Glas (neu)', ru:'Стекло (новый)', theme:'light', dot:'#1d5fd6'},
   {id:'cockpit', de:'Cockpit (neu)', ru:'Кокпит (новый)', theme:'dark', dot:'#ffb020'},
   {id:'std-dark', de:'Standard dunkel', ru:'Стандарт тёмный', theme:'dark', dot:'#f2b705'},
   {id:'std-light', de:'Standard hell', ru:'Стандарт светлый', theme:'light', dot:'#9a6a00'},
@@ -28,11 +29,13 @@ var SKINS = [
 ];
 state.skin = lget('jc-skin', state.theme==='light' ? 'std-light' : 'std-dark');
 if (!lget('jc-design13', false)) { state.skin = 'cockpit'; lset('jc-skin', 'cockpit'); lset('jc-design13', true); }
+if (!lget('jc-design18', false)) { state.skin = 'glas'; lset('jc-skin', 'glas'); lset('jc-design18', true); }
 function applySkin(){
   var sk = SKINS.find(function(x){ return x.id===state.skin; }) || SKINS[0];
   state.theme = sk.theme;
   document.documentElement.setAttribute('data-theme', sk.theme);
   document.documentElement.setAttribute('data-skin', sk.id);
+  var tc = document.querySelector('meta[name=theme-color]'); if (tc) tc.setAttribute('content', sk.id==='glas' ? '#c5d0de' : (sk.theme==='light' ? '#f3f2ee' : '#161a1f'));
 }
 applySkin();
 
@@ -224,8 +227,8 @@ function renderQuick(r){
 function renderBottom(r){
   var bn = $('#bottomNav'); if (!bn) return;
   var ik = function(p, sw){ return '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="'+p+'" fill="none" stroke="currentColor" stroke-width="'+(sw||2)+'" stroke-linecap="round" stroke-linejoin="round"/></svg>'; };
-  if (state.skin === 'cockpit'){
-    var it = [['start',T('Start','Главная'),'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z'],['obd','OBD','M9 2v5M15 2v5M6 7h12v4a6 6 0 0 1-12 0zM12 17v5'],['kat-sensoren',T('Nachschlagewerk','Справочник'),'M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4zM8 4v16'],['berichte',T('Berichte','Отчёты'),'M6 2h8l5 5v15H6zM14 2v5h5M9 13h7M9 17h7']];
+  if (state.skin === 'cockpit' || state.skin === 'glas'){
+    var it = [['start',T('Start','Главная'),'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z'],['obd','OBD','M9 2v5M15 2v5M6 7h12v4a6 6 0 0 1-12 0zM12 17v5'],['kat-sensoren',T('Handbuch','Справочник'),'M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4zM8 4v16'],['berichte',T('Berichte','Отчёты'),'M6 2h8l5 5v15H6zM14 2v5h5M9 13h7M9 17h7']];
     var act = function(k){ if (k==='start') return r==='start'||r===''; if (k==='obd') return r.indexOf('obd')===0; if (k==='kat-sensoren') return r.indexOf('kat-')===0 || r.indexOf('b-')===0 || r.indexOf('tab-')===0; return r.indexOf('bericht')===0; };
     bn.innerHTML = it.map(function(x){ return '<a href="#'+x[0]+'" aria-label="'+esc(x[1])+'"'+(act(x[0])?' aria-current="page"':'')+'>'+ik(x[2])+'<span>'+esc(x[1])+'</span></a>'; }).join('') + '<button type="button" id="bnMore" aria-label="'+T('Mehr','Ещё')+'">'+ik('M5 12h.01M12 12h.01M19 12h.01', 3)+'<span>'+T('Mehr','Ещё')+'</span></button>';
     var mb = $('#bnMore'); if (mb) mb.onclick = function(){ var o = !side.classList.contains('open'); side.classList.toggle('open', o); scrim.hidden = !o; };
@@ -268,14 +271,14 @@ function card(it){
 }
 function hvCallout(){ return '<div class="callout hv"><b>'+T('Hochvolt','Высокое напряжение')+'</b><p>'+T('Arbeiten an HV-Systemen nur mit Qualifikation nach DGUV Information 209-093. Spannungsfreiheit mit zweipoligem Spannungsprüfer feststellen. Messgeräte mindestens CAT III 1000 V.','Работы с ВВ-системами только при наличии допуска по DGUV Information 209-093. Отсутствие напряжения проверять двухполюсным указателем. Приборы не ниже CAT III 1000 В.')+'</p></div>'; }
 function deNote(){ return state.lang==='ru' ? '<p class="note">Текст главы пока на немецком. Перевод — следующий этап.</p>' : ''; }
-function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.17.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
+function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.18.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
 function crumbs(parts){ return '<p class="eyebrow"><a href="#start">'+T('Start','Главная')+'</a>'+parts.map(function(p){ return ' / '+p; }).join('')+'</p>'; }
 
 /* ---------- Start ---------- */
 var PANNE = ['k102','k103','k29','k28','k109','k119','k111','k110','k45'];
 function vHome(){
   var m = D.meta, v = m.verify;
-  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.17.0 · Stand','Версия 0.17.0 · состояние')+' '+esc(m.stand)+'</p>' +
+  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.18.0 · Stand','Версия 0.18.0 · состояние')+' '+esc(m.stand)+'</p>' +
     '<h1>JC Diagnose</h1><p class="lead">'+T('Sollwerte, Pinbelegung, Multimeter- und Oszilloskop-Prüfschritte für Sensoren, Aktoren, Bordnetz, Bussysteme und Hochvolt – plus Systemtests und dein eigenes Soll/Ist-Messprotokoll.','Нормы, распиновка, проверки мультиметром и осциллографом для датчиков, исполнительных механизмов, бортсети, шин и ВВ — плюс системные тесты и твой собственный журнал замеров «норма/факт».')+'</p>' +
     '<div class="chips"><a class="chip" href="#mess-neu">+ '+T('Neue Messung','Новый замер')+'</a><a class="chip" href="#obd">'+T('Fahrzeug verbinden','Подключить машину')+'</a><a class="chip" href="#dtc">'+T('Fehlercode prüfen','Проверить код ошибки')+'</a><a class="chip" href="#import">'+T('Bericht importieren','Импорт отчёта')+'</a><a class="chip" href="#oszi">'+T('Oszillogramme','Осциллограммы')+'</a><a class="chip" href="#tab-oszi">'+T('Oszi-Startwerte','Настройки осциллографа')+'</a><a class="chip" href="#systemtests">'+T('Systemtests','Системные тесты')+'</a><a class="chip" href="#rechner">'+T('Rechner','Калькуляторы')+'</a><a class="chip" href="#tab-fehler">'+T('Fehlerbilder','Неисправности')+'</a></div></div>' +
     '<div class="stats"><div class="stat"><b>'+m.n_items+'</b><span>'+T('Kapitel','глав')+'</span></div><div class="stat"><b>'+X.systemtests.rows.length+'</b><span>'+T('Systemtests','системных тестов')+'</span></div><div class="stat"><b>'+state.mess.length+'</b><span>'+T('eigene Messungen','своих замеров')+'</span></div></div></section>';
