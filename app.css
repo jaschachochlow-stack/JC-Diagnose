@@ -695,3 +695,17 @@ html[data-skin=cockpit] .ck-big{box-shadow:0 8px 30px rgba(255,176,32,.12)}
 .ck-t,.ck-s,.ck-h,.ck-k{overflow-wrap:anywhere;hyphens:auto}
 .send-btn b,.send-btn small{overflow-wrap:anywhere;hyphens:auto}
 .sheet,.sheet-body{min-width:0}
+
+/* Alle Steuergeräte */
+.ecu-list{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr))}
+.ecu-item{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:10px 12px;border:1px solid var(--line,#2a3038);border-radius:12px;background:var(--card,transparent);color:inherit;font:inherit;cursor:pointer;min-width:0}
+.ecu-item.on{border-color:var(--accent,#ffb020);box-shadow:0 0 0 1px var(--accent,#ffb020) inset}
+.ecu-item b,.ecu-item .meta{overflow-wrap:anywhere}
+.ecu-det{margin-top:14px;min-width:0}
+.ecu-bar{height:6px;border-radius:3px;background:rgba(127,127,127,.25);overflow:hidden;margin:6px 0}
+.ecu-bar i{display:block;height:100%;background:var(--accent,#ffb020)}
+.ecu-did{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.ecu-did input{width:84px;padding:8px;border-radius:8px;border:1px solid var(--line,#2a3038);background:transparent;color:inherit;text-transform:uppercase}
+.ecu-tab{width:100%;border-collapse:collapse;font-size:.9em;display:block;overflow-x:auto;max-width:100%}
+.ecu-tab th,.ecu-tab td{text-align:left;padding:5px 8px;border-bottom:1px solid rgba(127,127,127,.25);white-space:nowrap}
+.ecu-rep{margin:0 0 10px}

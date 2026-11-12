@@ -46,3 +46,11 @@ Fotos (Kamera oder Galerie), Screenshots und eingescannte PDFs werden offline pe
 - „Live-Daten“ öffnet ein eigenes Fenster: erst Werte wählen, dann Anzeige mit Umschalter Zahlen/Diagramme.
 - Beschriftungen automatisch auf Überlauf geprüft (DE/RU, 360–1280 px).
 
+
+## 0.15.0 – Alle Steuergeräte
+
+- Neuer Bereich OBD → „Alle Steuergeräte": sucht Steuergeräte am CAN-Bus (11 Bit, IDs 0x700–0x7E7), liest Kennungen (22 F1xx), liest und löscht den Fehlerspeicher jedes Steuergeräts (UDS 19 02 / 14, KWP-Rückfall 18).
+- Rohwerte: beliebige Datenkennungen (22 xxxx) lesen, Bereich nach antwortenden Kennungen durchsuchen, Live-Liste mit Min/Max. Herstellerwerte sind nicht genormt und werden ohne Einheit angezeigt.
+- Namen sind frei wählbar (nur 7E0 Motor, 7E1 Getriebe sind genormt). Ergebnisse landen im OBD-Bericht, im Text und in der Senden-Funktion.
+- Grenzen: nur CAN 11 Bit/UDS, ELM327-Klone sind langsam, Herstellerprotokolle und gesperrte Gateways antworten evtl. nicht.
+
