@@ -271,14 +271,14 @@ function card(it){
 }
 function hvCallout(){ return '<div class="callout hv"><b>'+T('Hochvolt','Высокое напряжение')+'</b><p>'+T('Arbeiten an HV-Systemen nur mit Qualifikation nach DGUV Information 209-093. Spannungsfreiheit mit zweipoligem Spannungsprüfer feststellen. Messgeräte mindestens CAT III 1000 V.','Работы с ВВ-системами только при наличии допуска по DGUV Information 209-093. Отсутствие напряжения проверять двухполюсным указателем. Приборы не ниже CAT III 1000 В.')+'</p></div>'; }
 function deNote(){ return state.lang==='ru' ? '<p class="note">Текст главы пока на немецком. Перевод — следующий этап.</p>' : ''; }
-function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.18.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
+function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.19.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
 function crumbs(parts){ return '<p class="eyebrow"><a href="#start">'+T('Start','Главная')+'</a>'+parts.map(function(p){ return ' / '+p; }).join('')+'</p>'; }
 
 /* ---------- Start ---------- */
 var PANNE = ['k102','k103','k29','k28','k109','k119','k111','k110','k45'];
 function vHome(){
   var m = D.meta, v = m.verify;
-  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.18.0 · Stand','Версия 0.18.0 · состояние')+' '+esc(m.stand)+'</p>' +
+  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.19.0 · Stand','Версия 0.19.0 · состояние')+' '+esc(m.stand)+'</p>' +
     '<h1>JC Diagnose</h1><p class="lead">'+T('Sollwerte, Pinbelegung, Multimeter- und Oszilloskop-Prüfschritte für Sensoren, Aktoren, Bordnetz, Bussysteme und Hochvolt – plus Systemtests und dein eigenes Soll/Ist-Messprotokoll.','Нормы, распиновка, проверки мультиметром и осциллографом для датчиков, исполнительных механизмов, бортсети, шин и ВВ — плюс системные тесты и твой собственный журнал замеров «норма/факт».')+'</p>' +
     '<div class="chips"><a class="chip" href="#mess-neu">+ '+T('Neue Messung','Новый замер')+'</a><a class="chip" href="#obd">'+T('Fahrzeug verbinden','Подключить машину')+'</a><a class="chip" href="#dtc">'+T('Fehlercode prüfen','Проверить код ошибки')+'</a><a class="chip" href="#import">'+T('Bericht importieren','Импорт отчёта')+'</a><a class="chip" href="#oszi">'+T('Oszillogramme','Осциллограммы')+'</a><a class="chip" href="#tab-oszi">'+T('Oszi-Startwerte','Настройки осциллографа')+'</a><a class="chip" href="#systemtests">'+T('Systemtests','Системные тесты')+'</a><a class="chip" href="#rechner">'+T('Rechner','Калькуляторы')+'</a><a class="chip" href="#tab-fehler">'+T('Fehlerbilder','Неисправности')+'</a></div></div>' +
     '<div class="stats"><div class="stat"><b>'+m.n_items+'</b><span>'+T('Kapitel','глав')+'</span></div><div class="stat"><b>'+X.systemtests.rows.length+'</b><span>'+T('Systemtests','системных тестов')+'</span></div><div class="stat"><b>'+state.mess.length+'</b><span>'+T('eigene Messungen','своих замеров')+'</span></div></div></section>';
@@ -311,7 +311,7 @@ function vItem(id){
   var fav = state.fav.indexOf(id) >= 0;
   var own = state.mess.filter(function(m){ return m.comp===id; });
   var h = '<div class="wrap">'+crumbs(['<a href="#kat-'+it.cat+'">'+esc(L(catById[it.cat],'name'))+'</a>', T('Kapitel ','Глава ')+it.n]) +
-    '<div class="detail-head"><h1>'+esc(L(it,'title'))+'</h1><div class="actions"><button class="btn" id="favBtn" aria-pressed="'+fav+'">'+(fav?T('Gemerkt','В избранном'):T('Merken','В избранное'))+'</button><a class="btn primary" href="#mess-neu" data-new="'+id+'">+ '+T('Messung','Замер')+'</a></div></div>';
+    '<div class="detail-head"><div class="gl-dh"><span class="gl-ico">'+gIc(it.cat==='sensoren'?'pulse':it.cat==='aktoren'?'plug':'doc',30)+'</span><div class="gl-dt"><h1>'+esc(L(it,'title'))+'</h1><div class="gl-chips"><span class="gl-chip">'+esc(L(catById[it.cat],'name'))+'</span><span class="gl-chip">'+T('Kapitel ','Глава ')+it.n+'</span></div></div></div><div class="actions"><button class="btn" id="favBtn" aria-pressed="'+fav+'">'+(fav?T('Gemerkt','В избранном'):T('Merken','В избранное'))+'</button><a class="btn primary" href="#mess-neu" data-new="'+id+'">+ '+T('Messung','Замер')+'</a></div></div>';
   if (state.lang==='ru') h += '<p class="subtitle">'+esc(it.title)+'</p>';
   if (it.hv) h += hvCallout();
   if (it.ov && it.ov.length) h += '<dl class="quick">' + it.ov.map(function(r,i){ return '<div><dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd><button class="btn small mbtn" data-ov="'+i+'">→ '+T('als Soll messen','замерить по норме')+'</button></div>'; }).join('') + '</dl>';
@@ -1913,7 +1913,39 @@ function plate(kz){ return kz ? '<span class="kz">'+esc(kz)+'</span>' : ''; }
 function dateOnly(iso){ return iso ? new Date(iso).toLocaleDateString(state.lang==='ru'?'ru-RU':'de-DE', {day:'2-digit', month:'2-digit', year:'numeric'}) : ''; }
 
 /* Cockpit (Startseite) */
+
+/* Glas-Startseite (Design Mix) */
+function gIc(n, sz){ var P = {doc:'M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6', pulse:'M3 12h4l2-6 4 12 2-6h6', plug:'M9 3v5M15 3v5M7 8h10v4a5 5 0 0 1-10 0zM12 17v4', book:'M4 5.5C6 4 9 4 12 5.5 15 4 18 4 20 5.5V19c-2-1.5-5-1.5-8 0-3-1.5-6-1.5-8 0zM12 5.5V19', search:'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4', chev:'M9 6l6 6-6 6'};
+  return '<svg width="'+(sz||24)+'" height="'+(sz||24)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+P[n].split(/(?=M)/).map(function(d){ return '<path d="'+d+'"/>'; }).join('')+'</svg>'; }
+function sensorArt(k){
+  var g = '<defs><linearGradient id="sg'+k+'" x1="0" x2="1"><stop offset="0" stop-color="#6b6f76"/><stop offset=".5" stop-color="#d9dde2"/><stop offset="1" stop-color="#6b6f76"/></linearGradient></defs>', f = 'url(#sg'+k+')', b;
+  if (k==='lambda') b = g+'<rect x="38" y="6" width="14" height="22" rx="3" fill="'+f+'"/><rect x="30" y="28" width="30" height="12" rx="2" fill="'+f+'"/><rect x="34" y="40" width="22" height="24" fill="'+f+'"/><rect x="38" y="64" width="14" height="14" rx="3" fill="#8a8e95"/>';
+  else if (k==='maf') b = g+'<rect x="10" y="24" width="70" height="38" rx="8" fill="'+f+'"/><ellipse cx="45" cy="43" rx="22" ry="14" fill="#2a2d32"/><rect x="38" y="8" width="14" height="18" rx="3" fill="#4b4f56"/>';
+  else b = g+'<circle cx="58" cy="46" r="22" fill="none" stroke="'+f+'" stroke-width="10" stroke-dasharray="6 4"/><rect x="8" y="34" width="34" height="24" rx="4" fill="'+f+'"/><rect x="2" y="40" width="10" height="12" fill="#4b4f56"/>';
+  return '<svg viewBox="0 0 90 90" width="100%" height="64" aria-hidden="true">'+b+'</svg>'; }
+function vGlasHome(){
+  var D0 = state.diag, vs = vehicles(), fz = (D0 && D0.fz) || (obd.veh ? vehToFz(obd.veh, {}) : null) || {};
+  var h = '<div class="wrap gl-home">';
+  h += '<button class="gl-search" id="glSearch" type="button">'+gIc('search',20)+'<span>'+T('Suchen …','Поиск …')+'</span></button>';
+  var vtxt = (fzSummary(fz) || fz.vin) ? esc([fz.marke, fz.modell].filter(Boolean).join(' ')||T('Fahrzeug','Автомобиль')) : '';
+  h += '<section class="gl-hero"><div class="gl-hero-t"><h1>Kfz-Diagnose<br>Nachschlagewerk</h1><p>'+T('Umfassendes Wissen für Profis und Auszubildende.','Исчерпывающие знания для профи и учеников.')+'</p><i class="gl-line"></i>' +
+    '<a class="gl-status'+(obd.io?' on':'')+'" href="#obd"><i></i>'+(obd.io ? esc(obd.name) : T('OBD nicht verbunden','OBD не подключён'))+(vtxt?' · '+vtxt:'')+'</a></div>' +
+    '<svg class="gl-art" viewBox="0 0 160 120" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="20" y="40" width="100" height="60" rx="8"/><path d="M40 40V20h60v20M50 100v-20h40v20M20 60h-10M120 60h12M60 62h40"/><circle cx="130" cy="88" r="14"/></g></svg></section>';
+  h += '<div class="gl-h"><h2>'+T('Schnellzugriff','Быстрый доступ')+'</h2><a href="#tab-overview">'+T('Alle anzeigen','Все')+'</a></div><div class="gl-tiles">' +
+    [['#dtc','doc',T('Fehlercodes','Коды ошибок')],['#oszi','pulse',T('Oszilloskop','Осциллограф')],['#obd','plug',T('OBD-Scanner','OBD-сканер')],['#kat-sensoren','book',T('Nachschlagen','Справочник')]].map(function(t){ return '<a class="gl-tile" href="'+t[0]+'">'+gIc(t[1],26)+'<span>'+t[2]+'</span></a>'; }).join('') + '</div>';
+  h += '<div class="gl-h"><h2>'+T('Wichtige Sensoren','Важные датчики')+'</h2><a href="#kat-sensoren">'+T('Alle anzeigen','Все')+'</a></div><div class="gl-sens">' +
+    [['k3','maf','Luftmassen&shy;messer',T('Heißfilm','Термоанемометр')],['k7','lambda','Lambda&shy;sonde',T('Abgas-Sauerstoff','Кислород в выхлопе')],['k5','crank','Kurbelwellen&shy;sensor',T('Induktiv','Индуктивный')]].map(function(x){
+      var it = byId[x[0]], nm = it ? esc(L(it,'title').replace(/\s*\(.*\)/,'')) : x[2];
+      return '<a class="gl-sen" href="#b-'+x[0]+'">'+sensorArt(x[1])+'<b>'+(it && state.lang==='ru' ? nm : x[2])+'</b><i></i><small>'+x[3]+'</small></a>'; }).join('') + '</div>';
+  h += '<div class="gl-more"><span>'+T('Mehr:','Ещё:')+'</span>'+[['#mess-neu',T('Neue Messung','Новый замер')],['#fz',T('Fahrzeuge','Машины')],['#berichte',T('Berichte','Отчёты')],['#systemtests',T('Systemtests','Системные тесты')],['#rechner',T('Rechner','Калькуляторы')],['#diag',T('Diagnose','Диагностика')]].map(function(x){ return '<a href="'+x[0]+'">'+x[1]+'</a>'; }).join('')+'</div>';
+  h += '<div class="ck-panne"><span>'+T('Pannenhilfe:','Выезд:')+'</span>'+PANNE.slice(0,6).map(function(id){ var it = byId[id]; return it ? '<a href="#b-'+id+'">'+esc(L(it,'title').replace(/\s*\(.*\)/,''))+'</a>' : ''; }).join('')+'</div>';
+  if (vs.length){ h += '<div class="gl-h"><h2>'+T('Letzte Fahrzeuge','Недавние машины')+'</h2></div><div class="ck-recent">'+vs.slice(0,3).map(function(V){ return '<a class="ber" href="#fz-'+V.key+'"><div class="ber-top">'+plate(V.fz.kz)+'<b>'+esc(vehTitle(V))+'</b>'+(V.active?'<span class="st na">'+T('läuft','идёт')+'</span>':'')+'</div></a>'; }).join('')+'</div>'; }
+  h += '<div class="callout" style="margin-top:18px"><b>'+T('Hinweis','Важно')+'</b><p>'+T('Alle Werte sind typische Richtwerte. Verbindlich sind Herstellerdaten (HaynesPro, Carmin).','Все значения — типовые ориентиры. Обязательны данные производителя (HaynesPro, Carmin).')+'</p></div>';
+  after(function(){ var b = $('#glSearch'); if (b) b.onclick = function(){ var t = document.querySelector('.topbar'); if (t) t.classList.add('search-open'); $('#search').focus(); }; });
+  return h + foot() + '</div>';
+}
 function vCockpit(){
+  if (state.skin === 'glas') return vGlasHome();
   var D0 = state.diag, vs = vehicles(), curV = null;
   if (D0 && fzKey(D0.fz)) curV = vs.find(function(v){ return v.key===fzKey(D0.fz); });
   var fz = (D0 && D0.fz) || (obd.veh ? vehToFz(obd.veh, {}) : null) || {};
@@ -2130,6 +2162,7 @@ var nt = $('#navToggle'), scrim = $('#scrim');
 function closeNav(){ side.classList.remove('open'); scrim.hidden = true; nt.setAttribute('aria-expanded','false'); }
 nt.addEventListener('click', function(){ var o = !side.classList.contains('open'); side.classList.toggle('open', o); scrim.hidden = !o; nt.setAttribute('aria-expanded', String(o)); });
 scrim.addEventListener('click', closeNav);
+var stg = $('#searchToggle'); if (stg) stg.addEventListener('click', function(){ var tb = document.querySelector('.topbar'); tb.classList.toggle('search-open'); if (tb.classList.contains('search-open')) sIn.focus(); });
 $('#themeToggle').addEventListener('click', function(e){
   e.stopPropagation();
   var old = $('#skinMenu'); if (old){ old.remove(); return; }

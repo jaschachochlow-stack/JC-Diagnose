@@ -13,7 +13,7 @@ Berichte, Fahrzeugakte und Oszillogramm-Referenzen.
 Richtwerte ohne Gewähr – Herstellerdaten gehen vor.
 
 
-## Design „Glas“ (0.18.0)
+## Design „Glas“ (0.18.0–0.19.0: Kacheln, Startseite, Sensor-/OBD-/Live-Ansichten)
 - Neues Standard-Aussehen: helles Milchglas mit blauem Akzent, Anordnung wie das Cockpit (Statuszeile, große Kachel, Schnellzugriff), Bottom-Navigation mit Beschriftung. Umschaltbar über das Palette-Symbol (Aussehen); die alten Designs bleiben.
 - Protokoll-Tabelle ohne Überlauf auf dem Telefon; Menüpunkt „Handbuch“ statt „Nachschlagewerk“ in der Leiste.
 
