@@ -268,14 +268,14 @@ function card(it){
 }
 function hvCallout(){ return '<div class="callout hv"><b>'+T('Hochvolt','Высокое напряжение')+'</b><p>'+T('Arbeiten an HV-Systemen nur mit Qualifikation nach DGUV Information 209-093. Spannungsfreiheit mit zweipoligem Spannungsprüfer feststellen. Messgeräte mindestens CAT III 1000 V.','Работы с ВВ-системами только при наличии допуска по DGUV Information 209-093. Отсутствие напряжения проверять двухполюсным указателем. Приборы не ниже CAT III 1000 В.')+'</p></div>'; }
 function deNote(){ return state.lang==='ru' ? '<p class="note">Текст главы пока на немецком. Перевод — следующий этап.</p>' : ''; }
-function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.15.2 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
+function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.16.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
 function crumbs(parts){ return '<p class="eyebrow"><a href="#start">'+T('Start','Главная')+'</a>'+parts.map(function(p){ return ' / '+p; }).join('')+'</p>'; }
 
 /* ---------- Start ---------- */
 var PANNE = ['k102','k103','k29','k28','k109','k119','k111','k110','k45'];
 function vHome(){
   var m = D.meta, v = m.verify;
-  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.15.2 · Stand','Версия 0.15.2 · состояние')+' '+esc(m.stand)+'</p>' +
+  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.16.0 · Stand','Версия 0.16.0 · состояние')+' '+esc(m.stand)+'</p>' +
     '<h1>JC Diagnose</h1><p class="lead">'+T('Sollwerte, Pinbelegung, Multimeter- und Oszilloskop-Prüfschritte für Sensoren, Aktoren, Bordnetz, Bussysteme und Hochvolt – plus Systemtests und dein eigenes Soll/Ist-Messprotokoll.','Нормы, распиновка, проверки мультиметром и осциллографом для датчиков, исполнительных механизмов, бортсети, шин и ВВ — плюс системные тесты и твой собственный журнал замеров «норма/факт».')+'</p>' +
     '<div class="chips"><a class="chip" href="#mess-neu">+ '+T('Neue Messung','Новый замер')+'</a><a class="chip" href="#obd">'+T('Fahrzeug verbinden','Подключить машину')+'</a><a class="chip" href="#dtc">'+T('Fehlercode prüfen','Проверить код ошибки')+'</a><a class="chip" href="#import">'+T('Bericht importieren','Импорт отчёта')+'</a><a class="chip" href="#oszi">'+T('Oszillogramme','Осциллограммы')+'</a><a class="chip" href="#tab-oszi">'+T('Oszi-Startwerte','Настройки осциллографа')+'</a><a class="chip" href="#systemtests">'+T('Systemtests','Системные тесты')+'</a><a class="chip" href="#rechner">'+T('Rechner','Калькуляторы')+'</a><a class="chip" href="#tab-fehler">'+T('Fehlerbilder','Неисправности')+'</a></div></div>' +
     '<div class="stats"><div class="stat"><b>'+m.n_items+'</b><span>'+T('Kapitel','глав')+'</span></div><div class="stat"><b>'+X.systemtests.rows.length+'</b><span>'+T('Systemtests','системных тестов')+'</span></div><div class="stat"><b>'+state.mess.length+'</b><span>'+T('eigene Messungen','своих замеров')+'</span></div></div></section>';
@@ -881,7 +881,7 @@ function obdScanSave(what){
   s.proto = obd.info ? obd.info.name : ''; s.nsup = obd.sup ? obd.sup.length : 0;
   if (what === 'dtc' && obd.dtcs){ var d = obd.dtcs; s.dtc = {stored:(d.stored||[]).slice(), pending:(d.pending||[]).slice(), permanent:(d.permanent||[]).slice(), uds:(d.uds||[]).slice()}; s.dtcAt = now; delete s.cleared; }
   if (what === 'clear') s.cleared = now;
-  if (what === 'ecu' && obd.ecu && obd.ecu.list.length){ s.ecus = obd.ecu.list.map(function(x){ return {req:x.req, res:x.res, name:ecuName(x), part:(x.idn && x.idn.F187) || '', dtc:x.dtc ? x.dtc.map(function(c){ return {code:c.code, st:c.st}; }) : null, err:x.err || '', cleared:x.cleared || ''}; }); s.ecuAt = now; }
+  if (what === 'ecu' && obd.ecu && obd.ecu.list.length){ s.ecus = obd.ecu.list.map(function(x){ return {req:x.req, res:x.res, mode:x.mode || '11', name:ecuName(x), part:(x.idn && x.idn.F187) || '', dtc:x.dtc ? x.dtc.map(function(c){ return {code:c.code, st:c.st}; }) : null, err:x.err || '', cleared:x.cleared || ''}; }); s.ecuAt = now; }
   if (what === 'live' && obd.live.length){ s.live = obd.live.map(function(x){ return {pid:x.pid, label:x.label, text:x.text, note:x.note||''}; }); s.liveAt = now;
     s.hist = {}; obd.live.forEach(function(x){ var h = obd.hist[x.pid]; if (!h || h.length < 2) return; var st = Math.ceil(h.length/150), o = [], i; for (i = 0; i < h.length; i += st) o.push([h[i][0]-h[0][0], Math.round(h[i][1]*100)/100]); var l = h[h.length-1]; if (o[o.length-1][0] !== l[0]-h[0][0]) o.push([l[0]-h[0][0], Math.round(l[1]*100)/100]); s.hist[x.pid] = o; }); }
   archivSave(); if (cloudArch) cloudArch.doc(e.id).set(JSON.parse(JSON.stringify(e))).catch(function(){});
@@ -1104,22 +1104,26 @@ function vObdReport(r){
 }
 /* ---------- Alle Steuergeräte (ABS, Airbag, Kombiinstrument …) ---------- */
 function ecuSt(){ if (!obd.ecu) obd.ecu = {list:[], sel:null, busy:'', prog:null, cancel:false, vals:{}, live:false, dids:[], found:[], msg:'', scanned:false}; return obd.ecu; }
-function ecuKey(e){ return ((obd.veh && obd.veh.vin) || '') + ':' + e.req; }
+function ecuKey(e){ return ((obd.veh && obd.veh.vin) || '') + ':' + (e.mode || '11') + e.req; }
 function ecuNames(){ return lget('jc-ecunames', {}) || {}; }
 function ecuBrand(){ var s = ecuSt(); return s.brand && s.brand !== 'auto' ? s.brand : JCECU.brandOf(obd.veh && obd.veh.marke); }
-function ecuName(e){ var n = ecuNames()[ecuKey(e)]; if (n) return n; var l = JCECU.label(e.req, ecuBrand()) || JCECU.guess(e.idn); if (l) return T(l[0], l[1]); var sn = e.idn && (e.idn['090A'] || e.idn.F197 || ''); return sn || (T('Steuergerät ','Блок ')+e.req); }
+function ecuName(e){ var n = ecuNames()[ecuKey(e)]; if (n) return n; var l = JCECU.label(e.req, ecuBrand(), e.mode) || JCECU.guess(e.idn); if (l) return T(l[0], l[1]); var sn = e.idn && (e.idn['090A'] || e.idn.F197 || ''); return sn || (T('Steuergerät ','Блок ')+e.req); }
 function ecuRefresh(){ if (cur() === 'obd-ecus') render(true); }
 function ecuRun(label, fn){ var s = ecuSt(); obd.liveOn = false; s.live = false; s.busy = label; s.msg = ''; ecuRefresh();
   return Promise.resolve().then(fn).then(function(){ s.busy = ''; s.prog = null; ecuRefresh(); }, function(e){ s.busy = ''; s.prog = null; s.msg = (e && e.message) || String(e); ecuRefresh(); }); }
-function ecuByReq(q){ return ecuSt().list.find(function(e){ return e.req === q; }); }
+function ecuByReq(q){ return ecuSt().list.find(function(e){ return e.id === q; }); }
+function ecuModes(){ var s = ecuSt(), br = ecuBrand(), m = s.mode || 'auto';
+  if (m === '11' || m === '29' || m === 'bmw') return {modes:[m]};
+  if (m === '250') return {modes:['11s', '29s']};
+  return {modes: br === 'bmw' ? ['bmw', '11'] : br === 'fca' ? ['29', '11'] : ['11'], fallback:['11', '29', 'bmw', '11s', '29s']}; }
 function ecuScan(){
   var s = ecuSt(); s.cancel = false; s.list = []; s.sel = null;
   ecuRun(T('Suche Steuergeräte …','Ищу блоки управления …'), function(){
-    return JCECU.scan(obd.io, {brand:ecuBrand(), deep:!!s.deep, cancel:function(){ return s.cancel; }}, function(i, n, f, id){ s.prog = {i:i, n:n, f:f, id:id}; if (i % 6 === 0 || i === n) ecuRefresh(); }).then(function(found){
-      s.list = found; s.scanned = true; obdLog(T('Steuergeräte gefunden: ','Найдено блоков: ')+found.length);
+    var mm = ecuModes(); return JCECU.begin(obd.io).then(function(){ return JCECU.scan(obd.io, {brand:ecuBrand(), depth:s.depth || 0, modes:mm.modes, fallback:mm.fallback, cancel:function(){ return s.cancel; }}, function(i, n, f, id, ml){ s.prog = {i:i, n:n, f:f, id:id, mode:ml}; if (i % 6 === 0 || i === n) ecuRefresh(); }); }).then(function(found){
+      found.forEach(function(x){ x.id = x.mode + ':' + x.req; }); s.list = found; s.scanned = true; obdLog(T('Steuergeräte gefunden: ','Найдено блоков: ')+found.length);
       return found.reduce(function(p, e, i){ return p.then(function(){ if (s.cancel) return; s.busy = T('Lese Kennung und Fehlerspeicher …','Читаю идентификацию и ошибки …'); s.prog = {i:i+1, n:found.length, f:found.length, id:e.req}; ecuRefresh();
         return JCECU.ident(obd.io, e).then(function(x){ e.idn = x; }, function(){}).then(function(){ return ecuReadOne(e).catch(function(er){ if (obd.io && obd.io.closed) throw er; e.err = (er && er.message) || String(er); }); }); }); }, Promise.resolve());
-    }).then(function(){ if (s.list.length) obdScanSave('ecu'); });
+    }).then(function(){ if (s.list.length) obdScanSave('ecu'); }).then(function(){ return JCECU.end(obd.io); }, function(er){ return JCECU.end(obd.io).then(function(){ throw er; }); });
   });
 }
 function ecuReadOne(e){
@@ -1128,7 +1132,7 @@ function ecuReadOne(e){
 function ecuReadAll(){
   var s = ecuSt();
   ecuRun(T('Lese Fehlerspeicher aller Steuergeräte …','Читаю ошибки всех блоков …'), function(){
-    return s.list.reduce(function(p, e, i){ return p.then(function(){ s.prog = {i:i+1, n:s.list.length, f:0, id:e.req}; ecuRefresh(); return ecuReadOne(e); }); }, Promise.resolve()).then(function(){ obdScanSave('ecu'); });
+    return JCECU.begin(obd.io).then(function(){ return s.list.reduce(function(p, e, i){ return p.then(function(){ s.prog = {i:i+1, n:s.list.length, f:0, id:e.req}; ecuRefresh(); return ecuReadOne(e); }); }, Promise.resolve()); }).then(function(){ obdScanSave('ecu'); }).then(function(){ return JCECU.end(obd.io); }, function(er){ return JCECU.end(obd.io).then(function(){ throw er; }); });
   });
 }
 function ecuTable(e){
@@ -1165,22 +1169,23 @@ function vObdEcus(){
   var busy = !!s.busy;
   var br = ecuBrand(), tot = 0; s.list.forEach(function(x){ if (x.dtc) tot += x.dtc.length; });
   h += '<div class="field"><label for="ecBrand">'+T('Marke (für Namen der Steuergeräte)','Марка (для названий блоков)')+'</label><select id="ecBrand"><option value="auto"'+((!s.brand||s.brand==='auto')?' selected':'')+'>'+T('Automatisch aus VIN','Автоматически по VIN')+' ('+esc(T(JCECU.brands[br].n[0], JCECU.brands[br].n[1]))+')</option>'+Object.keys(JCECU.brands).map(function(k){ return '<option value="'+k+'"'+(s.brand===k?' selected':'')+'>'+esc(T(JCECU.brands[k].n[0], JCECU.brands[k].n[1]))+'</option>'; }).join('')+'</select></div>'+
-    '<label class="check"><input type="checkbox" id="ecDeep"'+(s.deep?' checked':'')+'> '+T('Tiefe Suche (auch 0x500–0x6FF, dauert länger)','Глубокий поиск (ещё 0x500–0x6FF, дольше)')+'</label>';
+    '<div class="field"><label for="ecMode">'+T('Adressierung / Protokoll','Адресация / протокол')+'</label><select id="ecMode">'+[['auto',T('Automatisch (alle Arten nacheinander)','Автоматически (все виды по очереди)')],['11',T('Nur CAN 11 Bit','Только CAN 11 бит')],['29',T('Nur CAN 29 Bit (18DAxxF1)','Только CAN 29 бит (18DAxxF1)')],['bmw',T('Nur BMW-Adressierung (6F1)','Только адресация BMW (6F1)')],['250',T('Nur 250 kbit (11 und 29 Bit)','Только 250 кбит (11 и 29 бит)')]].map(function(o){ return '<option value="'+o[0]+'"'+((s.mode||'auto')===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'; }).join('')+'</select></div>'+
+    '<div class="field"><label for="ecDepth">'+T('Suchtiefe (11 Bit)','Глубина поиска (11 бит)')+'</label><select id="ecDepth">'+[[0,T('Standard (0x700–0x7E7)','Стандарт (0x700–0x7E7)')],[1,T('Tief (+ 0x500–0x6FF)','Глубоко (+ 0x500–0x6FF)')],[2,T('Vollständig (0x000–0x7FF, dauert Minuten)','Полный (0x000–0x7FF, несколько минут)')]].map(function(o){ return '<option value="'+o[0]+'"'+((s.depth||0)===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'; }).join('')+'</select></div>';
   h += '<div class="btn-row"><button class="btn primary" id="ecScan"'+(busy?' disabled':'')+'>'+(s.scanned?T('Alles neu lesen','Прочитать всё заново'):T('Alle Steuergeräte suchen und alle Fehler lesen','Найти все блоки и прочитать все ошибки'))+'</button>'+
     (s.list.length ? '<button class="btn" id="ecAll"'+(busy?' disabled':'')+'>'+T('Nur Fehler neu lesen','Только ошибки заново')+'</button>' : '')+
     (busy ? '<button class="btn danger" id="ecStop">'+T('Abbrechen','Отмена')+'</button>' : '')+'<a class="btn" href="#obd">← OBD</a></div>';
-  if (busy){ h += '<p class="note">'+esc(s.busy)+(s.prog ? ' '+s.prog.i+' / '+s.prog.n+' ('+esc(s.prog.id)+') · '+T('gefunden','найдено')+': '+s.prog.f : '')+'</p>'+(s.prog ? '<div class="ecu-bar"><i style="width:'+Math.round(s.prog.i*100/Math.max(1, s.prog.n))+'%"></i></div>' : ''); }
+  if (busy){ h += '<p class="note">'+esc(s.busy)+(s.prog ? ' '+s.prog.i+' / '+s.prog.n+' ('+esc(s.prog.id)+(s.prog.mode?' · '+esc(s.prog.mode):'')+') · '+T('gefunden','найдено')+': '+s.prog.f : '')+'</p>'+(s.prog ? '<div class="ecu-bar"><i style="width:'+Math.round(s.prog.i*100/Math.max(1, s.prog.n))+'%"></i></div>' : ''); }
   if (s.msg) h += '<div class="callout hv"><b>'+T('Fehler','Ошибка')+'</b><p>'+esc(s.msg)+'</p></div>';
   if (s.scanned && !s.list.length && !busy) h += '<div class="callout hv"><b>'+T('Keine Steuergeräte gefunden','Блоки не найдены')+'</b><p>'+T('Zündung an? Adapter vom Typ ELM327 mit CAN 11 Bit? Nicht jedes Fahrzeug antwortet auf diese Abfrage (z. B. Gateway-gesperrt oder Herstellerprotokoll).','Зажигание включено? Адаптер ELM327 с CAN 11 бит? Не каждая машина отвечает на такой запрос (например, закрытый шлюз или протокол производителя).')+'</p></div>';
   if (s.list.length){
     h += '<h2>'+T('Gefunden','Найдено')+' ('+s.list.length+') · '+tot+' '+T('Fehler insgesamt','ошибок всего')+'</h2><div class="ecu-list">'+s.list.map(function(e){
       var n = e.dtc ? e.dtc.length : null, chip = e.err ? '<span class="st na">?</span>' : n == null ? '<span class="st na">–</span>' : n ? '<span class="st hi">'+n+' '+T('Fehler','ошиб.')+'</span>' : '<span class="st ok">✓ 0</span>';
-      return '<button class="ecu-item'+(s.sel===e.req?' on':'')+'" data-ecu="'+e.req+'"><b>'+esc(ecuName(e))+'</b><span class="meta mono">'+e.req+' → '+e.res+(e.idn && (e.idn['090A'] || e.idn.F197) ? ' · '+esc(e.idn['090A'] || e.idn.F197) : (e.idn && e.idn.F187 ? ' · '+esc(e.idn.F187) : ''))+'</span>'+chip+'</button>'; }).join('')+'</div>';
+      return '<button class="ecu-item'+(s.sel===e.id?' on':'')+'" data-ecu="'+e.id+'"><b>'+esc(ecuName(e))+'</b><span class="meta mono">'+(e.mode && e.mode !== '11' ? e.mode.toUpperCase()+' · ' : '')+e.req+' → '+e.res+(e.idn && (e.idn['090A'] || e.idn.F197) ? ' · '+esc(e.idn['090A'] || e.idn.F197) : (e.idn && e.idn.F187 ? ' · '+esc(e.idn.F187) : ''))+'</span>'+chip+'</button>'; }).join('')+'</div>';
   }
   var e = s.sel && ecuByReq(s.sel);
   if (e){
     var nm = ecuNames()[ecuKey(e)] || '';
-    h += '<div class="ecu-det"><h2>'+esc(ecuName(e))+' <span class="meta mono">'+e.req+' → '+e.res+'</span></h2>'+
+    h += '<div class="ecu-det"><h2>'+esc(ecuName(e))+' <span class="meta mono">'+(e.mode && e.mode !== '11' ? e.mode.toUpperCase()+' · ' : '')+e.req+' → '+e.res+'</span></h2>'+
       '<div class="field"><label for="ecName">'+T('Name / Zuordnung (selbst festlegen)','Название / назначение (задай сам)')+'</label><input id="ecName" list="ecKinds" value="'+esc(nm)+'" placeholder="'+esc(T('z. B. ABS / ESP','напр. ABS / ESP'))+'" autocomplete="off"><datalist id="ecKinds">'+JCECU.kinds.map(function(k){ return '<option value="'+esc(T(k[0], k[1]))+'">'; }).join('')+'</datalist></div>';
     if (e.idn && Object.keys(e.idn).length) h += '<dl class="quick">'+[[0x090A,'OBD-Name','OBD-название']].concat(JCECU.IDENT).filter(function(i){ return true; }).filter(function(i){ return e.idn[JCECU.hx(i[0], 4)]; }).map(function(i){ return '<div><dt>'+T(i[1], i[2])+'</dt><dd class="mono">'+esc(e.idn[JCECU.hx(i[0], 4)])+'</dd></div>'; }).join('')+'</dl>';
     else h += '<p class="meta">'+T('Dieses Steuergerät nennt keine Standard-Kennungen (22 F1xx).','Этот блок не отдаёт стандартные идентификаторы (22 F1xx).')+'</p>';
@@ -1193,13 +1198,14 @@ function vObdEcus(){
       '<div class="btn-row"><button class="btn'+(s.live?'':' primary')+'" id="ecLive"'+(s.dids.length?'':' disabled')+'>'+(s.live?'■ '+T('Stopp','Стоп'):'▶ '+T('Live','Живые')+' ('+s.dids.length+')')+'</button>'+(s.dids.length?'<button class="btn small" id="ecLiveClr">'+T('Liste leeren','Очистить список')+'</button>':'')+'</div>'+
       '<div id="ecuVals">'+ecuDidVals(e)+'</div></div>';
   }
-  h += '<div class="callout"><b>'+T('Grenzen','Ограничения')+'</b><p>'+T('Nur CAN 11 Bit und UDS. Fahrzeuge mit Herstellerprotokoll (z. B. KWP/K-Line, erweiterte Adressierung) oder gesperrtem Gateway antworten evtl. nicht. Günstige ELM327-Nachbauten sind langsam und unzuverlässig. Fehler löschen nur nach dem Lesen und Notieren; Airbag- und Sicherheitssysteme nur mit Fachkenntnis.','Только CAN 11 бит и UDS. Машины с протоколом производителя (KWP/K-Line, расширенная адресация) или закрытым шлюзом могут не отвечать. Дешёвые клоны ELM327 медленные и ненадёжные. Стирай ошибки только после чтения и записи; Airbag и системы безопасности — только со знанием дела.')+'</p></div>'+foot()+'</div>';
+  h += '<div class="callout"><b>'+T('Grenzen','Ограничения')+'</b><p>'+T('CAN (11/29 Bit, 250/500 kbit, BMW-Adressierung) und UDS. K-Line/KWP-Fahrzeuge und gesperrte Gateways antworten evtl. nicht. Günstige ELM327-Nachbauten sind langsam und unzuverlässig. Fehler löschen nur nach dem Lesen und Notieren; Airbag- und Sicherheitssysteme nur mit Fachkenntnis.','CAN (11/29 бит, 250/500 кбит, адресация BMW) и UDS. Машины с K-Line/KWP или закрытым шлюзом могут не отвечать. Дешёвые клоны ELM327 медленные и ненадёжные. Стирай ошибки только после чтения и записи; Airbag и системы безопасности — только со знанием дела.')+'</p></div>'+foot()+'</div>';
   after(function(){
     var q = function(i){ return main.querySelector(i); };
     var b = q('#ecScan'); if (b) b.onclick = ecuScan;
     b = q('#ecAll'); if (b) b.onclick = ecuReadAll;
     var bb = q('#ecBrand'); if (bb) bb.onchange = function(){ s.brand = bb.value; ecuRefresh(); };
-    var bd = q('#ecDeep'); if (bd) bd.onchange = function(){ s.deep = bd.checked; };
+    var bd = q('#ecDepth'); if (bd) bd.onchange = function(){ s.depth = parseInt(bd.value, 10) || 0; };
+    var bm = q('#ecMode'); if (bm) bm.onchange = function(){ s.mode = bm.value; };
     b = q('#ecStop'); if (b) b.onclick = function(){ s.cancel = true; };
     main.querySelectorAll('[data-ecu]').forEach(function(x){ x.onclick = function(){ s.live = false; s.sel = x.dataset.ecu; s.dids = []; s.found = []; ecuRefresh(); }; });
     if (!e) return;

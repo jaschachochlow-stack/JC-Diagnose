@@ -47,6 +47,14 @@ Fotos (Kamera oder Galerie), Screenshots und eingescannte PDFs werden offline pe
 - Beschriftungen automatisch auf Überlauf geprüft (DE/RU, 360–1280 px).
 
 
+## 0.16.0 – Alle Adressierungsarten
+
+- Steuergeräte-Suche für CAN 11 Bit, CAN 29 Bit (Anfrage 18DAxxF1), BMW-Adressierung (Tester 6F1, Zieladresse im ersten Datenbyte) und 250 kbit (11/29 Bit). Modus „Automatisch": zuerst die zur Marke passende Art, bei weniger als 3 Treffern alle weiteren.
+- Suchtiefe 11 Bit: Standard (0x700–0x7E7), Tief (+0x500–0x6FF), Vollständig (0x000–0x7FF).
+- Protokoll und Adressierung werden nur einmal gewechselt und am Ende zurückgestellt (ATSP/ATSH/ATCEA/ATFCSx).
+- Namen: BMW (ZGW 10, DME 12, CAS 40, DSC 60) und FCA 29 Bit (ECM 10, TCM 18, ABS 28, BCM 40); alle anderen über Kennung und Systemname.
+- Grenzen: K-Line/KWP und herstellerspezifische Busse (z. B. BMW K-CAN 100 kbit, Mercedes-Gateway) sind mit dem ELM327 nicht erreichbar.
+
 ## 0.15.2 – Namen für alle Marken
 
 - Namenserkennung ohne Markentabelle: aus dem genormten OBD-Namen (Modus 09 PID 0A) und dem Systemnamen (UDS F197) erkennt die App Airbag, ABS/ESP, Getriebe, Motor, Kombiinstrument, Gateway, Lenkung, Klima, Fahrwerk, Tür, Sitz usw. bei jeder Marke.

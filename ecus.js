@@ -89,7 +89,7 @@ var GUESS = [
 [/transm|\btcm\b|\btcu\b|getriebe|gearbox|\bdsg\b|\btcc\b|gear ?shift/i,'Getriebesteuerung','ЭБУ КПП'],
 [/engine|\becm\b|\bpcm\b|\bdme\b|\bede\b|\bmed\b|motor(?!ized)|\bdde\b/i,'Motorsteuerung','ЭБУ двигателя'],
 [/cluster|kombi|instrument|meter|\bipc\b|\bdash/i,'Kombiinstrument','Приборная панель'],
-[/gateway|\bgw\b|\bcgw\b/i,'Gateway','Шлюз (Gateway)'],
+[/gateway|\bgw\b|\bcgw\b|\bzgw\b|\bzgm\b/i,'Gateway','Шлюз (Gateway)'],
 [/steer|lenk|\beps\b|\bpas\b/i,'Lenkung','Рулевое управление'],
 [/climat|hvac|klima|air ?con|\bclim\b|\bac\b|heater/i,'Klimaanlage','Климат-контроль'],
 [/park|\bpdc\b|\bpts\b|sonar|rear ?view|camera|kamera/i,'Einparkhilfe / Kamera','Парктроник / камера'],
@@ -113,6 +113,8 @@ var BR = {
   vag:{n:['VAG (VW, Audi, Seat, Škoda, Cupra, Porsche)','VAG (VW, Audi, Seat, Škoda, Cupra, Porsche)'], t:VAG, re:/volkswagen|\bvw\b|audi|seat|cupra|skoda|škoda|porsche|bentley|lamborghini/i},
   ford:{n:['Ford / Lincoln','Ford / Lincoln'], t:FORD, re:/ford|lincoln|mercury/i},
   hk:{n:['Hyundai / Kia / Genesis','Hyundai / Kia / Genesis'], t:HK, re:/hyundai|\bkia\b|genesis/i},
+  bmw:{n:['BMW / Mini','BMW / Mini'], t:[['7E0','7E8','Motorsteuerung','ЭБУ двигателя'],['7E1','7E9','Getriebesteuerung','ЭБУ КПП']], re:/bmw|\bmini\b|rolls/i},
+  fca:{n:['Fiat / Chrysler / Jeep / Dodge / Ram','Fiat / Chrysler / Jeep / Dodge / Ram'], t:[['7E0','7E8','Motorsteuerung','ЭБУ двигателя'],['7E1','7E9','Getriebesteuerung','ЭБУ КПП']], re:/fiat|chrysler|jeep|dodge|\bram\b|alfa|maserati|lancia/i},
   psa:{n:['Peugeot / Citroën / DS','Peugeot / Citroën / DS'], t:PSA, re:/peugeot|citro|^ds\b/i},
   other:{n:['Andere Marke (nur Standard-Namen)','Другая марка (только стандартные названия)'], t:[[ '7E0','7E8','Motorsteuerung','ЭБУ двигателя'],['7E1','7E9','Getriebesteuerung','ЭБУ КПП']], re:null}
 };
@@ -120,43 +122,109 @@ function brandOf(marke){ var k; if (!marke) return 'other'; for (k in BR) if (BR
 function tableOf(brand){ return (BR[brand] || BR.other).t; }
 function known(brand, req){ var t = tableOf(brand), i; for (i = 0; i < t.length; i++) if (t[i][0] === req) return t[i]; return null; }
 
-// ---- Bus-Zugriff -----------------------------------------------------------------------------
-async function setup(io, ecu){
-  await io.send('ATSH'+ecu.req, 2000); if (ecu.res) await io.send('ATCRA'+ecu.res, 2000); await io.send('ATH0', 2000);
+// ---- Adressierungsarten ------------------------------------------------------------------------
+// 11 = CAN 11 Bit (ISO 15765-4, 500 kbit) · 29 = CAN 29 Bit, Anfrage 18DA<ZG>F1 (500 kbit) · bmw = erweiterte Adressierung, Tester 6F1, Ziel im 1. Datenbyte
+// 11s / 29s = wie 11 / 29 mit 250 kbit
+var MODES = {
+  '11':{sp:'6', n:['CAN 11 Bit / 500 kbit','CAN 11 бит / 500 кбит']},
+  '29':{sp:'7', n:['CAN 29 Bit / 500 kbit (18DAxxF1)','CAN 29 бит / 500 кбит (18DAxxF1)']},
+  'bmw':{sp:'6', n:['BMW-Adressierung (6F1, erweitert)','Адресация BMW (6F1, расширенная)']},
+  '11s':{sp:'8', n:['CAN 11 Bit / 250 kbit','CAN 11 бит / 250 кбит']},
+  '29s':{sp:'9', n:['CAN 29 Bit / 250 kbit','CAN 29 бит / 250 кбит']}
+};
+// Namen für 29 Bit (FCA 2013–2017: ECM 10, TCM 18, ABS 28, BCM 40; Quelle evmetrics.co.uk/obd/ecus.html) und BMW (ZGW 10, DME 12, CAS 40, DSC 60; Quelle bimmer.studio/ecu-explorer, quantexlab.com/en/develop/elm327.html)
+var FCA29 = [['10','','Motorsteuerung (ECM)','ЭБУ двигателя (ECM)'],['18','','Getriebesteuerung (TCM)','ЭБУ КПП (TCM)'],['28','','ABS','ABS'],['40','','Karosseriemodul (BCM)','Блок кузова (BCM)']];
+var BMWT = [['10','','Zentrales Gateway (ZGW)','Центральный шлюз (ZGW)'],['12','','Motorelektronik (DME/DDE)','Электроника двигателя (DME/DDE)'],['40','','Zugangssystem / Bordnetz (CAS/BDC)','Система доступа / бортсеть (CAS/BDC)'],['60','','Fahrdynamik (DSC)','Динамическая стабилизация (DSC)']];
+function knownM(brand, req, mode){
+  var t = (mode === 'bmw') ? (brand === 'bmw' ? BMWT : []) : (mode === '29' || mode === '29s') ? (brand === 'fca' ? FCA29 : []) : tableOf(brand), i;
+  for (i = 0; i < t.length; i++) if (t[i][0] === req) return t[i];
+  return null;
 }
-async function restore(io){
-  try { await io.send('ATSH7DF', 2000); await io.send('ATAR', 2000); await io.send('ATH0', 2000); await io.send('ATST96', 2000); } catch(e){}
+
+// ---- Bus-Zugriff -----------------------------------------------------------------------------
+// begin/end klammern eine ganze Folge von Zugriffen: Protokoll und Adressierung werden nur einmal gewechselt und am Ende zurückgestellt.
+async function begin(io){
+  io.__depth = (io.__depth || 0) + 1;
+  if (io.__depth === 1){ io.__orig = ''; try { io.__orig = String(await io.send('ATDPN', 2000)).replace(/[^0-9A-Fa-f]/g, ''); } catch(e){} io.__sp = io.__orig.replace(/^A/i, ''); io.__ext = false; }
+}
+async function end(io){
+  io.__depth = Math.max(0, (io.__depth || 1) - 1); if (io.__depth) return;
+  try {
+    await io.send('ATCEA', 2000); await io.send('ATFCSM0', 2000); await io.send('ATAR', 2000); await io.send('ATH0', 2000); await io.send('ATST96', 2000);
+    var o = io.__orig || ''; if (o && io.__sp !== o.replace(/^A/i, '')){ await io.send('ATSP'+o, 3000); io.__sp = o.replace(/^A/i, ''); }
+    var d = o.replace(/^A/i, '').charAt(0); if (d === '7' || d === '9') await io.send('ATSHDB33F1', 2000); else if (d === '6' || d === '8') await io.send('ATSH7DF', 2000);
+  } catch(e){}
+  io.__ext = false;
+}
+async function restore(io){ if (io.__depth) return; io.__depth = 1; await end(io); }
+async function useMode(io, mode){ var sp = (MODES[mode] || MODES['11']).sp; if (io.__sp !== sp){ await io.send('ATSP'+sp, 3000); io.__sp = sp; } }
+async function setup(io, ecu){
+  var m = ecu.mode || '11';
+  await useMode(io, m);
+  if (m === 'bmw'){
+    await io.send('ATSH6F1', 2000); await io.send('ATFCSH6F1', 2000); await io.send('ATFCSD'+ecu.req+'30FF32', 2000); await io.send('ATFCSM1', 2000);
+    await io.send('ATCRA6'+ecu.req, 2000); await io.send('ATCEA'+ecu.req, 2000); io.__ext = true;
+  } else {
+    if (io.__ext){ await io.send('ATCEA', 2000); await io.send('ATFCSM0', 2000); io.__ext = false; }
+    if (m === '29' || m === '29s'){ await io.send('ATSHDA'+ecu.req+'F1', 2000); await io.send('ATCRA18DAF1'+ecu.req, 2000); }
+    else { await io.send('ATSH'+ecu.req, 2000); if (ecu.res) await io.send('ATCRA'+ecu.res, 2000); else await io.send('ATAR', 2000); }
+  }
+  await io.send('ATH0', 2000);
 }
 async function request(io, ecu, hexReq, svc, to){
   await setup(io, ecu);
-  var raw = await io.send(hexReq, to || 4000);
-  return check(payload(raw), svc);
+  var raw = await io.send(hexReq, to || 4000), b = payload(raw);
+  if (b && ecu.mode === 'bmw' && b[0] === 0xF1) b = b.slice(1);
+  return check(b, svc);
 }
-async function withBus(io, fn){ try { return await fn(); } finally { await restore(io); } }
+async function withBus(io, fn){ await begin(io); try { return await fn(); } finally { await end(io); } }
 
-// Suche: Test-Anfrage 3E 00 an jede ID; wer antwortet, ist ein Steuergerät.
-// IDs: alle bekannten der Marke + Durchlauf 0x700–0x7E7 (+ 0x500–0x6FF bei „tief"), ohne 0x7DF (Sammeladresse)
-async function scan(io, opt, onProg){
-  opt = opt || {}; var found = [], ids = [], seen = {}, i, id, br = opt.brand || 'other';
-  var dp = ''; try { dp = String(await io.send('ATDP', 2000)); } catch(e){}
-  if (dp && !/CAN/i.test(dp) && !opt.force) throw new Error((window.JCLANG==='ru' ? 'Сканирование блоков работает только по CAN. Протокол адаптера: ' : 'Steuergeräte-Suche funktioniert nur über CAN. Protokoll des Adapters: ')+dp.replace(/\s+/g,' ').trim());
+// Suche: Test-Anfrage 3E 00 an jede Adresse; wer antwortet, ist ein Steuergerät.
+function frames29(raw){
+  var o = []; String(raw||'').replace(/\r/g, '').split('\n').forEach(function(l){ var s = l.replace(/\s+/g, '').toUpperCase(); var m = /^(18DAF1[0-9A-F]{2})([0-9A-F]{4,})$/.exec(s); if (m) o.push({id:m[1], data:pairs(m[2])}); });
+  return o;
+}
+async function scanMode(io, mode, opt, onProg, found){
+  var br = opt.brand || 'other', ids = [], seen = {}, id, i, n0 = found.length, ml = (MODES[mode].n)[window.JCLANG === 'ru' ? 1 : 0];
   function add(x){ var r = hx(x, 3); if (x === 0x7DF || seen[r]) return; seen[r] = 1; ids.push(r); }
-  tableOf(br).forEach(function(k){ add(parseInt(k[0], 16)); });
-  for (id = 0x7E0; id <= 0x7E7; id++) add(id);
-  for (id = 0x700; id <= 0x7E7; id++) add(id);
-  if (opt.deep) for (id = 0x500; id <= 0x6FF; id++) add(id);
-  await withBus(io, async function(){
-    await io.send('ATH1', 2000); await io.send('ATAR', 2000); await io.send('ATST20', 2000);
+  if (mode === '11' || mode === '11s'){
+    if (mode === '11') tableOf(br).forEach(function(k){ add(parseInt(k[0], 16)); });
+    for (id = 0x7E0; id <= 0x7E7; id++) add(id);
+    for (id = 0x700; id <= 0x7E7; id++) add(id);
+    if (opt.depth >= 1) for (id = 0x500; id <= 0x6FF; id++) add(id);
+    if (opt.depth >= 2) for (id = 0x000; id <= 0x4FF; id++) add(id);
+  } else { for (id = 0; id <= 0xFF; id++) if (id !== 0xF1) ids.push(hx(id, 2)); }
+  await begin(io);
+  try {
+    await useMode(io, mode); await io.send('ATH1', 2000); await io.send('ATAR', 2000); await io.send('ATST20', 2000);
+    if (io.__ext){ await io.send('ATCEA', 2000); await io.send('ATFCSM0', 2000); io.__ext = false; }
     for (i = 0; i < ids.length; i++){
       if (io.closed) throw new Error('Verbindung getrennt'); if (opt.cancel && opt.cancel()) break;
-      var req = ids[i], kn = known(br, req); if (onProg) onProg(i+1, ids.length, found.length, req);
-      var raw = ''; try { await io.send('ATSH'+req, 1500); if (kn) await io.send('ATCRA'+kn[1], 1500); raw = await io.send('3E00', 700); if (kn) await io.send('ATAR', 1500); } catch(e){ if (io.closed) throw e; continue; }
-      var fr = frames(raw).filter(function(f){ return f.id !== req; });
-      for (var k = 0; k < fr.length; k++){ var d = fr[k].data; // [PCI, 7E, 00] bzw. [PCI, 7F, 3E, nrc]
-        if (d.length >= 3 && (d[1] === 0x7E || d[1] === 0x7F)){ found.push({req:req, res:fr[k].id}); break; } }
+      var req = ids[i], raw = '', hit = null; if (onProg) onProg(i+1, ids.length, found.length - n0, req, ml);
+      try {
+        if (mode === 'bmw'){ await io.send('ATCRA6'+req, 1500); await io.send('ATSH6F1', 1500); await io.send('ATCEA'+req, 1500); io.__ext = true; raw = await io.send('3E00', 700); }
+        else if (mode === '29' || mode === '29s'){ await io.send('ATSHDA'+req+'F1', 1500); raw = await io.send('3E00', 700); }
+        else { var kn = knownM(br, req, mode); await io.send('ATSH'+req, 1500); if (kn && kn[1]) await io.send('ATCRA'+kn[1], 1500); raw = await io.send('3E00', 700); if (kn && kn[1]) await io.send('ATAR', 1500); }
+      } catch(e){ if (io.closed) throw e; continue; }
+      if (mode === 'bmw'){ frames(raw).forEach(function(f){ var d = f.data; if (!hit && f.id === '6'+req && d.length >= 4 && d[0] === 0xF1 && (d[2] === 0x7E || d[2] === 0x7F)) hit = {req:req, res:f.id, mode:mode}; }); }
+      else if (mode === '29' || mode === '29s'){ frames29(raw).forEach(function(f){ var d = f.data; if (!hit && f.id === '18DAF1'+req && d.length >= 3 && (d[1] === 0x7E || d[1] === 0x7F)) hit = {req:req, res:f.id, mode:mode}; }); }
+      else { frames(raw).filter(function(f){ return f.id !== req; }).forEach(function(f){ var d = f.data; if (!hit && d.length >= 3 && (d[1] === 0x7E || d[1] === 0x7F)) hit = {req:req, res:f.id, mode:mode}; }); }
+      if (hit) found.push(hit);
     }
-  });
-  found.sort(function(a, b){ return parseInt(a.req, 16) - parseInt(b.req, 16); });
+  } finally { await end(io); }
+}
+// opt: brand, depth (0–2), modes (z. B. ['11','29']), fallback (Modi, falls weniger als 3 Steuergeräte gefunden), cancel
+async function scan(io, opt, onProg){
+  opt = opt || {}; var found = [], modes = (opt.modes && opt.modes.length) ? opt.modes : ['11'], i;
+  await begin(io);
+  try {
+    for (i = 0; i < modes.length; i++){ if (opt.cancel && opt.cancel()) break; await scanMode(io, modes[i], opt, onProg, found); }
+    if (opt.fallback && found.length < 3 && !(opt.cancel && opt.cancel())){
+      var more = opt.fallback.filter(function(m){ return modes.indexOf(m) < 0; });
+      for (i = 0; i < more.length; i++){ if (opt.cancel && opt.cancel()) break; if (found.length >= 3 && more[i].indexOf('s') > 0) break; await scanMode(io, more[i], opt, onProg, found); }
+    }
+  } finally { await end(io); }
+  found.sort(function(a, b){ return (a.mode === b.mode ? 0 : (a.mode < b.mode ? -1 : 1)) || (parseInt(a.req, 16) - parseInt(b.req, 16)); });
   return found;
 }
 
@@ -224,20 +292,40 @@ var DEMO = {
   '715': {res:'77F', dtc:[[0x80,0x01,0x12,0x28]], did:{F187:'5Q0959655', F197:'DEMO AIRBAG'}, live:{}},
   '755': {res:'7BF', dtc:[[0x56,0x20,0x00,0x08]], did:{F187:'5Q0907553', F197:'DEMO FAHRWERK'}, live:{}}
 };
-var ds = {hdr:false, req:null, on:false};
+var DEMO29 = {
+  '10': {res:'18DAF110', dtc:[[0x01,0x71,0x00,0x24]], did:{F187:'68123456AA', F197:'DEMO ECM 29BIT'}, live:{}},
+  '28': {res:'18DAF128', dtc:[[0x40,0x35,0x00,0x2F]], did:{F187:'68234567AB', F197:'DEMO ABS 29BIT'}, live:{}},
+  '40': {res:'18DAF140', dtc:[], did:{F187:'68345678AC', F197:'DEMO BCM 29BIT'}, live:{}}
+};
+var DEMOBMW = {
+  '12': {res:'612', dtc:[[0x03,0x01,0x00,0x2F]], did:{F187:'8604321', F197:'DEMO DME'}, live:{}},
+  '60': {res:'660', dtc:[[0x40,0x35,0x00,0x2F]], did:{F187:'6851234', F197:'DEMO DSC'}, live:{}},
+  '10': {res:'610', dtc:[], did:{F187:'9283456', F197:'DEMO ZGW'}, live:{}}
+};
+var ds = {hdr:false, req:null, on:false, sp:'6', cea:null};
 function dframe(id, bytes){ // Antwort im ELM-Format (ATS0): Kopf oder Nutzdaten, Mehrbild über 7 Byte
   var h = function(a){ return a.map(function(c){ return hx(c); }).join(''); };
-  if (ds.hdr) return id + hx(bytes.length) + h(bytes);
+  var bmw = ds.req === '6F1';
+  if (ds.hdr) return id + (bmw ? 'F1' : '') + hx(bytes.length) + h(bytes);
+  if (bmw) bytes = [0xF1].concat(bytes);
   if (bytes.length <= 7) return h(bytes);
   var s = hx(bytes.length, 3), i, n = 0; for (i = 0; i < bytes.length; i += 7) s += '\n'+(n++ % 16).toString(16).toUpperCase()+':'+h(bytes.slice(i, i+7)); return s;
 }
+function demoEcu(){
+  if (ds.req === '6F1') return ds.cea ? DEMOBMW[ds.cea] : null;
+  var m = /^DA([0-9A-F]{2})F1$/.exec(ds.req || ''); if (m) return DEMO29[m[1]];
+  return ['0', '6', '8'].indexOf(ds.sp) >= 0 ? DEMO[ds.req] : null;
+}
 function demo(c){
   if (c === 'ATDP') return 'ISO 15765-4 (CAN 11/500)';
+  if (c === 'ATDPN') return 'A6';
+  if (c.indexOf('ATSP') === 0){ ds.sp = c.slice(4).replace(/^A/, '') || '0'; return 'OK'; }
+  if (c.indexOf('ATCEA') === 0){ ds.cea = c.slice(5) || null; return 'OK'; }
   if (c === 'ATH1'){ ds.hdr = true; return 'OK'; } if (c === 'ATH0'){ ds.hdr = false; return null; }
-  if (c.indexOf('ATSH') === 0){ var a = c.slice(4); if (a === '7DF'){ ds.on = false; ds.req = null; return null; } ds.on = true; ds.req = a; return 'OK'; }
+  if (c.indexOf('ATSH') === 0){ var a = c.slice(4); if (a === '7DF' || a === 'DB33F1'){ ds.on = false; ds.req = null; return null; } ds.on = true; ds.req = a; return 'OK'; }
   if (!ds.on) return null;
   if (c.indexOf('AT') === 0) return 'OK';
-  var e = DEMO[ds.req]; if (!e) return 'NO DATA';
+  var e = demoEcu(); if (!e) return 'NO DATA';
   var b = pairs(c), t = Date.now(), k;
   if (c === '3E00') return dframe(e.res, [0x7E, 0x00]);
   if (c === '090A' && ds.req === '7E0') return dframe(e.res, [0x49, 0x0A, 0x01].concat('ECM-EngineControl'.split('').map(function(ch){ return ch.charCodeAt(0); }), [0, 0, 0]));
@@ -251,6 +339,6 @@ function demo(c){
 }
 
 window.JCECU = {scan:scan, readDtcs:readDtcs, clearDtcs:clearDtcs, ident:ident, readDid:readDid, readDids:readDids, scanDids:scanDids, restore:restore, demo:demo, IDENT:IDENT, flagText:flagText, dtc3:dtc3, payload:payload, frames:frames, hx:hx, sleep:sleep,
-  label:function(req, brand){ var k = known(brand || 'other', req); return k ? [k[2], k[3]] : null; }, guess:guess, brands:BR, brandOf:brandOf,
+  label:function(req, brand, mode){ var k = knownM(brand || 'other', req, mode || '11'); return k ? [k[2], k[3]] : null; }, MODES:MODES, begin:begin, end:end, guess:guess, brands:BR, brandOf:brandOf,
   kinds:[['ABS / ESP','ABS / ESP'],['Airbag','Airbag'],['Kombiinstrument','Приборная панель'],['Komfort / Zentralelektrik','Комфорт / ЦЭ'],['Klima','Климат'],['Lenkung','Рулевое'],['Getriebe','КПП'],['Motor','Двигатель'],['Gateway','Шлюз'],['Sonstiges','Прочее']]};
 })();
