@@ -47,6 +47,12 @@ Fotos (Kamera oder Galerie), Screenshots und eingescannte PDFs werden offline pe
 - Beschriftungen automatisch auf Überlauf geprüft (DE/RU, 360–1280 px).
 
 
+## 0.15.1 – Alle Steuergeräte in einem Schritt
+
+- Ein Knopf: sucht alle Steuergeräte, liest Kennungen und den kompletten Fehlerspeicher aller Steuergeräte und benennt sie automatisch (Motor, Getriebe, ABS/ESP, Airbag, Kombiinstrument, Fahrwerk, Klima, Lenkung, Türen …).
+- Namenstabellen: VAG (VW, Audi, Seat, Škoda, Cupra, Porsche; ca. 80 Module, Quelle ODIS-IDs, github.com/ConnorHowell/vag-uds-ids) und Peugeot/Citroën/DS (Quelle github.com/ludwig-v/arduino-psa-diag). Marke automatisch aus der VIN oder von Hand gewählt; bei anderen Marken nur Standard-Namen (7E0 Motor, 7E1 Getriebe) plus eigene Namen.
+- Optionale „Tiefe Suche" (0x500–0x6FF).
+
 ## 0.15.0 – Alle Steuergeräte
 
 - Neuer Bereich OBD → „Alle Steuergeräte": sucht Steuergeräte am CAN-Bus (11 Bit, IDs 0x700–0x7E7), liest Kennungen (22 F1xx), liest und löscht den Fehlerspeicher jedes Steuergeräts (UDS 19 02 / 14, KWP-Rückfall 18).

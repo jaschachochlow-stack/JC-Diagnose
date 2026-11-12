@@ -268,14 +268,14 @@ function card(it){
 }
 function hvCallout(){ return '<div class="callout hv"><b>'+T('Hochvolt','Высокое напряжение')+'</b><p>'+T('Arbeiten an HV-Systemen nur mit Qualifikation nach DGUV Information 209-093. Spannungsfreiheit mit zweipoligem Spannungsprüfer feststellen. Messgeräte mindestens CAT III 1000 V.','Работы с ВВ-системами только при наличии допуска по DGUV Information 209-093. Отсутствие напряжения проверять двухполюсным указателем. Приборы не ниже CAT III 1000 В.')+'</p></div>'; }
 function deNote(){ return state.lang==='ru' ? '<p class="note">Текст главы пока на немецком. Перевод — следующий этап.</p>' : ''; }
-function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.15.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
+function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.15.1 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
 function crumbs(parts){ return '<p class="eyebrow"><a href="#start">'+T('Start','Главная')+'</a>'+parts.map(function(p){ return ' / '+p; }).join('')+'</p>'; }
 
 /* ---------- Start ---------- */
 var PANNE = ['k102','k103','k29','k28','k109','k119','k111','k110','k45'];
 function vHome(){
   var m = D.meta, v = m.verify;
-  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.15.0 · Stand','Версия 0.15.0 · состояние')+' '+esc(m.stand)+'</p>' +
+  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.15.1 · Stand','Версия 0.15.1 · состояние')+' '+esc(m.stand)+'</p>' +
     '<h1>JC Diagnose</h1><p class="lead">'+T('Sollwerte, Pinbelegung, Multimeter- und Oszilloskop-Prüfschritte für Sensoren, Aktoren, Bordnetz, Bussysteme und Hochvolt – plus Systemtests und dein eigenes Soll/Ist-Messprotokoll.','Нормы, распиновка, проверки мультиметром и осциллографом для датчиков, исполнительных механизмов, бортсети, шин и ВВ — плюс системные тесты и твой собственный журнал замеров «норма/факт».')+'</p>' +
     '<div class="chips"><a class="chip" href="#mess-neu">+ '+T('Neue Messung','Новый замер')+'</a><a class="chip" href="#obd">'+T('Fahrzeug verbinden','Подключить машину')+'</a><a class="chip" href="#dtc">'+T('Fehlercode prüfen','Проверить код ошибки')+'</a><a class="chip" href="#import">'+T('Bericht importieren','Импорт отчёта')+'</a><a class="chip" href="#oszi">'+T('Oszillogramme','Осциллограммы')+'</a><a class="chip" href="#tab-oszi">'+T('Oszi-Startwerte','Настройки осциллографа')+'</a><a class="chip" href="#systemtests">'+T('Systemtests','Системные тесты')+'</a><a class="chip" href="#rechner">'+T('Rechner','Калькуляторы')+'</a><a class="chip" href="#tab-fehler">'+T('Fehlerbilder','Неисправности')+'</a></div></div>' +
     '<div class="stats"><div class="stat"><b>'+m.n_items+'</b><span>'+T('Kapitel','глав')+'</span></div><div class="stat"><b>'+X.systemtests.rows.length+'</b><span>'+T('Systemtests','системных тестов')+'</span></div><div class="stat"><b>'+state.mess.length+'</b><span>'+T('eigene Messungen','своих замеров')+'</span></div></div></section>';
@@ -1106,7 +1106,8 @@ function vObdReport(r){
 function ecuSt(){ if (!obd.ecu) obd.ecu = {list:[], sel:null, busy:'', prog:null, cancel:false, vals:{}, live:false, dids:[], found:[], msg:'', scanned:false}; return obd.ecu; }
 function ecuKey(e){ return ((obd.veh && obd.veh.vin) || '') + ':' + e.req; }
 function ecuNames(){ return lget('jc-ecunames', {}) || {}; }
-function ecuName(e){ var n = ecuNames()[ecuKey(e)]; if (n) return n; var l = JCECU.label(e.req); if (l) return T(l[0], l[1]); var sn = e.idn && (e.idn.F197 || ''); return sn || (T('Steuergerät ','Блок ')+e.req); }
+function ecuBrand(){ var s = ecuSt(); return s.brand && s.brand !== 'auto' ? s.brand : JCECU.brandOf(obd.veh && obd.veh.marke); }
+function ecuName(e){ var n = ecuNames()[ecuKey(e)]; if (n) return n; var l = JCECU.label(e.req, ecuBrand()); if (l) return T(l[0], l[1]); var sn = e.idn && (e.idn.F197 || ''); return sn || (T('Steuergerät ','Блок ')+e.req); }
 function ecuRefresh(){ if (cur() === 'obd-ecus') render(true); }
 function ecuRun(label, fn){ var s = ecuSt(); obd.liveOn = false; s.live = false; s.busy = label; s.msg = ''; ecuRefresh();
   return Promise.resolve().then(fn).then(function(){ s.busy = ''; s.prog = null; ecuRefresh(); }, function(e){ s.busy = ''; s.prog = null; s.msg = (e && e.message) || String(e); ecuRefresh(); }); }
@@ -1114,9 +1115,10 @@ function ecuByReq(q){ return ecuSt().list.find(function(e){ return e.req === q; 
 function ecuScan(){
   var s = ecuSt(); s.cancel = false; s.list = []; s.sel = null;
   ecuRun(T('Suche Steuergeräte …','Ищу блоки управления …'), function(){
-    return JCECU.scan(obd.io, {cancel:function(){ return s.cancel; }}, function(i, n, f, id){ s.prog = {i:i, n:n, f:f, id:id}; if (i % 6 === 0 || i === n) ecuRefresh(); }).then(function(found){
+    return JCECU.scan(obd.io, {brand:ecuBrand(), deep:!!s.deep, cancel:function(){ return s.cancel; }}, function(i, n, f, id){ s.prog = {i:i, n:n, f:f, id:id}; if (i % 6 === 0 || i === n) ecuRefresh(); }).then(function(found){
       s.list = found; s.scanned = true; obdLog(T('Steuergeräte gefunden: ','Найдено блоков: ')+found.length);
-      return found.reduce(function(p, e){ return p.then(function(){ return JCECU.ident(obd.io, e).then(function(i){ e.idn = i; }, function(){}); }); }, Promise.resolve());
+      return found.reduce(function(p, e, i){ return p.then(function(){ if (s.cancel) return; s.busy = T('Lese Kennung und Fehlerspeicher …','Читаю идентификацию и ошибки …'); s.prog = {i:i+1, n:found.length, f:found.length, id:e.req}; ecuRefresh();
+        return JCECU.ident(obd.io, e).then(function(x){ e.idn = x; }, function(){}).then(function(){ return ecuReadOne(e).catch(function(er){ if (obd.io && obd.io.closed) throw er; e.err = (er && er.message) || String(er); }); }); }); }, Promise.resolve());
     }).then(function(){ if (s.list.length) obdScanSave('ecu'); });
   });
 }
@@ -1161,14 +1163,17 @@ function vObdEcus(){
   if (!obd.io) return h + '<div class="empty"><p>'+T('Nicht mit dem Fahrzeug verbunden.','Нет подключения к машине.')+'</p><a class="btn primary" href="#obd">OBD</a></div></div>';
   h += '<p class="lead">'+T('Sucht alle Steuergeräte am CAN-Bus (ABS, Airbag, Kombiinstrument, Komfort …), liest und löscht deren Fehlerspeicher und zeigt Rohwerte. Zündung an, Motor aus, Fahrzeug steht.','Ищет все блоки на шине CAN (ABS, Airbag, приборка, комфорт …), читает и стирает их ошибки, показывает сырые значения. Зажигание включено, двигатель заглушен, машина стоит.')+'</p>';
   var busy = !!s.busy;
-  h += '<div class="btn-row"><button class="btn primary" id="ecScan"'+(busy?' disabled':'')+'>'+(s.scanned?T('Erneut suchen','Искать заново'):T('Steuergeräte suchen','Найти блоки'))+'</button>'+
-    (s.list.length ? '<button class="btn" id="ecAll"'+(busy?' disabled':'')+'>'+T('Fehler aller lesen','Прочитать ошибки всех')+'</button>' : '')+
+  var br = ecuBrand(), tot = 0; s.list.forEach(function(x){ if (x.dtc) tot += x.dtc.length; });
+  h += '<div class="field"><label for="ecBrand">'+T('Marke (für Namen der Steuergeräte)','Марка (для названий блоков)')+'</label><select id="ecBrand"><option value="auto"'+((!s.brand||s.brand==='auto')?' selected':'')+'>'+T('Automatisch aus VIN','Автоматически по VIN')+' ('+esc(T(JCECU.brands[br].n[0], JCECU.brands[br].n[1]))+')</option>'+Object.keys(JCECU.brands).map(function(k){ return '<option value="'+k+'"'+(s.brand===k?' selected':'')+'>'+esc(T(JCECU.brands[k].n[0], JCECU.brands[k].n[1]))+'</option>'; }).join('')+'</select></div>'+
+    '<label class="check"><input type="checkbox" id="ecDeep"'+(s.deep?' checked':'')+'> '+T('Tiefe Suche (auch 0x500–0x6FF, dauert länger)','Глубокий поиск (ещё 0x500–0x6FF, дольше)')+'</label>';
+  h += '<div class="btn-row"><button class="btn primary" id="ecScan"'+(busy?' disabled':'')+'>'+(s.scanned?T('Alles neu lesen','Прочитать всё заново'):T('Alle Steuergeräte suchen und alle Fehler lesen','Найти все блоки и прочитать все ошибки'))+'</button>'+
+    (s.list.length ? '<button class="btn" id="ecAll"'+(busy?' disabled':'')+'>'+T('Nur Fehler neu lesen','Только ошибки заново')+'</button>' : '')+
     (busy ? '<button class="btn danger" id="ecStop">'+T('Abbrechen','Отмена')+'</button>' : '')+'<a class="btn" href="#obd">← OBD</a></div>';
   if (busy){ h += '<p class="note">'+esc(s.busy)+(s.prog ? ' '+s.prog.i+' / '+s.prog.n+' ('+esc(s.prog.id)+') · '+T('gefunden','найдено')+': '+s.prog.f : '')+'</p>'+(s.prog ? '<div class="ecu-bar"><i style="width:'+Math.round(s.prog.i*100/Math.max(1, s.prog.n))+'%"></i></div>' : ''); }
   if (s.msg) h += '<div class="callout hv"><b>'+T('Fehler','Ошибка')+'</b><p>'+esc(s.msg)+'</p></div>';
   if (s.scanned && !s.list.length && !busy) h += '<div class="callout hv"><b>'+T('Keine Steuergeräte gefunden','Блоки не найдены')+'</b><p>'+T('Zündung an? Adapter vom Typ ELM327 mit CAN 11 Bit? Nicht jedes Fahrzeug antwortet auf diese Abfrage (z. B. Gateway-gesperrt oder Herstellerprotokoll).','Зажигание включено? Адаптер ELM327 с CAN 11 бит? Не каждая машина отвечает на такой запрос (например, закрытый шлюз или протокол производителя).')+'</p></div>';
   if (s.list.length){
-    h += '<h2>'+T('Gefunden','Найдено')+' ('+s.list.length+')</h2><div class="ecu-list">'+s.list.map(function(e){
+    h += '<h2>'+T('Gefunden','Найдено')+' ('+s.list.length+') · '+tot+' '+T('Fehler insgesamt','ошибок всего')+'</h2><div class="ecu-list">'+s.list.map(function(e){
       var n = e.dtc ? e.dtc.length : null, chip = e.err ? '<span class="st na">?</span>' : n == null ? '<span class="st na">–</span>' : n ? '<span class="st hi">'+n+' '+T('Fehler','ошиб.')+'</span>' : '<span class="st ok">✓ 0</span>';
       return '<button class="ecu-item'+(s.sel===e.req?' on':'')+'" data-ecu="'+e.req+'"><b>'+esc(ecuName(e))+'</b><span class="meta mono">'+e.req+' → '+e.res+(e.idn && e.idn.F187 ? ' · '+esc(e.idn.F187) : '')+'</span>'+chip+'</button>'; }).join('')+'</div>';
   }
@@ -1193,6 +1198,8 @@ function vObdEcus(){
     var q = function(i){ return main.querySelector(i); };
     var b = q('#ecScan'); if (b) b.onclick = ecuScan;
     b = q('#ecAll'); if (b) b.onclick = ecuReadAll;
+    b = q('#ecBrand'); if (b) b.onchange = function(){ s.brand = b.value; ecuRefresh(); };
+    b = q('#ecDeep'); if (b) b.onchange = function(){ s.deep = b.checked; };
     b = q('#ecStop'); if (b) b.onclick = function(){ s.cancel = true; };
     main.querySelectorAll('[data-ecu]').forEach(function(x){ x.onclick = function(){ s.live = false; s.sel = x.dataset.ecu; s.dids = []; s.found = []; ecuRefresh(); }; });
     if (!e) return;

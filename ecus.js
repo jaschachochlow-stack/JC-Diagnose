@@ -28,7 +28,7 @@ function payload(raw){
 function frames(raw){
   var o = []; String(raw||'').replace(/\r/g, '').split('\n').forEach(function(l){
     var s = l.replace(/\s+/g, ''); if (!/^[0-9A-F]{5,}$/i.test(s)) return;
-    var id = s.slice(0, 3).toUpperCase(); if (id.charAt(0) !== '7') return;
+    var id = s.slice(0, 3).toUpperCase();
     o.push({id:id, data:pairs(s.slice(3))});
   });
   return o;
@@ -48,6 +48,46 @@ function dtc3(b0, b1, b2){ var L = 'PCBU'.charAt(b0 >> 6); return L + ((b0 >> 4)
 function dtcFlags(st){ var f = []; if (st & 1) f.push('aktiv'); if (st & 4) f.push('anstehend'); if (st & 8) f.push('bestätigt'); if (st & 128) f.push('Lampe'); return f; }
 function flagText(st){ var ru = window.JCLANG === 'ru', m = {aktiv:'активна', anstehend:'ожидающая', 'bestätigt':'подтверждена', Lampe:'лампа'}; return dtcFlags(st).map(function(x){ return ru ? m[x] : x; }).join(', ') || (ru ? 'сохранена' : 'gespeichert'); }
 
+
+// ---- Bekannte Steuergeräte-Adressen je Konzern ------------------------------------------------
+// Quelle VAG: Sammlung der UDS-CAN-IDs aus ODIS (github.com/ConnorHowell/vag-uds-ids); PSA: github.com/ludwig-v/arduino-psa-diag (ECU_LIST).
+// Format: [Anfrage-ID, Antwort-ID, Name DE, Name RU]. Gilt nur, wenn die Marke passt; sonst würden gleiche IDs falsch benannt.
+var VAG = [
+['7E0','7E8','Motorsteuerung 1','ЭБУ двигателя 1'],['7E2','7EA','Motorsteuerung 2','ЭБУ двигателя 2'],['7E1','7E9','Getriebesteuerung','ЭБУ КПП'],
+['7E6','7EE','Antriebsmotor (Hybrid/Elektro)','Тяговый мотор (гибрид/электро)'],['7E5','7ED','Batterie-Energiemanagement','Управление энергией батареи'],['765','7CF','Batterie-Laden','Зарядка батареи'],['728','792','Batterieregelung','Регулятор батареи'],
+['713','77D','Bremsenelektronik (ABS/ESP)','Тормозная электроника (ABS/ESP)'],['715','77F','Airbag','Airbag (подушки безопасности)'],['714','77E','Kombiinstrument','Приборная панель'],['771','7DB','Tacho','Спидометр'],
+['710','77A','Gateway','Шлюз (Gateway)'],['70E','778','Zentralelektrik','Центральная электрика'],['70D','777','Komfortsystem','Система комфорта'],['745','7AF','Komfortsystem 2','Система комфорта 2'],
+['712','77C','Lenkhilfe (Servolenkung)','Усилитель руля'],['716','780','Aktive Lenkung / Anzeige','Активное рулевое / дисплей'],['70C','776','Lenksäulenelektronik','Электроника рулевой колонки'],['731','79B','Lenksäulenverriegelung','Блокировка рулевой колонки'],
+['711','77B','Wegfahrsperre','Иммобилайзер'],['732','79C','Zugang/Start (Kessy)','Бесключевой доступ/старт (Kessy)'],['746','7B0','Klimaanlage','Климат-контроль'],['71A','784','Klimabedienteil hinten','Климат задний'],['719','783','Klimakompressor','Компрессор кондиционера'],
+['76A','7D4','Standheizung','Автономный отопитель'],['750','7BA','Fahrzeugpositionserkennung','Определение положения авто'],['751','7BB','Lenkwinkelsensor','Датчик угла поворота руля'],['752','7BC','Elektrische Parkbremse','Электрический стояночный тормоз'],
+['753','7BD','Schaltmodul Getriebe','Модуль выбора передач'],['754','7BE','Leuchtweitenregulierung','Корректор фар'],['755','7BF','Fahrwerksregelung','Управление подвеской'],['772','7DC','Elektronische Dämpferregelung','Электронное управление амортизаторами'],
+['757','7C1','Abstandsregelung (ACC)','Адаптивный круиз (ACC)'],['756','7C0','Abstandsregelung 2','Адаптивный круиз 2'],['70A','774','Einparkhilfe','Парктроник'],['70B','775','Reifendruckkontrolle','Контроль давления в шинах'],
+['70F','779','Allradsteuerung','Полный привод'],['71D','787','Allradsteuerung 2','Полный привод 2'],['71E','788','Schließelektronik','Электроника замков'],['720','78A','Radbremse hinten rechts','Тормоз заднего правого колеса'],['71F','789','Radbremse hinten links','Тормоз заднего левого колеса'],
+['730','79A','Fernlichtassistent','Ассистент дальнего света'],['748','7B2','Fernlichtassistent 2','Ассистент дальнего света 2'],['758','7C2','Bildverarbeitung','Обработка изображения'],['74F','7B9','Frontsensor Fahrerassistenz','Фронтальный датчик ассистентов'],
+['74E','7B8','Spurwechselassistent','Ассистент смены полосы'],['75E','7C8','Gurtstraffer vorne links','Преднатяжитель переднего левого ремня'],['75F','7C9','Gurtstraffer vorne rechts','Преднатяжитель переднего правого ремня'],
+['74A','7B4','Tür Fahrerseite','Дверь водителя'],['74B','7B5','Tür Beifahrerseite','Дверь пассажира'],['73E','7A8','Tür hinten Fahrerseite','Дверь задняя водителя'],['73F','7A9','Tür hinten Beifahrerseite','Дверь задняя пассажира'],
+['74C','7B6','Sitzverstellung Fahrer','Регулировка сиденья водителя'],['74D','7B7','Sitzverstellung Beifahrer','Регулировка сиденья пассажира'],['72D','797','Dachelektronik','Электроника крыши'],['73D','7A7','Dachelektronik 2','Электроника крыши 2'],
+['733','79D','Schiebetür links','Сдвижная дверь левая'],['734','79E','Schiebetür rechts','Сдвижная дверь правая'],['718','782','Radio','Радио'],['76C','7D6','Navigation','Навигация'],['76F','7D9','Soundsystem','Аудиосистема'],
+['76D','7D7','TV-Tuner','ТВ-тюнер'],['770','7DA','Mediaplayer 1','Медиаплеер 1'],['76E','7D8','Mediaplayer 3','Медиаплеер 3'],['773','7DD','Infotainment-Steuergerät','Блок инфотейнмента'],['749','7B3','Infotainment-Schnittstelle','Интерфейс инфотейнмента'],
+['767','7D1','Telematik','Телематика'],['76B','7D5','Telefon / externe Kommunikation','Телефон / внешняя связь'],['769','7D3','Rückfahrkamera','Камера заднего вида'],['726','790','Bordkamera','Бортовая камера'],['727','791','Nachtsicht','Ночное видение'],
+['71B','785','Head-up-Display','Проекционный дисплей'],['747','7B1','Anhängerfunktion','Функция прицепа'],['723','78D','Heckklappe','Крышка багажника'],['721','78B','Sensorelektronik','Электроника датчиков'],['762','7CC','Bremssystem-Sensorik','Датчики тормозной системы'],
+['763','7CD','Mikrocontroller-Einheit','Микроконтроллерный блок'],['73C','7A6','Hilfsanzeige','Вспомогательный дисплей'],['71C','786','Sound-Aktuator','Звуковой актуатор']
+];
+var PSA = [
+['744','644','Airbag','Airbag (подушки безопасности)'],['75C','65C','Alarmanlage','Сигнализация'],['760','660','Autoradio','Магнитола'],['752','652','Bordnetz / Karosserie (BSI)','Бортовая сеть / кузов (BSI)'],
+['76D','66D','Klimaanlage','Климат-контроль'],['75F','65F','Kombiinstrument','Приборная панель'],['6A8','688','Motorsteuerung (Einspritzung)','ЭБУ двигателя (впрыск)'],['6AD','68D','ABS/ESP','ABS/ESP'],
+['6AF','68F','Doppelkupplungsgetriebe','Робот с двойным сцеплением'],['6A9','689','Getriebesteuerung','ЭБУ КПП'],['6B5','695','Lenkung','Рулевое управление'],['6B8','698','Reifendruckkontrolle','Контроль давления в шинах'],
+['765','665','Anzeige / Display','Дисплей'],['764','664','Telematik','Телематика'],['7E0','7E8','Motorsteuerung','ЭБУ двигателя']
+];
+var BR = {
+  vag:{n:['VAG (VW, Audi, Seat, Škoda, Cupra, Porsche)','VAG (VW, Audi, Seat, Škoda, Cupra, Porsche)'], t:VAG, re:/volkswagen|\bvw\b|audi|seat|cupra|skoda|škoda|porsche|bentley|lamborghini/i},
+  psa:{n:['Peugeot / Citroën / DS','Peugeot / Citroën / DS'], t:PSA, re:/peugeot|citro|^ds\b/i},
+  other:{n:['Andere Marke (nur Standard-Namen)','Другая марка (только стандартные названия)'], t:[[ '7E0','7E8','Motorsteuerung','ЭБУ двигателя'],['7E1','7E9','Getriebesteuerung','ЭБУ КПП']], re:null}
+};
+function brandOf(marke){ var k; if (!marke) return 'other'; for (k in BR) if (BR[k].re && BR[k].re.test(marke)) return k; return 'other'; }
+function tableOf(brand){ return (BR[brand] || BR.other).t; }
+function known(brand, req){ var t = tableOf(brand), i; for (i = 0; i < t.length; i++) if (t[i][0] === req) return t[i]; return null; }
+
 // ---- Bus-Zugriff -----------------------------------------------------------------------------
 async function setup(io, ecu){
   await io.send('ATSH'+ecu.req, 2000); if (ecu.res) await io.send('ATCRA'+ecu.res, 2000); await io.send('ATH0', 2000);
@@ -62,24 +102,29 @@ async function request(io, ecu, hexReq, svc, to){
 }
 async function withBus(io, fn){ try { return await fn(); } finally { await restore(io); } }
 
-// Suche: Test-Anfrage 3E 00 an jede ID; wer antwortet, ist ein Steuergerät
+// Suche: Test-Anfrage 3E 00 an jede ID; wer antwortet, ist ein Steuergerät.
+// IDs: alle bekannten der Marke + Durchlauf 0x700–0x7E7 (+ 0x500–0x6FF bei „tief"), ohne 0x7DF (Sammeladresse)
 async function scan(io, opt, onProg){
-  opt = opt || {}; var found = [], ids = [], i, id;
+  opt = opt || {}; var found = [], ids = [], seen = {}, i, id, br = opt.brand || 'other';
   var dp = ''; try { dp = String(await io.send('ATDP', 2000)); } catch(e){}
   if (dp && !/CAN/i.test(dp) && !opt.force) throw new Error((window.JCLANG==='ru' ? 'Сканирование блоков работает только по CAN. Протокол адаптера: ' : 'Steuergeräte-Suche funktioniert nur über CAN. Protokoll des Adapters: ')+dp.replace(/\s+/g,' ').trim());
-  var from = opt.from != null ? opt.from : 0x700, to = opt.to != null ? opt.to : 0x7E7;
-  for (id = from; id <= to; id++) if (id !== 0x7DF) ids.push(id);
+  function add(x){ var r = hx(x, 3); if (x === 0x7DF || seen[r]) return; seen[r] = 1; ids.push(r); }
+  tableOf(br).forEach(function(k){ add(parseInt(k[0], 16)); });
+  for (id = 0x7E0; id <= 0x7E7; id++) add(id);
+  for (id = 0x700; id <= 0x7E7; id++) add(id);
+  if (opt.deep) for (id = 0x500; id <= 0x6FF; id++) add(id);
   await withBus(io, async function(){
-    await io.send('ATH1', 2000); await io.send('ATAR', 2000); await io.send('ATST19', 2000);
+    await io.send('ATH1', 2000); await io.send('ATAR', 2000); await io.send('ATST20', 2000);
     for (i = 0; i < ids.length; i++){
       if (io.closed) throw new Error('Verbindung getrennt'); if (opt.cancel && opt.cancel()) break;
-      var req = hx(ids[i], 3); if (onProg) onProg(i+1, ids.length, found.length, req);
-      var raw = ''; try { await io.send('ATSH'+req, 1500); raw = await io.send('3E00', 700); } catch(e){ if (io.closed) throw e; continue; }
+      var req = ids[i], kn = known(br, req); if (onProg) onProg(i+1, ids.length, found.length, req);
+      var raw = ''; try { await io.send('ATSH'+req, 1500); if (kn) await io.send('ATCRA'+kn[1], 1500); raw = await io.send('3E00', 700); if (kn) await io.send('ATAR', 1500); } catch(e){ if (io.closed) throw e; continue; }
       var fr = frames(raw).filter(function(f){ return f.id !== req; });
       for (var k = 0; k < fr.length; k++){ var d = fr[k].data; // [PCI, 7E, 00] bzw. [PCI, 7F, 3E, nrc]
-        if (d.length >= 3 && (d[1] === 0x7E || d[1] === 0x7F)){ if (!found.some(function(x){ return x.req === req; })) found.push({req:req, res:fr[k].id}); break; } }
+        if (d.length >= 3 && (d[1] === 0x7E || d[1] === 0x7F)){ found.push({req:req, res:fr[k].id}); break; } }
     }
   });
+  found.sort(function(a, b){ return parseInt(a.req, 16) - parseInt(b.req, 16); });
   return found;
 }
 
@@ -140,9 +185,10 @@ async function scanDids(io, ecu, from, to, onProg, cancel){
 var DEMO = {
   '7E0': {res:'7E8', dtc:[[0x03,0x01,0x00,0x2F],[0x01,0x71,0x00,0x24]], did:{F190:'WVWZZZ1KZAW000001', F187:'06A906032', F189:'0001', F197:'DEMO MOTOR'}, live:{2001:function(t){ return [Math.round(800+200*Math.sin(t/1500))>>8, Math.round(800+200*Math.sin(t/1500))&255]; }}},
   '7E1': {res:'7E9', dtc:[[0x07,0x31,0x00,0x08]], did:{F187:'09G927749', F197:'DEMO GETRIEBE'}, live:{}},
-  '7B0': {res:'7B8', dtc:[[0x40,0x35,0x00,0x2F],[0x40,0x40,0x00,0x08]], did:{F187:'1K0907379', F189:'0204', F197:'DEMO ABS'}, live:{2040:function(t){ var v = Math.round(5000+1500*Math.sin(t/900)); return [v>>8, v&255]; }, 2041:function(t){ var v = Math.round(5000+1400*Math.sin(t/900+0.3)); return [v>>8, v&255]; }}},
-  '7C0': {res:'7C8', dtc:[], did:{F187:'5K0920xxx', F197:'DEMO KOMBIINSTRUMENT'}, live:{}},
-  '7D0': {res:'7D8', dtc:[[0x80,0x01,0x12,0x28]], did:{F187:'5Q0959655', F197:'DEMO AIRBAG'}, live:{}}
+  '713': {res:'77D', dtc:[[0x40,0x35,0x00,0x2F],[0x40,0x40,0x00,0x08]], did:{F187:'1K0907379', F189:'0204', F197:'DEMO ABS'}, live:{2040:function(t){ var v = Math.round(5000+1500*Math.sin(t/900)); return [v>>8, v&255]; }, 2041:function(t){ var v = Math.round(5000+1400*Math.sin(t/900+0.3)); return [v>>8, v&255]; }}},
+  '714': {res:'77E', dtc:[], did:{F187:'5K0920xxx', F197:'DEMO KOMBIINSTRUMENT'}, live:{}},
+  '715': {res:'77F', dtc:[[0x80,0x01,0x12,0x28]], did:{F187:'5Q0959655', F197:'DEMO AIRBAG'}, live:{}},
+  '755': {res:'7BF', dtc:[[0x56,0x20,0x00,0x08]], did:{F187:'5Q0907553', F197:'DEMO FAHRWERK'}, live:{}}
 };
 var ds = {hdr:false, req:null, on:false};
 function dframe(id, bytes){ // Antwort im ELM-Format (ATS0): Kopf oder Nutzdaten, Mehrbild über 7 Byte
@@ -170,6 +216,6 @@ function demo(c){
 }
 
 window.JCECU = {scan:scan, readDtcs:readDtcs, clearDtcs:clearDtcs, ident:ident, readDid:readDid, readDids:readDids, scanDids:scanDids, restore:restore, demo:demo, IDENT:IDENT, flagText:flagText, dtc3:dtc3, payload:payload, frames:frames, hx:hx, sleep:sleep,
-  label:function(req){ return req === '7E0' ? ['Motor','Двигатель'] : req === '7E1' ? ['Getriebe','КПП'] : null; },
+  label:function(req, brand){ var k = known(brand || 'other', req); return k ? [k[2], k[3]] : null; }, brands:BR, brandOf:brandOf,
   kinds:[['ABS / ESP','ABS / ESP'],['Airbag','Airbag'],['Kombiinstrument','Приборная панель'],['Komfort / Zentralelektrik','Комфорт / ЦЭ'],['Klima','Климат'],['Lenkung','Рулевое'],['Getriebe','КПП'],['Motor','Двигатель'],['Gateway','Шлюз'],['Sonstiges','Прочее']]};
 })();
