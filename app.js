@@ -272,14 +272,14 @@ function card(it){
 }
 function hvCallout(){ return '<div class="callout hv"><b>'+T('Hochvolt','Высокое напряжение')+'</b><p>'+T('Arbeiten an HV-Systemen nur mit Qualifikation nach DGUV Information 209-093. Spannungsfreiheit mit zweipoligem Spannungsprüfer feststellen. Messgeräte mindestens CAT III 1000 V.','Работы с ВВ-системами только при наличии допуска по DGUV Information 209-093. Отсутствие напряжения проверять двухполюсным указателем. Приборы не ниже CAT III 1000 В.')+'</p></div>'; }
 function deNote(){ return state.lang==='ru' ? '<p class="note">Текст главы пока на немецком. Перевод — следующий этап.</p>' : ''; }
-function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.20.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
+function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.20.1 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
 function crumbs(parts){ return '<p class="eyebrow"><a href="#start">'+T('Start','Главная')+'</a>'+parts.map(function(p){ return ' / '+p; }).join('')+'</p>'; }
 
 /* ---------- Start ---------- */
 var PANNE = ['k102','k103','k29','k28','k109','k119','k111','k110','k45'];
 function vHome(){
   var m = D.meta, v = m.verify;
-  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.20.0 · Stand','Версия 0.20.0 · состояние')+' '+esc(m.stand)+'</p>' +
+  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.20.1 · Stand','Версия 0.20.1 · состояние')+' '+esc(m.stand)+'</p>' +
     '<h1>JC Diagnose</h1><p class="lead">'+T('Sollwerte, Pinbelegung, Multimeter- und Oszilloskop-Prüfschritte für Sensoren, Aktoren, Bordnetz, Bussysteme und Hochvolt – plus Systemtests und dein eigenes Soll/Ist-Messprotokoll.','Нормы, распиновка, проверки мультиметром и осциллографом для датчиков, исполнительных механизмов, бортсети, шин и ВВ — плюс системные тесты и твой собственный журнал замеров «норма/факт».')+'</p>' +
     '<div class="chips"><a class="chip" href="#mess-neu">+ '+T('Neue Messung','Новый замер')+'</a><a class="chip" href="#obd">'+T('Fahrzeug verbinden','Подключить машину')+'</a><a class="chip" href="#dtc">'+T('Fehlercode prüfen','Проверить код ошибки')+'</a><a class="chip" href="#import">'+T('Bericht importieren','Импорт отчёта')+'</a><a class="chip" href="#oszi">'+T('Oszillogramme','Осциллограммы')+'</a><a class="chip" href="#tab-oszi">'+T('Oszi-Startwerte','Настройки осциллографа')+'</a><a class="chip" href="#systemtests">'+T('Systemtests','Системные тесты')+'</a><a class="chip" href="#rechner">'+T('Rechner','Калькуляторы')+'</a><a class="chip" href="#tab-fehler">'+T('Fehlerbilder','Неисправности')+'</a></div></div>' +
     '<div class="stats"><div class="stat"><b>'+m.n_items+'</b><span>'+T('Kapitel','глав')+'</span></div><div class="stat"><b>'+X.systemtests.rows.length+'</b><span>'+T('Systemtests','системных тестов')+'</span></div><div class="stat"><b>'+state.mess.length+'</b><span>'+T('eigene Messungen','своих замеров')+'</span></div></div></section>';
@@ -316,7 +316,7 @@ function vItem(id){
   if (state.lang==='ru') h += '<p class="subtitle">'+esc(it.title)+'</p>';
   if (it.hv) h += hvCallout();
   if (it.ov && it.ov.length) h += '<dl class="quick">' + it.ov.map(function(r,i){ return '<div><dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd><button class="btn small mbtn" data-ov="'+i+'">→ '+T('als Soll messen','замерить по норме')+'</button></div>'; }).join('') + '</dl>';
-  h += oszForItem(id);
+  h += oszForItem(id) + refBlock(id);
   if (own.length) h += '<h2>'+T('Eigene Messungen','Мои замеры')+' ('+own.length+')</h2><div class="mess-list">'+own.slice(0,5).map(messCard).join('')+'</div>';
   if (it.sections.length > 1) h += '<nav class="toc">' + it.sections.map(function(s,i){ return '<a href="#b-'+id+'" data-sec="s'+i+'">'+esc(s.replace(/\(.*?\)/g,'').trim())+'</a>'; }).join('') + '</nav>';
   h += deNote() + '<article class="content">'+it.html+'</article>';
@@ -333,6 +333,7 @@ function vItem(id){
     main.querySelectorAll('[data-sec]').forEach(function(a){ a.onclick = function(e){ e.preventDefault(); var el = document.getElementById(a.dataset.sec); if (el) el.scrollIntoView({behavior:'smooth'}); }; });
     main.querySelectorAll('[data-ov]').forEach(function(b){ b.onclick = function(){ var r = it.ov[+b.dataset.ov], p = parseSoll(r[1]); startDraft({comp:id, punkt:r[0], solltxt:r[1], lo:p.lo, hi:p.hi, einheit:p.unit, herkunft:1}); }; });
     main.querySelectorAll('[data-new]').forEach(function(a){ a.onclick = function(e){ e.preventDefault(); startDraft({comp:a.dataset.new}); }; });
+    main.querySelectorAll('[data-rfall]').forEach(function(a){ a.onclick = function(){ var w = REFMAP[a.dataset.rfall]; refSt.tab='werte'; refSt.c=''; refSt.mf=''; refSt.q = ''; refSt.ids = refForItem(a.dataset.rfall).map(function(r){ return r.id; }); }; });
     bindWaves(id);
     bindMessCards();
   });
@@ -2070,10 +2071,11 @@ function cmdRun(i){ var it = CMD.items[i]; if (!it) return; CMD.open = false; cm
 
 /* ---------- Messwert-Datenbank (refdb.js: Richtwerte aus Excel 3.0, keine OEM-Sollwerte) ---------- */
 var RFC = {Energie:['Energie / Elektrik','Питание / электрика','M13 2L5 14h6l-1 8 8-12h-6z'],Bus:['Bus / Kommunikation','Шины / связь','M3 7h18M3 12h18M3 17h18M7 4v6M12 9v6M17 14v6'],Abgas:['Abgas / Lambda','Выхлоп / лямбда','M4 14h9a3 3 0 1 0-3-3M4 18h12a3 3 0 1 1-3 3M4 10h5'],Luft:['Luft / Ansaugung','Воздух / впуск','M3 8h11a3 3 0 1 0-3-3M3 13h15a3 3 0 1 1-3 3M3 18h8'],Kraftstoff:['Einspritzung / Zündung','Впрыск / зажигание','M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z'],Geber:['Geber / Steuerzeiten','Датчики / фазы','M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2'],Thermo:['Temperatur / Klima','Температура / климат','M10 14V5a2 2 0 0 1 4 0v9a4 4 0 1 1-4 0z'],Fahrwerk:['Bremse / Fahrwerk','Тормоза / ходовая','M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z'],Hochvolt:['Hochvolt','Высокое напряжение','M13 2L4 14h7l-2 8 11-13h-7z']};
-var refSt = {q:'', c:'', mf:'', tab:'werte'};
+var refSt = {q:'', c:'', mf:'', tab:'werte', ids:null};
 function refIc(c, sz){ var P = (RFC[c]||RFC.Energie)[2]; return '<svg width="'+(sz||24)+'" height="'+(sz||24)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+P.split(/(?=M)/).map(function(d){ return '<path d="'+d+'"/>'; }).join('')+'</svg>'; }
 function refRows(){ var R = window.REFDB; return R ? R.rows : []; }
 function refMatch(r){
+  if (refSt.ids && refSt.ids.indexOf(r.id)<0) return false;
   if (refSt.c && r.c!==refSt.c) return false;
   if (refSt.mf && r.mf!==refSt.mf) return false;
   var terms = norm(refSt.q.trim()).split(/\s+/).filter(Boolean); if (!terms.length) return true;
@@ -2107,25 +2109,40 @@ function vRef(){
     var cs = {}; refRows().forEach(function(r){ cs[r.c] = (cs[r.c]||0)+1; });
     var mfs = []; refRows().forEach(function(r){ if (r.mf && mfs.indexOf(r.mf)<0) mfs.push(r.mf); });
     h += refWarn()+'<div class="filterbar"><input id="rfQ" type="search" value="'+esc(refSt.q)+'" placeholder="'+T('Suchen: Lambda, CAN, Injektor, P0171','Поиск: Lambda, CAN, Injektor, P0171')+'" autocomplete="off"><select id="rfMf" aria-label="'+T('Hersteller','Производитель')+'"><option value="">'+T('Alle Hersteller','Все производители')+'</option>'+mfs.map(function(m){ return '<option'+(refSt.mf===m?' selected':'')+'>'+esc(m)+'</option>'; }).join('')+'</select></div>'+
-      '<div class="chips"><button type="button" class="chip'+(refSt.c?'':' on')+'" data-rc="">'+T('Alle','Все')+'</button>'+Object.keys(RFC).filter(function(c){ return cs[c]; }).map(function(c){ return '<button type="button" class="chip'+(refSt.c===c?' on':'')+'" data-rc="'+c+'">'+esc(T(RFC[c][0],RFC[c][1]))+' '+cs[c]+'</button>'; }).join('')+'</div><div id="rfRes">'+refList()+'</div>';
+      '<div class="chips"><button type="button" class="chip'+(refSt.c?'':' on')+'" data-rc="">'+T('Alle','Все')+'</button>'+Object.keys(RFC).filter(function(c){ return cs[c]; }).map(function(c){ return '<button type="button" class="chip'+(refSt.c===c?' on':'')+'" data-rc="'+c+'">'+esc(T(RFC[c][0],RFC[c][1]))+' '+cs[c]+'</button>'; }).join('')+'</div>'+(refSt.ids ? '<p class="muted"><button type="button" class="btn small" id="rfClr">'+T('Filter zurücksetzen','Сбросить фильтр')+'</button></p>' : '')+'<div id="rfRes">'+refList()+'</div>';
   }
   after(function(){
     main.querySelectorAll('[data-rt]').forEach(function(b){ b.onclick = function(){ refSt.tab = b.dataset.rt; render(); }; });
-    var q = $('#rfQ'); if (q) q.oninput = function(){ refSt.q = q.value; $('#rfRes').innerHTML = refList(); };
-    var m = $('#rfMf'); if (m) m.onchange = function(){ refSt.mf = m.value; $('#rfRes').innerHTML = refList(); };
-    main.querySelectorAll('[data-rc]').forEach(function(b){ b.onclick = function(){ refSt.c = b.dataset.rc; render(true); }; });
+    var q = $('#rfQ'); if (q) q.oninput = function(){ refSt.ids = null; refSt.q = q.value; $('#rfRes').innerHTML = refList(); };
+    var cl = $('#rfClr'); if (cl) cl.onclick = function(){ refSt.ids = null; render(); };
+    var m = $('#rfMf'); if (m) m.onchange = function(){ refSt.ids = null; refSt.mf = m.value; $('#rfRes').innerHTML = refList(); };
+    main.querySelectorAll('[data-rc]').forEach(function(b){ b.onclick = function(){ refSt.ids = null; refSt.c = b.dataset.rc; render(true); }; });
   });
   return h + foot() + '</div>';
+}
+
+var REFMAP = {k3:'luftmasse|lmm',k4:'kuehlmitteltemperatur|ntc',k5:'kurbelwelle|ckp',k6:'nockenwelle|cmp',k7:'lambda|sprungsonde',k8:'injektor|einspritz',k9:'drosselklappe',k10:'\\bmap\\b|saugrohr|ladedruck',k13:'raddrehzahl',k14:'raildruck',k17:'dpf',k19:'zuendspule',k22:'\\bagr\\b',k26:'scv|common rail|raildruck',k28:'anlasser|starter',k29:'generator',k35:'kuehlmittelpumpe',k37:'isolation|\\bhv\\b',k38:'\\bhv\\b|isolation',k41:'dc/dc',k44:'lenkwinkel',k45:'\\bibs\\b|batteriesensor',k52:'nox',k58:'klimadruck',k63:'bremslicht',k67:'bremsdruck',k43:'klimadruck|\\bhv\\b'};
+function refForItem(id){
+  var rx = REFMAP[id]; if (!rx) return [];
+  rx = new RegExp(rx);
+  return refRows().filter(function(r){ return rx.test(norm(r.t+' '+(r.how||''))) && rx.test(norm(r.t)); });
+}
+function refItemFor(r){ var k, t = norm(r.t); for (k in REFMAP) if (byId[k] && new RegExp(REFMAP[k]).test(t)) return k; return ''; }
+function refBlock(id){
+  var rows = refForItem(id); if (!rows.length) return '';
+  return '<section class="rf-sec"><div class="gl-h"><h2>'+T('Messwerte aus der Datenbank','Значения из базы')+' ('+rows.length+')</h2><a href="#ref" data-rfall="'+id+'">'+T('Alle anzeigen','Все')+'</a></div><div class="rf-grid">'+rows.slice(0,6).map(refCard).join('')+'</div></section>';
 }
 function vRefItem(id){
   var r = refRows().filter(function(x){ return x.id===id; })[0];
   if (!r) return vNotFound();
   var kv = [['Referenz / Sollsignal', T('Referenz / Sollsignal','Эталон / норма'), r.ref ? r.ref+(r.u ? ' '+r.u : '') : ''],['Messbedingungen',T('Messbedingungen','Условия измерения'),r.cond],['Messpunkte / Gerät',T('Messpunkte / Gerät','Точки / прибор'),r.pt],['Oszilloskop',T('Oszilloskop-Einstellung','Настройка осциллографа'),r.osc],['Prüfverfahren',T('Prüfverfahren','Метод проверки'),r.how],['Fehlerbilder',T('Fehlerbilder','Картины неисправностей'),r.err],['Fehlercodes',T('Fehlercodes','Коды ошибок'),r.dtc],['Fahrzeug / Motor',T('Fahrzeug / Motor','Автомобиль / двигатель'),r.veh],['Antrieb',T('Antrieb','Привод'),r.drive]].filter(function(k){ return k[2] && k[2]!=='–'; });
+  after(function(){ var b = $('#rfMeasure'); if (b) b.onclick = function(){ var p = parseSoll(r.ref+' '+r.u), k = refItemFor(r), d = {punkt:r.pt, notiz:r.cond, solltxt:r.ref+(r.u?' '+r.u:''), lo:p.lo, hi:p.hi, einheit:p.unit||r.u, herkunft:1}; if (k) d.comp = k; else d.compFree = r.t; startDraft(d); }; });
   return '<div class="wrap">'+crumbs(['<a href="#ref">'+T('Messwert-Datenbank','База значений')+'</a>', esc(r.id)])+
     '<div class="detail-head"><div class="gl-dh"><span class="gl-ico rf-ico">'+refIc(r.c,30)+'</span><div class="gl-dt"><h1>'+esc(r.t)+'</h1><div class="gl-chips"><span class="gl-chip">'+esc(T(RFC[r.c][0],RFC[r.c][1]))+'</span>'+(r.mf ? '<span class="gl-chip">'+esc(r.mf)+'</span>' : '')+'<span class="gl-chip">'+esc(r.id)+'</span></div></div></div></div>'+
     '<div class="rf-kv">'+kv.map(function(k){ return '<div><span>'+esc(k[1])+'</span><b>'+esc(k[2])+'</b></div>'; }).join('')+'</div>'+
     (r.val ? '<div class="callout"><b>'+T('Gültigkeit / Sicherheit','Применимость / безопасность')+'</b><p>'+esc(r.val)+'</p></div>' : '')+
     (/^https?:/.test(r.src) ? '<p><a class="btn" href="'+esc(r.src)+'" target="_blank" rel="noopener noreferrer">'+T('Quelle öffnen','Открыть источник')+'</a></p>' : (r.src ? '<p class="muted">'+esc(r.src)+'</p>' : ''))+
+    '<div class="btn-row"><button class="btn primary" id="rfMeasure">+ '+T('Messung zu diesem Eintrag','Замер по этой записи')+'</button></div>'+
     '<p class="muted" style="font-size:var(--text-xs)">'+T('Texte der Datenbank sind deutsch (Fachtexte).','Тексты базы на немецком (технические формулировки).')+'</p>'+foot()+'</div>';
 }
 
