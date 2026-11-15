@@ -248,6 +248,7 @@ function renderSide(r){
     link('dtc', T('Fehlercodes','Коды ошибок'), '') +
     link('import', T('Bericht importieren','Импорт отчёта'), '') +
     link('oszi', T('Oszillogramme','Осциллограммы'), Object.keys(OSZ.waves).length) +
+    link('ref', T('Messwert-Datenbank','База значений'), (window.REFDB ? REFDB.rows.length : '')) +
     link('systemtests', T('Systemtests','Системные тесты'), X.systemtests.rows.length) +
     link('tab-overview', T('Tabellen','Таблицы'), '') +
     link('rechner', T('Rechner','Калькуляторы'), '') +
@@ -257,7 +258,7 @@ function renderSide(r){
   D.cats.forEach(function(c){ h += link('kat-'+c.id, '<i class="nav-dot" style="background:'+CATCOL[c.id]+'"></i>'+esc(L(c,'name')), count(c.id)); });
   side.innerHTML = h + '</div>';
   function link(to, label, n){
-    var act = r === to || (to.indexOf('tab-')===0 && r.indexOf('tab-')===0) || (to==='mess' && r.indexOf('mess')===0) || (to==='diag' && r.indexOf('diag')===0) || (to==='berichte' && r.indexOf('bericht')===0) || (to==='fz' && r.indexOf('fz')===0);
+    var act = r === to || (to.indexOf('tab-')===0 && r.indexOf('tab-')===0) || (to==='mess' && r.indexOf('mess')===0) || (to==='diag' && r.indexOf('diag')===0) || (to==='berichte' && r.indexOf('bericht')===0) || (to==='fz' && r.indexOf('fz')===0) || (to==='ref' && r.indexOf('ref')===0);
     return '<a class="nav-link" href="#'+to+'"'+(act?' aria-current="page"':'')+'><span class="l">'+label+'</span>'+(n!==''?'<span class="count">'+n+'</span>':'')+'</a>';
   }
 }
@@ -271,14 +272,14 @@ function card(it){
 }
 function hvCallout(){ return '<div class="callout hv"><b>'+T('Hochvolt','Высокое напряжение')+'</b><p>'+T('Arbeiten an HV-Systemen nur mit Qualifikation nach DGUV Information 209-093. Spannungsfreiheit mit zweipoligem Spannungsprüfer feststellen. Messgeräte mindestens CAT III 1000 V.','Работы с ВВ-системами только при наличии допуска по DGUV Information 209-093. Отсутствие напряжения проверять двухполюсным указателем. Приборы не ниже CAT III 1000 В.')+'</p></div>'; }
 function deNote(){ return state.lang==='ru' ? '<p class="note">Текст главы пока на немецком. Перевод — следующий этап.</p>' : ''; }
-function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.19.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
+function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.20.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
 function crumbs(parts){ return '<p class="eyebrow"><a href="#start">'+T('Start','Главная')+'</a>'+parts.map(function(p){ return ' / '+p; }).join('')+'</p>'; }
 
 /* ---------- Start ---------- */
 var PANNE = ['k102','k103','k29','k28','k109','k119','k111','k110','k45'];
 function vHome(){
   var m = D.meta, v = m.verify;
-  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.19.0 · Stand','Версия 0.19.0 · состояние')+' '+esc(m.stand)+'</p>' +
+  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.20.0 · Stand','Версия 0.20.0 · состояние')+' '+esc(m.stand)+'</p>' +
     '<h1>JC Diagnose</h1><p class="lead">'+T('Sollwerte, Pinbelegung, Multimeter- und Oszilloskop-Prüfschritte für Sensoren, Aktoren, Bordnetz, Bussysteme und Hochvolt – plus Systemtests und dein eigenes Soll/Ist-Messprotokoll.','Нормы, распиновка, проверки мультиметром и осциллографом для датчиков, исполнительных механизмов, бортсети, шин и ВВ — плюс системные тесты и твой собственный журнал замеров «норма/факт».')+'</p>' +
     '<div class="chips"><a class="chip" href="#mess-neu">+ '+T('Neue Messung','Новый замер')+'</a><a class="chip" href="#obd">'+T('Fahrzeug verbinden','Подключить машину')+'</a><a class="chip" href="#dtc">'+T('Fehlercode prüfen','Проверить код ошибки')+'</a><a class="chip" href="#import">'+T('Bericht importieren','Импорт отчёта')+'</a><a class="chip" href="#oszi">'+T('Oszillogramme','Осциллограммы')+'</a><a class="chip" href="#tab-oszi">'+T('Oszi-Startwerte','Настройки осциллографа')+'</a><a class="chip" href="#systemtests">'+T('Systemtests','Системные тесты')+'</a><a class="chip" href="#rechner">'+T('Rechner','Калькуляторы')+'</a><a class="chip" href="#tab-fehler">'+T('Fehlerbilder','Неисправности')+'</a></div></div>' +
     '<div class="stats"><div class="stat"><b>'+m.n_items+'</b><span>'+T('Kapitel','глав')+'</span></div><div class="stat"><b>'+X.systemtests.rows.length+'</b><span>'+T('Systemtests','системных тестов')+'</span></div><div class="stat"><b>'+state.mess.length+'</b><span>'+T('eigene Messungen','своих замеров')+'</span></div></div></section>';
@@ -574,7 +575,9 @@ function vSearch(q){
     return '<a class="result" href="#b-'+r.it.id+'"><div class="rt">'+esc(L(r.it,'title'))+' <span class="badge'+(r.it.hv?' hv':'')+'">'+esc(L(catById[r.it.cat],'name'))+'</span></div><div class="snip">'+(s>0?'…':'')+snip+'…</div></a>';
   }).join('');
   h += st.slice(0,20).map(function(r){ return '<a class="result" href="#systemtests"><div class="rt">'+esc(strip(r[1]))+' <span class="badge info">'+T('Systemtest','Системный тест')+' · '+esc(strip(r[0]))+'</span></div><div class="snip">'+esc(strip(r[3]))+' — '+esc(strip(r[4]))+'</div></a>'; }).join('');
-  if (!res.length && !st.length) h += '<div class="empty"><p>'+T('Kein Treffer. Deutsche Fachbegriffe funktionieren am besten (Kapiteltexte sind deutsch), z. B. Lambda, Kurbelwelle, P0335.','Ничего не найдено. Лучше искать немецкими терминами или по названию главы (тексты на немецком), напр. Lambda, Kurbelwelle, P0335, «коленвал».')+'</p></div>';
+  var rf = refRows().filter(function(r){ var t = norm([r.id,r.t,r.mf,r.veh,r.dtc,r.ref,r.how].join(' ')); return terms.length && terms.every(function(w){ return t.indexOf(w)>=0; }); });
+  h += rf.slice(0,20).map(function(r){ return '<a class="result" href="#ref-'+esc(r.id)+'"><div class="rt">'+esc(r.t)+' <span class="badge info">'+T('Messwert','Значение')+'</span></div><div class="snip">'+esc((r.ref||'')+(r.u?' '+r.u:'')+(r.cond?' · '+r.cond:''))+'</div></a>'; }).join('');
+  if (!res.length && !st.length && !rf.length) h += '<div class="empty"><p>'+T('Kein Treffer. Deutsche Fachbegriffe funktionieren am besten (Kapiteltexte sind deutsch), z. B. Lambda, Kurbelwelle, P0335.','Ничего не найдено. Лучше искать немецкими терминами или по названию главы (тексты на немецком), напр. Lambda, Kurbelwelle, P0335, «коленвал».')+'</p></div>';
   return h + '</div></div>';
 }
 function vNotFound(){ return '<div class="wrap"><div class="empty"><p>'+T('Seite nicht gefunden.','Страница не найдена.')+'</p><a class="btn" href="#start">'+T('Zur Startseite','На главную')+'</a></div></div>'; }
@@ -1932,12 +1935,12 @@ function vGlasHome(){
     '<a class="gl-status'+(obd.io?' on':'')+'" href="#obd"><i></i>'+(obd.io ? esc(obd.name) : T('OBD nicht verbunden','OBD не подключён'))+(vtxt?' · '+vtxt:'')+'</a></div>' +
     '<svg class="gl-art" viewBox="0 0 160 120" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="20" y="40" width="100" height="60" rx="8"/><path d="M40 40V20h60v20M50 100v-20h40v20M20 60h-10M120 60h12M60 62h40"/><circle cx="130" cy="88" r="14"/></g></svg></section>';
   h += '<div class="gl-h"><h2>'+T('Schnellzugriff','Быстрый доступ')+'</h2><a href="#tab-overview">'+T('Alle anzeigen','Все')+'</a></div><div class="gl-tiles">' +
-    [['#dtc','doc',T('Fehlercodes','Коды ошибок')],['#oszi','pulse',T('Oszilloskop','Осциллограф')],['#obd','plug',T('OBD-Scanner','OBD-сканер')],['#kat-sensoren','book',T('Nachschlagen','Справочник')]].map(function(t){ return '<a class="gl-tile" href="'+t[0]+'">'+gIc(t[1],26)+'<span>'+t[2]+'</span></a>'; }).join('') + '</div>';
+    [['#dtc','doc',T('Fehlercodes','Коды ошибок')],['#oszi','pulse',T('Oszilloskop','Осциллограф')],['#obd','plug',T('OBD-Scanner','OBD-сканер')],['#ref','search',T('Messwerte','Значения')]].map(function(t){ return '<a class="gl-tile" href="'+t[0]+'">'+gIc(t[1],26)+'<span>'+t[2]+'</span></a>'; }).join('') + '</div>';
   h += '<div class="gl-h"><h2>'+T('Wichtige Sensoren','Важные датчики')+'</h2><a href="#kat-sensoren">'+T('Alle anzeigen','Все')+'</a></div><div class="gl-sens">' +
     [['k3','maf','Luftmassen&shy;messer',T('Heißfilm','Термоанемометр')],['k7','lambda','Lambda&shy;sonde',T('Abgas-Sauerstoff','Кислород в выхлопе')],['k5','crank','Kurbelwellen&shy;sensor',T('Induktiv','Индуктивный')]].map(function(x){
       var it = byId[x[0]], nm = it ? esc(L(it,'title').replace(/\s*\(.*\)/,'')) : x[2];
       return '<a class="gl-sen" href="#b-'+x[0]+'">'+sensorArt(x[1])+'<b>'+(it && state.lang==='ru' ? nm : x[2])+'</b><i></i><small>'+x[3]+'</small></a>'; }).join('') + '</div>';
-  h += '<div class="gl-more"><span>'+T('Mehr:','Ещё:')+'</span>'+[['#mess-neu',T('Neue Messung','Новый замер')],['#fz',T('Fahrzeuge','Машины')],['#berichte',T('Berichte','Отчёты')],['#systemtests',T('Systemtests','Системные тесты')],['#rechner',T('Rechner','Калькуляторы')],['#diag',T('Diagnose','Диагностика')]].map(function(x){ return '<a href="'+x[0]+'">'+x[1]+'</a>'; }).join('')+'</div>';
+  h += '<div class="gl-more"><span>'+T('Mehr:','Ещё:')+'</span>'+[['#kat-sensoren',T('Nachschlagen','Справочник')],['#mess-neu',T('Neue Messung','Новый замер')],['#fz',T('Fahrzeuge','Машины')],['#berichte',T('Berichte','Отчёты')],['#systemtests',T('Systemtests','Системные тесты')],['#rechner',T('Rechner','Калькуляторы')],['#diag',T('Diagnose','Диагностика')]].map(function(x){ return '<a href="'+x[0]+'">'+x[1]+'</a>'; }).join('')+'</div>';
   h += '<div class="ck-panne"><span>'+T('Pannenhilfe:','Выезд:')+'</span>'+PANNE.slice(0,6).map(function(id){ var it = byId[id]; return it ? '<a href="#b-'+id+'">'+esc(L(it,'title').replace(/\s*\(.*\)/,''))+'</a>' : ''; }).join('')+'</div>';
   if (vs.length){ h += '<div class="gl-h"><h2>'+T('Letzte Fahrzeuge','Недавние машины')+'</h2></div><div class="ck-recent">'+vs.slice(0,3).map(function(V){ return '<a class="ber" href="#fz-'+V.key+'"><div class="ber-top">'+plate(V.fz.kz)+'<b>'+esc(vehTitle(V))+'</b>'+(V.active?'<span class="st na">'+T('läuft','идёт')+'</span>':'')+'</div></a>'; }).join('')+'</div>'; }
   h += '<div class="callout" style="margin-top:18px"><b>'+T('Hinweis','Важно')+'</b><p>'+T('Alle Werte sind typische Richtwerte. Verbindlich sind Herstellerdaten (HaynesPro, Carmin).','Все значения — типовые ориентиры. Обязательны данные производителя (HaynesPro, Carmin).')+'</p></div>';
@@ -2065,6 +2068,67 @@ function cmdRender(){
 }
 function cmdRun(i){ var it = CMD.items[i]; if (!it) return; CMD.open = false; cmdRender(); sIn.value = ''; sIn.blur(); it.a(); }
 
+/* ---------- Messwert-Datenbank (refdb.js: Richtwerte aus Excel 3.0, keine OEM-Sollwerte) ---------- */
+var RFC = {Energie:['Energie / Elektrik','Питание / электрика','M13 2L5 14h6l-1 8 8-12h-6z'],Bus:['Bus / Kommunikation','Шины / связь','M3 7h18M3 12h18M3 17h18M7 4v6M12 9v6M17 14v6'],Abgas:['Abgas / Lambda','Выхлоп / лямбда','M4 14h9a3 3 0 1 0-3-3M4 18h12a3 3 0 1 1-3 3M4 10h5'],Luft:['Luft / Ansaugung','Воздух / впуск','M3 8h11a3 3 0 1 0-3-3M3 13h15a3 3 0 1 1-3 3M3 18h8'],Kraftstoff:['Einspritzung / Zündung','Впрыск / зажигание','M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z'],Geber:['Geber / Steuerzeiten','Датчики / фазы','M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2'],Thermo:['Temperatur / Klima','Температура / климат','M10 14V5a2 2 0 0 1 4 0v9a4 4 0 1 1-4 0z'],Fahrwerk:['Bremse / Fahrwerk','Тормоза / ходовая','M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z'],Hochvolt:['Hochvolt','Высокое напряжение','M13 2L4 14h7l-2 8 11-13h-7z']};
+var refSt = {q:'', c:'', mf:'', tab:'werte'};
+function refIc(c, sz){ var P = (RFC[c]||RFC.Energie)[2]; return '<svg width="'+(sz||24)+'" height="'+(sz||24)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+P.split(/(?=M)/).map(function(d){ return '<path d="'+d+'"/>'; }).join('')+'</svg>'; }
+function refRows(){ var R = window.REFDB; return R ? R.rows : []; }
+function refMatch(r){
+  if (refSt.c && r.c!==refSt.c) return false;
+  if (refSt.mf && r.mf!==refSt.mf) return false;
+  var terms = norm(refSt.q.trim()).split(/\s+/).filter(Boolean); if (!terms.length) return true;
+  var tx = norm([r.id,r.t,r.mf,r.veh,r.dtc,r.ref,r.cond,r.pt,r.how,r.err||'',r.osc||''].join(' '));
+  return terms.every(function(w){ return tx.indexOf(w)>=0; });
+}
+function refCard(r){
+  var val = r.ref ? (r.ref.length>46 ? r.ref.slice(0,44)+'…' : r.ref) : '–';
+  return '<a class="rf-card" href="#ref-'+esc(r.id)+'"><span class="rf-ic">'+refIc(r.c,26)+'</span><span class="rf-b"><b class="rf-t">'+esc(r.t)+'</b><span class="rf-v">'+esc(val)+(r.u && val.length<30 ? ' <i>'+esc(r.u)+'</i>' : '')+'</span>'+
+    '<span class="rf-m">'+(r.mf && r.mf!=='Allgemein' ? '<span class="gl-chip">'+esc(r.mf)+'</span>' : '')+(r.cond ? '<span class="rf-c">'+esc(r.cond.length>70 ? r.cond.slice(0,68)+'…' : r.cond)+'</span>' : '')+'</span></span></a>';
+}
+function refList(){
+  var rows = refRows().filter(refMatch);
+  return '<p class="muted rf-n">'+rows.length+' '+T('Einträge','записей')+'</p><div class="rf-grid">'+rows.slice(0,120).map(refCard).join('')+'</div>' + (rows.length ? '' : '<div class="empty"><p>'+T('Kein Treffer. Anderen Begriff oder Filter versuchen (z. B. Lambda, CAN, Injektor, P0171).','Ничего не найдено. Попробуйте другой запрос или фильтр (например Lambda, CAN, Injektor, P0171).')+'</p></div>');
+}
+function refTabs(){ return '<div class="tabs rf-tabs" role="tablist">'+[['werte',T('Messwerte','Значения')],['faelle',T('Referenzfälle','Эталонные случаи')],['quellen',T('Quellen und Grenzen','Источники и границы')]].map(function(t){ return '<button type="button" role="tab" data-rt="'+t[0]+'" aria-selected="'+(refSt.tab===t[0])+'">'+t[1]+'</button>'; }).join('')+'</div>'; }
+function refWarn(){ return '<div class="callout"><b>'+T('Richtwerte, keine OEM-Sollwerte','Ориентировочные значения, не заводские нормы')+'</b><p>'+T('Vor dem Bewerten Fahrzeug und System identifizieren und mit der Herstellerangabe abgleichen. Keine OEM-Pinbelegungen. HV-Arbeiten nur mit Qualifikation und OEM-Freigabe.','Перед оценкой определите автомобиль и систему и сверьте с данными производителя. OEM-распиновок нет. Работы с ВВ только с допуском и разрешением производителя.')+'</p></div>'; }
+function vRef(){
+  var R = window.REFDB;
+  if (!R) return '<div class="wrap">'+crumbs([T('Messwert-Datenbank','База значений')])+'<div class="empty"><p>'+T('Datenbank nicht geladen.','База не загружена.')+'</p></div></div>';
+  var h = '<div class="wrap">'+crumbs([T('Messwert-Datenbank','База значений')])+'<h1>'+T('Messwert-Datenbank','База значений')+'</h1><p class="lead">'+T('Soll- und Richtwerte, Messpunkte und Prüfverfahren für Sensoren, Aktoren und Bussysteme.','Нормы и ориентировочные значения, точки измерения и методы проверки для датчиков, исполнительных устройств и шин.')+' <span class="muted">'+T('Version ','Версия ')+esc(R.ver)+' · '+esc(R.stand)+'</span></p>'+refTabs();
+  if (refSt.tab==='faelle') {
+    h += '<p class="muted">'+T('Beispielaufnahmen aus der ROTKEE-Bibliothek: Nutzerbeiträge, keine OEM-Daten, ohne numerische Sollwerte. Nur mit identischem Motorcode vergleichen.','Примеры из библиотеки ROTKEE: пользовательские материалы, не данные производителя, без числовых норм. Сравнивать только при том же коде двигателя.')+'</p><div class="rf-grid">'+R.cases.map(function(c){
+      return '<div class="rf-case"><b class="rf-t">'+esc(c.veh)+' · '+esc(c.eng)+'</b><span class="gl-chip">'+esc(c.t)+'</span><p><b>'+T('Befund','Результат')+':</b> '+esc(c.find)+'</p><p><b>'+T('Kanäle','Каналы')+':</b> '+esc(c.ch)+'</p><p>'+esc(c.how)+'</p><p class="muted">'+esc(c.q)+' · <a href="'+esc(c.src)+'" target="_blank" rel="noopener noreferrer">'+T('Quelle','Источник')+'</a></p></div>'; }).join('')+'</div>';
+  } else if (refSt.tab==='quellen') {
+    h += refWarn()+'<h2>'+T('Hinweise zur Datenbank','Примечания к базе')+'</h2><dl class="rf-dl">'+R.notes.map(function(n){ return '<dt>'+esc(n[0])+'</dt><dd>'+esc(n[1])+'</dd>'; }).join('')+'</dl>'+
+      '<h2>'+T('Bewertung der ROTKEE-Quelle','Оценка источника ROTKEE')+'</h2><dl class="rf-dl">'+R.rules.map(function(n){ return '<dt>'+esc(n[0])+'</dt><dd>'+esc(n[1])+'</dd>'; }).join('')+'</dl>'+
+      '<h2>'+T('Noch zu verifizieren','Ещё нужно проверить')+'</h2><div class="rf-grid">'+R.backlog.map(function(b){ return '<div class="rf-case"><b class="rf-t">'+esc(b[0])+'</b><p>'+esc(b[1])+'</p><p class="muted">'+esc(b[2])+'</p></div>'; }).join('')+'</div>'+
+      '<h2>'+T('Recherchenachweis','Подтверждение исследования')+' ('+R.checks.length+')</h2><div class="rf-grid">'+R.checks.map(function(c){ return '<div class="rf-case"><b class="rf-t">'+esc(c[0])+'</b><p>'+esc(c[2])+'</p><p class="muted">'+esc(c[3])+(/^https?:/.test(c[1]) ? ' · <a href="'+esc(c[1])+'" target="_blank" rel="noopener noreferrer">'+T('Quelle','Источник')+'</a>' : '')+'</p></div>'; }).join('')+'</div>';
+  } else {
+    var cs = {}; refRows().forEach(function(r){ cs[r.c] = (cs[r.c]||0)+1; });
+    var mfs = []; refRows().forEach(function(r){ if (r.mf && mfs.indexOf(r.mf)<0) mfs.push(r.mf); });
+    h += refWarn()+'<div class="filterbar"><input id="rfQ" type="search" value="'+esc(refSt.q)+'" placeholder="'+T('Suchen: Lambda, CAN, Injektor, P0171','Поиск: Lambda, CAN, Injektor, P0171')+'" autocomplete="off"><select id="rfMf" aria-label="'+T('Hersteller','Производитель')+'"><option value="">'+T('Alle Hersteller','Все производители')+'</option>'+mfs.map(function(m){ return '<option'+(refSt.mf===m?' selected':'')+'>'+esc(m)+'</option>'; }).join('')+'</select></div>'+
+      '<div class="chips"><button type="button" class="chip'+(refSt.c?'':' on')+'" data-rc="">'+T('Alle','Все')+'</button>'+Object.keys(RFC).filter(function(c){ return cs[c]; }).map(function(c){ return '<button type="button" class="chip'+(refSt.c===c?' on':'')+'" data-rc="'+c+'">'+esc(T(RFC[c][0],RFC[c][1]))+' '+cs[c]+'</button>'; }).join('')+'</div><div id="rfRes">'+refList()+'</div>';
+  }
+  after(function(){
+    main.querySelectorAll('[data-rt]').forEach(function(b){ b.onclick = function(){ refSt.tab = b.dataset.rt; render(); }; });
+    var q = $('#rfQ'); if (q) q.oninput = function(){ refSt.q = q.value; $('#rfRes').innerHTML = refList(); };
+    var m = $('#rfMf'); if (m) m.onchange = function(){ refSt.mf = m.value; $('#rfRes').innerHTML = refList(); };
+    main.querySelectorAll('[data-rc]').forEach(function(b){ b.onclick = function(){ refSt.c = b.dataset.rc; render(true); }; });
+  });
+  return h + foot() + '</div>';
+}
+function vRefItem(id){
+  var r = refRows().filter(function(x){ return x.id===id; })[0];
+  if (!r) return vNotFound();
+  var kv = [['Referenz / Sollsignal', T('Referenz / Sollsignal','Эталон / норма'), r.ref ? r.ref+(r.u ? ' '+r.u : '') : ''],['Messbedingungen',T('Messbedingungen','Условия измерения'),r.cond],['Messpunkte / Gerät',T('Messpunkte / Gerät','Точки / прибор'),r.pt],['Oszilloskop',T('Oszilloskop-Einstellung','Настройка осциллографа'),r.osc],['Prüfverfahren',T('Prüfverfahren','Метод проверки'),r.how],['Fehlerbilder',T('Fehlerbilder','Картины неисправностей'),r.err],['Fehlercodes',T('Fehlercodes','Коды ошибок'),r.dtc],['Fahrzeug / Motor',T('Fahrzeug / Motor','Автомобиль / двигатель'),r.veh],['Antrieb',T('Antrieb','Привод'),r.drive]].filter(function(k){ return k[2] && k[2]!=='–'; });
+  return '<div class="wrap">'+crumbs(['<a href="#ref">'+T('Messwert-Datenbank','База значений')+'</a>', esc(r.id)])+
+    '<div class="detail-head"><div class="gl-dh"><span class="gl-ico rf-ico">'+refIc(r.c,30)+'</span><div class="gl-dt"><h1>'+esc(r.t)+'</h1><div class="gl-chips"><span class="gl-chip">'+esc(T(RFC[r.c][0],RFC[r.c][1]))+'</span>'+(r.mf ? '<span class="gl-chip">'+esc(r.mf)+'</span>' : '')+'<span class="gl-chip">'+esc(r.id)+'</span></div></div></div></div>'+
+    '<div class="rf-kv">'+kv.map(function(k){ return '<div><span>'+esc(k[1])+'</span><b>'+esc(k[2])+'</b></div>'; }).join('')+'</div>'+
+    (r.val ? '<div class="callout"><b>'+T('Gültigkeit / Sicherheit','Применимость / безопасность')+'</b><p>'+esc(r.val)+'</p></div>' : '')+
+    (/^https?:/.test(r.src) ? '<p><a class="btn" href="'+esc(r.src)+'" target="_blank" rel="noopener noreferrer">'+T('Quelle öffnen','Открыть источник')+'</a></p>' : (r.src ? '<p class="muted">'+esc(r.src)+'</p>' : ''))+
+    '<p class="muted" style="font-size:var(--text-xs)">'+T('Texte der Datenbank sind deutsch (Fachtexte).','Тексты базы на немецком (технические формулировки).')+'</p>'+foot()+'</div>';
+}
+
 /* ---------- Router (#name) ---------- */
 var mem = 'start', pending = [];
 function after(fn){ pending.push(fn); }
@@ -2083,6 +2147,8 @@ function render(keepScroll){
   else if (r==='mess') html = vMess();
   else if (r==='mess-neu') html = vMessForm();
   else if (r==='systemtests') html = vSystemtests();
+  else if (r==='ref') html = vRef();
+  else if (r.indexOf('ref-')===0) html = vRefItem(r.slice(4));
   else if (r==='dtc') html = vDtc();
   else if (r==='import') html = vImport();
   else if (r==='oszi') html = vOszi();

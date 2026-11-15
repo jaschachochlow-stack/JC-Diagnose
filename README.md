@@ -84,3 +84,6 @@ Fotos (Kamera oder Galerie), Screenshots und eingescannte PDFs werden offline pe
 - Namen sind frei wählbar (nur 7E0 Motor, 7E1 Getriebe sind genormt). Ergebnisse landen im OBD-Bericht, im Text und in der Senden-Funktion.
 - Grenzen: nur CAN 11 Bit/UDS, ELM327-Klone sind langsam, Herstellerprotokolle und gesperrte Gateways antworten evtl. nicht.
 
+
+## Messwert-Datenbank (0.20.0)
+Datei `refdb.js` (aus `Kfz_Diagnose_Datenbank_3_1_ROTKEE.xlsx`, Version 3.0 vom 15.11.2026): 97 Messwerte/Prüfverfahren, 12 ROTKEE-Referenzfälle, Quellenprüfung und offene Recherche. Route `#ref`, Suche auch in der Globalsuche. Richtwerte, keine OEM-Sollwerte.
