@@ -1,6 +1,6 @@
 /* JC Diagnose – Offline-Cache. Bei jeder neuen Version VER erhöhen. */
-var VER = 'jc-0210';
-var FILES = ['./', './index.html', './app.css?v=0210', './data.js?v=0210', './jcx.js?v=0210', './oszi.js?v=0210', './pids.js?v=0210', './ecus.js?v=0210', './protos.js?v=0210', './refdb.js?v=0210', './mode06.js?v=0210', './bericht.js?v=0210', './app.js?v=0210', './manifest.json', './icon-192.png', './icon-512.png'];
+var VER = 'jc-0211';
+var FILES = ['./', './index.html', './app.css?v=0211', './data.js?v=0211', './jcx.js?v=0211', './oszi.js?v=0211', './pids.js?v=0211', './ecus.js?v=0211', './protos.js?v=0211', './refdb.js?v=0211', './mode06.js?v=0211', './bericht.js?v=0211', './app.js?v=0211', './manifest.json', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', function(e){ e.waitUntil(caches.open(VER).then(function(c){ return c.addAll(FILES); }).then(function(){ return self.skipWaiting(); })); });
 self.addEventListener('activate', function(e){ e.waitUntil(caches.keys().then(function(ks){ return Promise.all(ks.filter(function(k){ return k!==VER; }).map(function(k){ return caches.delete(k); })); }).then(function(){ return self.clients.claim(); })); });
 self.addEventListener('fetch', function(e){

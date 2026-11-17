@@ -272,14 +272,14 @@ function card(it){
 }
 function hvCallout(){ return '<div class="callout hv"><b>'+T('Hochvolt','Высокое напряжение')+'</b><p>'+T('Arbeiten an HV-Systemen nur mit Qualifikation nach DGUV Information 209-093. Spannungsfreiheit mit zweipoligem Spannungsprüfer feststellen. Messgeräte mindestens CAT III 1000 V.','Работы с ВВ-системами только при наличии допуска по DGUV Information 209-093. Отсутствие напряжения проверять двухполюсным указателем. Приборы не ниже CAT III 1000 В.')+'</p></div>'; }
 function deNote(){ return state.lang==='ru' ? '<p class="note">Текст главы пока на немецком. Перевод — следующий этап.</p>' : ''; }
-function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.21.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
+function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.21.1 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
 function crumbs(parts){ return '<p class="eyebrow"><a href="#start">'+T('Start','Главная')+'</a>'+parts.map(function(p){ return ' / '+p; }).join('')+'</p>'; }
 
 /* ---------- Start ---------- */
 var PANNE = ['k102','k103','k29','k28','k109','k119','k111','k110','k45'];
 function vHome(){
   var m = D.meta, v = m.verify;
-  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.21.0 · Stand','Версия 0.21.0 · состояние')+' '+esc(m.stand)+'</p>' +
+  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.21.1 · Stand','Версия 0.21.1 · состояние')+' '+esc(m.stand)+'</p>' +
     '<h1>JC Diagnose</h1><p class="lead">'+T('Sollwerte, Pinbelegung, Multimeter- und Oszilloskop-Prüfschritte für Sensoren, Aktoren, Bordnetz, Bussysteme und Hochvolt – plus Systemtests und dein eigenes Soll/Ist-Messprotokoll.','Нормы, распиновка, проверки мультиметром и осциллографом для датчиков, исполнительных механизмов, бортсети, шин и ВВ — плюс системные тесты и твой собственный журнал замеров «норма/факт».')+'</p>' +
     '<div class="chips"><a class="chip" href="#mess-neu">+ '+T('Neue Messung','Новый замер')+'</a><a class="chip" href="#obd">'+T('Fahrzeug verbinden','Подключить машину')+'</a><a class="chip" href="#dtc">'+T('Fehlercode prüfen','Проверить код ошибки')+'</a><a class="chip" href="#import">'+T('Bericht importieren','Импорт отчёта')+'</a><a class="chip" href="#oszi">'+T('Oszillogramme','Осциллограммы')+'</a><a class="chip" href="#tab-oszi">'+T('Oszi-Startwerte','Настройки осциллографа')+'</a><a class="chip" href="#systemtests">'+T('Systemtests','Системные тесты')+'</a><a class="chip" href="#rechner">'+T('Rechner','Калькуляторы')+'</a><a class="chip" href="#tab-fehler">'+T('Fehlerbilder','Неисправности')+'</a></div></div>' +
     '<div class="stats"><div class="stat"><b>'+m.n_items+'</b><span>'+T('Kapitel','глав')+'</span></div><div class="stat"><b>'+X.systemtests.rows.length+'</b><span>'+T('Systemtests','системных тестов')+'</span></div><div class="stat"><b>'+state.mess.length+'</b><span>'+T('eigene Messungen','своих замеров')+'</span></div></div></section>';
@@ -858,29 +858,42 @@ function liveTiles(){
 }
 function drawLive(){ var el = $('#liveBox'); if (!el) return; if (obd.view === 'cmp' && $('#cmpLg')){ if (!obd.cmpSnap) cmpRefresh(); return; } el.innerHTML = liveTiles(); bindTake(); }
 /* ---------- Live: alle Werte in einem Diagramm (Vergleich) ---------- */
-var CMPCOL = ['#ffb020','#4cc9f0','#7be08c','#ff6b9a','#b49cff','#ff8a4c','#5eead4','#e0e04a'], CMPW = 320, CMPH = 220, CML = 34, CMT = 8, CMR = 8, CMB = 18;
+var CMPCOL = ['#ffb020','#4cc9f0','#7be08c','#ff6b9a','#b49cff','#ff8a4c','#5eead4','#e0e04a'], CMPW = 320, CMPH = 220, CML = 34, CMT = 16, CMR = 8, CMB = 18, AXW = 30;
 function liveUnit(r){ var m = String(r.text||'').match(/^\s*-?\d+(?:[.,]\d+)?\s*(.*)$/); return m ? m[1].trim() : ''; }
-function cmpNorm(h){ var mn = Infinity, mx = -Infinity; h.forEach(function(p){ if (p[1] < mn) mn = p[1]; if (p[1] > mx) mx = p[1]; }); if (!isFinite(mn)) return [0,1]; var pad = (mx-mn)*0.06 || Math.max(1, Math.abs(mx)*0.1); return [mn-pad, mx+pad]; }
+function cmpNorm(h){ var mn = Infinity, mx = -Infinity; h.forEach(function(p){ if (p[1] < mn) mn = p[1]; if (p[1] > mx) mx = p[1]; }); if (!isFinite(mn)) return [0,4,1,0];
+  if (mx-mn < 1e-9){ var c = Math.max(1, Math.abs(mx)*0.1); mn -= c; mx += c; }
+  var raw = (mx-mn)/4, pw = Math.pow(10, Math.floor(Math.log(raw)/Math.LN10)), st = pw*10, k, lo, c2 = [1,2,2.5,5,10];
+  for (k = 0; k < c2.length; k++){ var t = c2[k]*pw, l = Math.floor(mn/t + 1e-9)*t; if (l + 4*t >= mx - 1e-9){ st = t; break; } }
+  lo = Math.floor(mn/st + 1e-9)*st; var dec = 0; while (dec < 4 && Math.abs(st*Math.pow(10,dec) - Math.round(st*Math.pow(10,dec))) > 1e-9) dec++;
+  return [lo, lo+4*st, st, dec]; }
 function cmpCompute(){
   var win = obd.cmpWin == null ? 60 : obd.cmpWin, items = obd.live.filter(function(r){ return liveNum(r) != null && (obd.hist[r.pid]||[]).length > 1; }), tEnd = 0, tFirst = Infinity;
   items.forEach(function(r){ var h = obd.hist[r.pid]; tEnd = Math.max(tEnd, h[h.length-1][0]); tFirst = Math.min(tFirst, h[0][0]); });
   var t1 = tEnd, t0 = win ? Math.max(tFirst, tEnd - win*1000) : tFirst; if (t1 - t0 < 1000) t0 = t1 - 1000;
-  var ser = obd.live.filter(function(r){ return liveNum(r) != null; }).map(function(r, i){ var h = obd.hist[r.pid] || [], nr = cmpNorm(h); return {pid:r.pid, label:r.label, unit:liveUnit(r), text:r.text, col:CMPCOL[i % CMPCOL.length], pts:h.filter(function(p){ return p[0] >= t0; }), lo:nr[0], hi:nr[1], off:!!obd.cmpOff[r.pid]}; });
-  return {ser:ser, t0:t0, t1:t1};
+  var ser = obd.live.filter(function(r){ return liveNum(r) != null; }).map(function(r, i){ var h = obd.hist[r.pid] || [], nr = cmpNorm(h); return {pid:r.pid, label:r.label, unit:liveUnit(r), text:r.text, col:CMPCOL[i % CMPCOL.length], pts:h.filter(function(p){ return p[0] >= t0; }), lo:nr[0], hi:nr[1], dec:nr[3], off:!!obd.cmpOff[r.pid]}; });
+  var vi = 0; ser.forEach(function(sr){ sr.slot = -1; if (sr.off) return; sr.slot = vi++; });
+  var nl = Math.min(vi, 3), nr2 = Math.min(Math.max(vi-3, 0), 2);
+  return {ser:ser, t0:t0, t1:t1, gl:nl*AXW + 6, gr:Math.max(8, nr2*AXW + 6)};
 }
 function cmpAt(sr, t){ var best = null, bd = Infinity; sr.pts.forEach(function(p){ var d = Math.abs(p[0]-t); if (d < bd){ bd = d; best = p; } }); return best; }
+function cmpTick(v, dec){ return v.toFixed(dec).replace('.',','); }
 function cmpInner(d, t){
-  var pw = CMPW-CML-CMR, ph = CMPH-CMT-CMB, span = Math.max(1, d.t1-d.t0), o = '', k;
-  for (k = 0; k < 5; k++){ var y = CMT+ph*k/4; o += '<line class="g" x1="'+CML+'" x2="'+(CMPW-CMR)+'" y1="'+y+'" y2="'+y+'"/><text x="'+(CML-5)+'" y="'+(y+3)+'" text-anchor="end">'+(100-25*k)+'%</text>'; }
-  for (k = 0; k < 5; k++){ var xx = CML+pw*k/4; o += '<text x="'+xx+'" y="'+(CMPH-4)+'" text-anchor="'+(k===0?'start':k===4?'end':'middle')+'">'+Math.round((d.t0+span*k/4-d.t1)/1000)+' s</text>'; }
-  d.ser.forEach(function(sr){ if (sr.off || sr.pts.length < 2) return; var pts = sr.pts.map(function(p){ return (CML+pw*(p[0]-d.t0)/span).toFixed(1)+','+(CMT+ph*(1-Math.max(0,Math.min(1,(p[1]-sr.lo)/(sr.hi-sr.lo))))).toFixed(1); }).join(' '); o += '<polyline points="'+pts+'" fill="none" stroke="'+sr.col+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'; });
-  if (t != null){ var cx = CML+pw*(t-d.t0)/span; o += '<line class="cur" x1="'+cx+'" x2="'+cx+'" y1="'+CMT+'" y2="'+(CMT+ph)+'"/>';
+  var L = d.gl, R = d.gr, pw = CMPW-L-R, ph = CMPH-CMT-CMB, span = Math.max(1, d.t1-d.t0), o = '', k;
+  for (k = 0; k < 5; k++){ var y = CMT+ph*k/4; o += '<line class="g" x1="'+L+'" x2="'+(CMPW-R)+'" y1="'+y+'" y2="'+y+'"/>'; }
+  for (k = 0; k < 5; k++){ var xx = L+pw*k/4; o += '<text x="'+xx+'" y="'+(CMPH-4)+'" text-anchor="'+(k===0?'start':k===4?'end':'middle')+'">'+Math.round((d.t0+span*k/4-d.t1)/1000)+' s</text>'; }
+  // Achsen: je Kurve eigene Skala in ihrer Farbe (links bis 3, rechts bis 2)
+  d.ser.forEach(function(sr){ if (sr.slot < 0 || sr.slot > 4) return; var left = sr.slot < 3, x = left ? L-4-AXW*sr.slot : CMPW-R+4+AXW*(sr.slot-3), an = left ? 'end' : 'start';
+    o += '<line x1="'+(left ? L-AXW*sr.slot : CMPW-R+AXW*(sr.slot-3))+'" x2="'+(left ? L-AXW*sr.slot : CMPW-R+AXW*(sr.slot-3))+'" y1="'+CMT+'" y2="'+(CMT+ph)+'" stroke="'+sr.col+'" stroke-opacity=".35"/>';
+    o += '<text x="'+x+'" y="'+(CMT-5)+'" text-anchor="'+an+'" style="fill:'+sr.col+';font-weight:700">'+esc((sr.unit||'').slice(0,5))+'</text>';
+    for (k = 0; k < 5; k++){ o += '<text x="'+x+'" y="'+(CMT+ph*k/4+3)+'" text-anchor="'+an+'" style="fill:'+sr.col+'">'+cmpTick(sr.hi-(sr.hi-sr.lo)*k/4, sr.dec)+'</text>'; } });
+  d.ser.forEach(function(sr){ if (sr.off || sr.pts.length < 2) return; var pts = sr.pts.map(function(p){ return (L+pw*(p[0]-d.t0)/span).toFixed(1)+','+(CMT+ph*(1-Math.max(0,Math.min(1,(p[1]-sr.lo)/(sr.hi-sr.lo))))).toFixed(1); }).join(' '); o += '<polyline points="'+pts+'" fill="none" stroke="'+sr.col+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'; });
+  if (t != null){ var cx = L+pw*(t-d.t0)/span; o += '<line class="cur" x1="'+cx+'" x2="'+cx+'" y1="'+CMT+'" y2="'+(CMT+ph)+'"/>';
     d.ser.forEach(function(sr){ if (sr.off) return; var p = cmpAt(sr, t); if (!p) return; o += '<circle cx="'+cx+'" cy="'+(CMT+ph*(1-Math.max(0,Math.min(1,(p[1]-sr.lo)/(sr.hi-sr.lo)))))+'" r="4" fill="'+sr.col+'" stroke="var(--color-bg)" stroke-width="2"/>'; }); }
   return o;
 }
 function cmpLegend(d, t, live){
   return d.ser.map(function(sr){ var txt = sr.text; if (t != null){ var p = cmpAt(sr, t); txt = p ? fmtV(p[1])+(sr.unit?' '+sr.unit:'') : '–'; }
-    return '<div class="cmp-lg'+(sr.off?' off':'')+'" style="border-left-color:'+sr.col+'"'+(live?' data-cmp="'+sr.pid+'" role="button" tabindex="0"':'')+'><small>'+esc(sr.label)+'</small><b>'+esc(txt)+'</b></div>'; }).join('');
+    return '<div class="cmp-lg'+(sr.off?' off':'')+'" style="border-left-color:'+sr.col+'"'+(live?' data-cmp="'+sr.pid+'" role="button" tabindex="0"':'')+'><small>'+esc(sr.label)+(sr.slot > 4 ? ' · '+cmpTick(sr.lo,sr.dec)+'…'+cmpTick(sr.hi,sr.dec) : '')+'</small><b>'+esc(txt)+'</b></div>'; }).join('');
 }
 function cmpBar(){
   var w = obd.cmpWin == null ? 60 : obd.cmpWin;
@@ -890,7 +903,7 @@ function cmpHtml(){
   var d = obd.cmpSnap || cmpCompute();
   if (!d.ser.length || !d.ser.some(function(x){ return x.pts.length > 1; })) return '<p class="muted">'+T('Sammle Werte …','Собираю значения …')+'</p>';
   var t = obd.cmpSnap ? obd.cmpT : null;
-  return '<div class="cmp-bar" id="cmpBar">'+cmpBar()+'</div><div class="cmp-card"><svg class="cmp-svg" viewBox="0 0 '+CMPW+' '+CMPH+'">'+cmpInner(d, t)+'</svg></div><p class="meta">'+T('Jede Linie ist auf ihren eigenen Bereich normiert (0–100 %). Finger auf das Diagramm: Werte zum gleichen Zeitpunkt. Karte antippen: Linie ein/aus.','Каждая линия растянута на свой диапазон (0–100 %). Палец на графике: значения в один момент. Тап по карточке: линия вкл/выкл.')+'</p><div class="cmp-leg" id="cmpLg">'+cmpLegend(d, t, true)+'</div>';
+  return '<div class="cmp-bar" id="cmpBar">'+cmpBar()+'</div><div class="cmp-card"><svg class="cmp-svg" viewBox="0 0 '+CMPW+' '+CMPH+'">'+cmpInner(d, t)+'</svg></div><p class="meta">'+T('Jede Linie hat ihre eigene Skala in ihrer Farbe (Einheit oben an der Achse). Finger auf das Diagramm: Werte zum gleichen Zeitpunkt. Karte antippen: Linie ein/aus.','У каждой линии своя шкала её цвета (единица сверху оси). Палец на графике: значения в один момент. Тап по карточке: линия вкл/выкл.')+'</p><div class="cmp-leg" id="cmpLg">'+cmpLegend(d, t, true)+'</div>';
 }
 function cmpRefresh(){
   var d = obd.cmpSnap || cmpCompute(), sv = main.querySelector('.cmp-svg'), lg = $('#cmpLg'), bar = $('#cmpBar'); if (!sv || !lg) { var el = $('#liveBox'); if (el) el.innerHTML = cmpHtml(); return; }
@@ -899,7 +912,7 @@ function cmpRefresh(){
 function bindCmpBox(){
   var box = $('#liveBox'); if (!box || box._cmp) return; box._cmp = true; var drag = false;
   function at(e){ var sv = box.querySelector('.cmp-svg'); if (!sv) return; var rc = sv.getBoundingClientRect(), x = (e.clientX-rc.left)/rc.width*CMPW, d = obd.cmpSnap || (obd.cmpSnap = cmpCompute());
-    obd.cmpT = Math.max(d.t0, Math.min(d.t1, d.t0 + (x-CML)/(CMPW-CML-CMR)*(d.t1-d.t0))); cmpRefresh(); }
+    obd.cmpT = Math.max(d.t0, Math.min(d.t1, d.t0 + (x-d.gl)/(CMPW-d.gl-d.gr)*(d.t1-d.t0))); cmpRefresh(); }
   box.addEventListener('pointerdown', function(e){ if (obd.view !== 'cmp' || !e.target.closest || !e.target.closest('.cmp-svg')) return; drag = true; at(e); });
   box.addEventListener('pointermove', function(e){ if (drag) at(e); });
   ['pointerup','pointercancel','pointerleave'].forEach(function(n){ box.addEventListener(n, function(){ drag = false; }); });
