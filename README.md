@@ -87,3 +87,7 @@ Fotos (Kamera oder Galerie), Screenshots und eingescannte PDFs werden offline pe
 
 ## Messwert-Datenbank (0.20.0)
 Datei `refdb.js` (aus `Kfz_Diagnose_Datenbank_3_1_ROTKEE.xlsx`, Version 3.0 vom 15.11.2026): 97 Messwerte/Prüfverfahren, 12 ROTKEE-Referenzfälle, Quellenprüfung und offene Recherche. Route `#ref`, Suche auch in der Globalsuche. Richtwerte, keine OEM-Sollwerte.
+
+## DTC-Bibliothek und Mode 06 (0.21.0)
+- `dtcx/*.js`: 9.533 universelle OBD-II-Codes (P0/P2/P3/B0/C0/U0/U3) mit Beschreibung, Ursachen, Symptomen, Aufwand. Quelle: OBDex (Daten CC0-1.0, github.com/foerbsnavi/obdex). Wird erst beim Zugriff geladen (Code-Karte und Volltextsuche unter `#dtc`). Neu bauen: `OBDEX=<Klon> node tools/make_dtcx.mjs`. Herstellercodes (P1xxx usw.) sind bewusst nicht enthalten.
+- `mode06.js`: Selbsttests des Steuergeräts (SAE J1979, MID/TID/UASID), Button „Selbsttests (Mode 06)“ unter `#obd`; nur CAN-Fahrzeuge, ELM327-kompatible Adapter.

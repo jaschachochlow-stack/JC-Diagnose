@@ -272,14 +272,14 @@ function card(it){
 }
 function hvCallout(){ return '<div class="callout hv"><b>'+T('Hochvolt','Высокое напряжение')+'</b><p>'+T('Arbeiten an HV-Systemen nur mit Qualifikation nach DGUV Information 209-093. Spannungsfreiheit mit zweipoligem Spannungsprüfer feststellen. Messgeräte mindestens CAT III 1000 V.','Работы с ВВ-системами только при наличии допуска по DGUV Information 209-093. Отсутствие напряжения проверять двухполюсным указателем. Приборы не ниже CAT III 1000 В.')+'</p></div>'; }
 function deNote(){ return state.lang==='ru' ? '<p class="note">Текст главы пока на немецком. Перевод — следующий этап.</p>' : ''; }
-function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.20.2 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
+function foot(){ return '<footer class="foot">JC Diagnose · '+T('Prototyp','Прототип')+' 0.21.0 · '+T('Daten','Данные')+': Nachschlagewerk '+esc(D.meta.version)+' + Excel '+esc(X.meta.title.replace('Kfz_Diagnosedatenbank ',''))+' · '+T('Richtwerte ohne Gewähr, Herstellerdaten gehen vor.','Ориентировочные значения, данные производителя приоритетнее.')+' · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/apk/JC-Diagnose.apk">'+T('Android-App (APK)','Android-приложение (APK)')+'</a> · <a href="https://github.com/jaschachochlow-stack/JC-Diagnose/releases/download/windows/JC-Diagnose-Windows.exe">'+T('Windows-App (.exe)','Windows-приложение (.exe)')+'</a></footer>'; }
 function crumbs(parts){ return '<p class="eyebrow"><a href="#start">'+T('Start','Главная')+'</a>'+parts.map(function(p){ return ' / '+p; }).join('')+'</p>'; }
 
 /* ---------- Start ---------- */
 var PANNE = ['k102','k103','k29','k28','k109','k119','k111','k110','k45'];
 function vHome(){
   var m = D.meta, v = m.verify;
-  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.20.2 · Stand','Версия 0.20.2 · состояние')+' '+esc(m.stand)+'</p>' +
+  var h = '<div class="wrap"><section class="hero"><div><p class="eyebrow">'+T('Version 0.21.0 · Stand','Версия 0.21.0 · состояние')+' '+esc(m.stand)+'</p>' +
     '<h1>JC Diagnose</h1><p class="lead">'+T('Sollwerte, Pinbelegung, Multimeter- und Oszilloskop-Prüfschritte für Sensoren, Aktoren, Bordnetz, Bussysteme und Hochvolt – plus Systemtests und dein eigenes Soll/Ist-Messprotokoll.','Нормы, распиновка, проверки мультиметром и осциллографом для датчиков, исполнительных механизмов, бортсети, шин и ВВ — плюс системные тесты и твой собственный журнал замеров «норма/факт».')+'</p>' +
     '<div class="chips"><a class="chip" href="#mess-neu">+ '+T('Neue Messung','Новый замер')+'</a><a class="chip" href="#obd">'+T('Fahrzeug verbinden','Подключить машину')+'</a><a class="chip" href="#dtc">'+T('Fehlercode prüfen','Проверить код ошибки')+'</a><a class="chip" href="#import">'+T('Bericht importieren','Импорт отчёта')+'</a><a class="chip" href="#oszi">'+T('Oszillogramme','Осциллограммы')+'</a><a class="chip" href="#tab-oszi">'+T('Oszi-Startwerte','Настройки осциллографа')+'</a><a class="chip" href="#systemtests">'+T('Systemtests','Системные тесты')+'</a><a class="chip" href="#rechner">'+T('Rechner','Калькуляторы')+'</a><a class="chip" href="#tab-fehler">'+T('Fehlerbilder','Неисправности')+'</a></div></div>' +
     '<div class="stats"><div class="stat"><b>'+m.n_items+'</b><span>'+T('Kapitel','глав')+'</span></div><div class="stat"><b>'+X.systemtests.rows.length+'</b><span>'+T('Systemtests','системных тестов')+'</span></div><div class="stat"><b>'+state.mess.length+'</b><span>'+T('eigene Messungen','своих замеров')+'</span></div></div></section>';
@@ -699,6 +699,25 @@ var obd = {cmpOff:{}, cmpWin:60, cmpSnap:null, cmpT:null, livePhase:'select', sh
 if (!obd.sel && window.JCPID) obd.sel = JCPID.presets.basis.p.slice();
 function obdLog(t){ obd.log.unshift(new Date().toLocaleTimeString()+' · '+t); obd.log = obd.log.slice(0,60); }
 function obdRefresh(){ var c = cur(); if (c==='obd' || c==='obd-live' || c==='obd-ecus') render(true); }
+
+/* ---------- Mode 06: Selbsttests des Motorsteuergeräts ---------- */
+function m6Panel(){
+  var m = obd.m06; if (!m) return '';
+  var ru = state.lang==='ru', bad = 0, edge = 0, n = 0;
+  var cards = m.map(function(r){
+    if (!r.tests.length) return '';
+    var rows = r.tests.map(function(t){
+      n++; var st = t.ok===null ? ['na','–'] : !t.ok ? ['bad',T('außerhalb','вне нормы')] : t.edge ? ['warn',T('grenznah','у границы')] : ['ok','OK'];
+      if (t.ok===false) bad++; else if (t.edge) edge++;
+      return '<div class="m6-row"><div class="m6-t">'+esc(JCM06.tidName(r.mid, t.tid, ru))+'</div><div class="m6-v mono">'+(t.ok===null ? 'UAS '+JCM06.hex(t.uas)+' · '+t.raw.map(function(x){ return x.toString(16).toUpperCase(); }).join(' / ') : JCM06.fmt(t.v)+' '+esc(t.u))+'</div><div class="m6-l mono">'+(t.ok===null ? '' : esc(JCM06.fmt(t.lo))+' … '+esc(JCM06.fmt(t.hi)))+'</div><span class="m6-s m6-'+st[0]+'">'+esc(st[1])+'</span></div>';
+    }).join('');
+    return '<div class="mess"><div class="r1"><b>'+esc(JCM06.name(r.mid, ru))+'</b><span class="meta mono">MID '+JCM06.hex(r.mid)+'</span></div>'+rows+'</div>';
+  }).join('');
+  return '<h2>'+T('Selbsttests (Mode 06)','Самотесты блока (Mode 06)')+'</h2>'+
+    '<div class="callout"><b>'+(bad ? bad+' '+T('Test(s) außerhalb der Grenzen','тест(ов) вне границ') : T('Alle Tests innerhalb der Grenzen','Все тесты в пределах границ'))+(edge ? ' · '+edge+' '+T('grenznah','у границы') : '')+'</b><p>'+T('Zeigt Messwert und Grenzen der Tests, die das Steuergerät selbst durchführt – oft schon bevor ein Fehlercode gesetzt wird. Ein Test kann nur laufen, wenn seine Bedingungen erfüllt waren (Fahrzyklus). Nur Orientierung, Herstellerangaben gehen vor.','Значения и границы тестов, которые блок выполняет сам, часто ещё до появления кода ошибки. Тест выполняется, только если были выполнены его условия (ездовой цикл). Только ориентир, данные производителя приоритетнее.')+'</p></div>'+
+    (cards || '<div class="empty"><p>'+T('Dieses Fahrzeug liefert keine Mode-06-Daten (nur CAN-Fahrzeuge, ab ca. 2004).','Автомобиль не отдаёт данные Mode 06 (только CAN, примерно с 2004 г.).')+'</p></div>')+
+    '<p class="meta">'+m.length+' MID · '+n+' '+T('Tests','тестов')+'</p>';
+}
 function obdRun(label, fn){
   obd.busy = label; obd.err = ''; obdRefresh();
   return Promise.resolve().then(fn).then(function(){ obd.busy = ''; obdRefresh(); }, function(e){ obd.busy = ''; obd.err = (e && e.message) || String(e); obdLog('Fehler: '+obd.err); obdRefresh(); });
@@ -781,10 +800,11 @@ function demoIo(){
       if (c==='01A6') return Promise.resolve('41A6001E3A2C');
       if (window.JCPRO){ var dp = JCPRO.demo(c); if (dp != null) return new Promise(function(r){ setTimeout(function(){ r(dp); }, 3); }); }
       if (window.JCECU){ var de = JCECU.demo(c); if (de != null) return new Promise(function(r){ setTimeout(function(){ r(de); }, 4); }); }
+      if (window.JCM06){ var d6 = JCM06.demo(c); if (d6 != null) return new Promise(function(r){ setTimeout(function(){ r(d6); }, 6); }); }
       if (window.JCPID){ var dm = JCPID.demo(c, Date.now()); if (dm) return new Promise(function(r){ setTimeout(function(){ r(dm); }, 25); }); }
       return base.send(cmd, t); }, close:function(){ return base.close(); } };
 }
-function obdDisconnect(){ if (obd.live.length) obdScanSave('live'); obd.scanId = null; obd.sheet = false; obd.hist = {}; obd.veh = null; obd.liveOn = false; obd.sup = null; var io = obd.io; obd.io = null; obd.info = null; obd.live = []; if (io) io.close().catch(function(){}); obdLog(T('Getrennt','Отключено')); obdRefresh(); }
+function obdDisconnect(){ obd.m06 = null; if (obd.live.length) obdScanSave('live'); obd.scanId = null; obd.sheet = false; obd.hist = {}; obd.veh = null; obd.liveOn = false; obd.sup = null; var io = obd.io; obd.io = null; obd.info = null; obd.live = []; if (io) io.close().catch(function(){}); obdLog(T('Getrennt','Отключено')); obdRefresh(); }
 function obdLiveLoop(){
   if (!obd.liveOn || !obd.io) return;
   var t0 = Date.now(), list = livePids();
@@ -1384,7 +1404,7 @@ function vObd(){
   } else {
     var i = obd.info || {};
     h += '<div class="mess"><div class="r1"><b>'+esc(obd.name)+'</b><span class="st ok">'+T('verbunden','подключено')+'</span></div><div class="meta">'+esc(i.name||'')+(i.number?' · '+esc(i.number):'')+(i.can?' · CAN':'')+'</div>'+(i.warning?'<p class="note">'+esc(i.warning)+'</p>':'')+
-      (obd.veh ? vehCard(obd.veh) : '')+'<div class="btn-row"><button class="btn primary" id="bRead">'+T('Fehler lesen','Прочитать ошибки')+'</button><button class="btn" id="bLive">'+T('Live-Daten','Живые данные')+' ▶</button><button class="btn" id="bEcus">'+T('Alle Steuergeräte','Все блоки')+'</button><button class="btn" id="bPro">'+T('Alle Protokolle prüfen','Проверить все протоколы')+'</button><button class="btn danger" id="bClear">'+T('Fehler löschen','Стереть ошибки')+'</button><button class="btn" id="bOff">'+T('Trennen','Отключить')+'</button></div></div>';
+      (obd.veh ? vehCard(obd.veh) : '')+'<div class="btn-row"><button class="btn primary" id="bRead">'+T('Fehler lesen','Прочитать ошибки')+'</button><button class="btn" id="bLive">'+T('Live-Daten','Живые данные')+' ▶</button><button class="btn" id="bEcus">'+T('Alle Steuergeräte','Все блоки')+'</button><button class="btn" id="bM6">'+T('Selbsttests (Mode 06)','Самотесты (Mode 06)')+'</button><button class="btn" id="bPro">'+T('Alle Protokolle prüfen','Проверить все протоколы')+'</button><button class="btn danger" id="bClear">'+T('Fehler löschen','Стереть ошибки')+'</button><button class="btn" id="bOff">'+T('Trennen','Отключить')+'</button></div></div>';
     h += proPanel();
     var lastScan = state.archiv.find(function(r){ return r.id === obd.scanId; });
     h += '<p class="meta obd-auto">'+T('Jede Auslesung wird automatisch im Archiv gespeichert (Fahrzeug, VIN, km, Fehler, Live-Werte).','Каждое считывание автоматически сохраняется в архиве (машина, VIN, пробег, ошибки, живые данные).')+(lastScan?' <a href="#bericht-'+esc(lastScan.id)+'">'+T('Letzten Bericht öffnen','Открыть последний отчёт')+'</a>':'')+'</p>';
@@ -1394,6 +1414,7 @@ function vObd(){
       after(function(){ var bd = $('#bDiag'); if (bd) bd.onclick = function(){ diagStart(allc, 'OBD'); }; });
       h += '<h2>'+T('Fehlerspeicher','Память ошибок')+'</h2>' + dtcList(d.stored, T('Gespeichert (03)','Сохранённые (03)')) + dtcList(d.pending, T('Anstehend (07)','Ожидающие (07)')) + dtcList(d.permanent, T('Permanent (0A)','Постоянные (0A)')) + (d.uds && d.uds.length ? dtcList(d.uds, 'UDS (19 02)') : '');
     }
+    h += m6Panel();
     h += '<details class="expert"><summary class="muted">'+T('Experten: Adapter-Test und Rohbefehl','Эксперт: тест адаптера и сырая команда')+'</summary><div class="btn-row"><button class="btn" id="bProbe">'+T('Adapter-Test','Тест адаптера')+'</button></div><div class="btn-row"><input id="rawCmd" class="mono" placeholder="'+T('Befehl, z. B. 010C','Команда, напр. 010C')+'" autocapitalize="characters" autocomplete="off"><button class="btn" id="bRaw">'+T('Senden','Отправить')+'</button></div></details>';
     if (obd.sheet && obd.dtcs) h += obdSheet();
   }
@@ -1405,6 +1426,7 @@ function vObd(){
     var ps = $('#obdProto'); if (ps) ps.onchange = function(){ obd.proto = ps.value; lset('jc-proto', ps.value); render(true); };
     main.querySelectorAll('[data-wq]').forEach(function(b){ b.onclick = function(){ var i = $('#wifiAddr'); if (i) i.value = b.dataset.wq; }; });
     main.querySelectorAll('[data-conn]').forEach(function(b){ b.onclick = function(e){ e.preventDefault(); e.stopPropagation(); obdConnect(b.dataset.conn); }; });
+    var b6 = $('#bM6'); if (b6) b6.onclick = function(){ obdRun(T('Lese Selbsttests (Mode 06) …','Читаю самотесты (Mode 06) …'), function(){ return JCM06.readAll(obd.io, function(r, all){ obd.busy = T('Lese Selbsttests (Mode 06) … ','Читаю самотесты (Mode 06) … ')+all.length; obdRefresh(); }).then(function(res){ obd.m06 = res; obdLog('Mode 06: '+res.length+' MID'); }); }); };
     var br = $('#bRead'); if (br) br.onclick = function(){ obdRun(T('Lese Fehlerspeicher …','Чтение ошибок …'), function(){ var pr = curProto(); return JCX.readAllDtcs(obd.io, !!(obd.info&&obd.info.can), pr.uds).then(function(d){ obd.dtcs = d; obdLog(T('Codes: ','Коды: ')+([].concat(d.stored,d.pending,d.permanent,d.uds).join(', ')||'–')); obd.scanId = null; obdScanSave('dtc'); obd.sheet = true; }); }); };
     var shc = function(){ obd.sheet = false; render(true); };
     var sx = $('#shX'); if (sx) sx.onclick = shc; var sb = $('#shBg'); if (sb) sb.onclick = shc;
@@ -1827,6 +1849,49 @@ function dtcCard(a){
     '<p>'+esc(t.summary)+'</p><h3>'+T('Was prüfen','Что проверить')+'</h3><ol>'+t.steps.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join('')+'</ol>' +
     '<h3>'+T('Kapitel in dieser Reihenfolge','Главы в этом порядке')+'</h3><div class="mess-list">'+t.chapters.map(function(c){ var it = byId[c.id]; return it ? '<a class="result" href="#b-'+it.id+'"><div class="rt">'+esc(L(it,'title'))+' <span class="badge">'+esc(c.kind)+'</span></div><div class="snip">'+esc(c.why)+'</div></a>' : ''; }).join('')+'</div></article>';
 }
+/* ---------- DTC-Bibliothek (dtcx/*.js, aus OBDex, CC0-1.0): 9.533 universelle Codes, Laden bei Bedarf ---------- */
+var DX = {fams:['P0','P2','P3','B0','C0','U0','U3'], st:{}, map:{}};
+function dxLoad(f){
+  if (window.DTCX && DTCX[f]) return Promise.resolve();
+  if (DX.st[f]) return DX.st[f];
+  return DX.st[f] = new Promise(function(res, rej){
+    var s = document.createElement('script'); s.src = 'dtcx/'+f+'.js?v=0210';
+    s.onload = function(){ res(); }; s.onerror = function(){ delete DX.st[f]; rej(new Error('dtcx '+f)); };
+    document.head.appendChild(s);
+  });
+}
+function dxGet(code){
+  var f = code.slice(0,2); if (DX.fams.indexOf(f)<0) return Promise.resolve(null);
+  return dxLoad(f).then(function(){
+    if (!DX.map[f]){ var m = DX.map[f] = {}; DTCX[f].forEach(function(r){ m[r.c] = r; }); }
+    return DX.map[f][code] || null;
+  }, function(){ return null; });
+}
+function dxAll(){ return Promise.all(DX.fams.map(dxLoad)).then(function(){ return [].concat.apply([], DX.fams.map(function(f){ return DTCX[f]; })); }); }
+var DXL = {h:['hoch','высокая'], m:['mittel','средняя'], l:['gering','низкая']};
+var DXD = {easy:['einfach','просто'], medium:['mittel','средне'], hard:['anspruchsvoll','сложно'], shop_only:['nur Werkstatt','только в мастерской']};
+var DXF = {M:['MIL (Motorkontrollleuchte)','MIL (лампа Check Engine)'], E:['abgasrelevant','влияет на выхлоп'], D:['Drive-Cycle nötig zum Löschen','нужен drive-cycle'], L:['Notlauf möglich','возможен аварийный режим']};
+function dxCard(r){
+  if (!r) return '';
+  var rep = r.r ? '<div><span>'+T('Reparatur','Ремонт')+'</span><b>'+esc(T((DXD[r.r[0]]||[r.r[0]])[0],(DXD[r.r[0]]||[r.r[0],r.r[0]])[1]))+(r.r[1] ? ' · '+T('selbst machbar','можно самому') : '')+(r.r[2] ? ' · '+r.r[2][0]+'–'+r.r[2][1]+' €' : '')+(r.r[3] ? ' · '+r.r[3][0]+'–'+r.r[3][1]+' h' : '')+'</b></div>' : '';
+  var flags = (r.f||'').split('').map(function(x){ return DXF[x] ? '<span class="gl-chip">'+esc(T(DXF[x][0],DXF[x][1]))+'</span>' : ''; }).join('');
+  return '<section class="dx-card"><h3>'+esc(r.t)+'</h3><p class="muted dx-en">'+esc(r.e)+'</p>'+(flags ? '<div class="gl-chips" style="display:flex">'+flags+'</div>' : '')+
+    '<p>'+esc(r.d)+'</p>'+
+    (r.u && r.u.length ? '<h4>'+T('Mögliche Ursachen','Возможные причины')+'</h4><ul class="dx-ul">'+r.u.map(function(u){ var l = DXL[u[0]]||DXL.m; return '<li><span class="dx-lk dx-'+u[0]+'">'+esc(T(l[0],l[1]))+'</span> '+esc(u[1])+'</li>'; }).join('')+'</ul>' : '')+
+    (r.s && r.s.length ? '<h4>'+T('Symptome','Симптомы')+'</h4><ul class="dx-ul">'+r.s.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join('')+'</ul>' : '')+
+    '<div class="rf-kv">'+(r.k && r.k.length ? '<div><span>'+T('Betroffene Bauteile','Затронутые компоненты')+'</span><b>'+esc(r.k.map(function(x){ return x.replace(/_/g,' '); }).join(', '))+'</b></div>' : '')+rep+'</div>'+
+    (r.x && r.x.length ? '<p class="dx-rel">'+T('Verwandte Codes','Связанные коды')+': '+r.x.map(function(c){ return '<button type="button" class="chip" data-c="'+esc(c)+'">'+esc(c)+'</button>'; }).join(' ')+'</p>' : '')+
+    '<p class="muted" style="font-size:var(--text-xs)">'+T('Quelle: OBDex (CC0-1.0), universelle SAE-J2012-Codes. Richtwerte für Kosten und Aufwand; Herstellerangaben gehen vor.','Источник: OBDex (CC0-1.0), универсальные коды SAE J2012. Стоимость и трудоёмкость ориентировочные; данные производителя приоритетнее.')+'</p></section>';
+}
+function dxSearch(q, cb){
+  var terms = norm(q).split(/\s+/).filter(Boolean); if (!terms.length) return cb([]);
+  dxAll().then(function(all){
+    var out = [];
+    for (var i=0; i<all.length && out.length<60; i++){ var r = all[i]; if (!r._n) r._n = norm(r.c+' '+r.t+' '+r.e+' '+(r.u||[]).map(function(u){ return u[1]; }).join(' ')+' '+r.d); if (terms.every(function(w){ return r._n.indexOf(w)>=0; })) out.push(r); }
+    cb(out);
+  }, function(){ cb(null); });
+}
+
 function vDtc(){
   var q = state.dtcQ || '';
   var codes = q.split(/[\s,;]+/).map(dtcNorm).filter(function(c,i,a){ return c && a.indexOf(c)===i; });
@@ -1834,15 +1899,25 @@ function vDtc(){
     '<form id="dtcForm" class="filterbar"><input id="dtcIn" type="search" value="'+esc(q)+'" placeholder="P0118, P0335 U0100" autocomplete="off"><button class="btn primary" type="submit">'+T('Prüfen','Проверить')+'</button></form>' +
     '<div class="chips">'+['P0118','P0171','P0300','P0335','P0562','C0035','U0100'].map(function(c){ return '<button type="button" class="chip" data-c="'+c+'">'+c+'</button>'; }).join('')+'</div>' + deNote().replace('Текст главы пока','Тексты подсказок пока') +
     (codes.length ? '<div class="btn-row"><button class="btn primary" id="dtcDiag">'+T('Geführte Diagnose mit diesen Codes','Пошаговая диагностика по этим кодам')+' ('+codes.length+')</button></div>' : '') +
-    '<div class="mess-list" style="margin-top:16px">'+codes.map(function(c){ return dtcCard(dtcAdvice(c)); }).join('')+'</div>';
+    '<div class="mess-list" style="margin-top:16px">'+codes.map(function(c){ return dtcCard(dtcAdvice(c))+'<div class="dx" data-dx="'+c+'"></div>'; }).join('')+'</div>';
   if (!codes.length) {
-    h += '<h2>'+T('Abgedeckte Bereiche','Охваченные диапазоны')+'</h2><div class="filterbar"><input id="segF" type="search" placeholder="'+T('Filtern: Lambda, P03, CAN','Фильтр: Lambda, P03, CAN')+'"><span class="muted" id="segN"></span></div><div class="tbl big"><table><thead><tr><th>'+T('Bereich','Диапазон')+'</th><th>'+T('Thema','Тема')+'</th><th>'+T('System','Система')+'</th><th>'+T('Priorität','Приоритет')+'</th></tr></thead><tbody id="segB"></tbody></table></div>';
+    h += '<h2>'+T('Volltextsuche in 9.533 Codes','Полнотекстовый поиск по 9 533 кодам')+'</h2><div class="filterbar"><input id="dxQ" type="search" placeholder="'+T('z. B. Katalysator, Lambdasonde, CAN, misfire','например: Katalysator, Lambdasonde, CAN, misfire')+'" autocomplete="off"></div><div id="dxRes" class="muted">'+T('Suchbegriff eingeben (Deutsch oder Englisch).','Введите запрос (по-немецки или по-английски).')+'</div>' +
+    '<h2>'+T('Abgedeckte Bereiche','Охваченные диапазоны')+'</h2><div class="filterbar"><input id="segF" type="search" placeholder="'+T('Filtern: Lambda, P03, CAN','Фильтр: Lambda, P03, CAN')+'"><span class="muted" id="segN"></span></div><div class="tbl big"><table><thead><tr><th>'+T('Bereich','Диапазон')+'</th><th>'+T('Thema','Тема')+'</th><th>'+T('System','Система')+'</th><th>'+T('Priorität','Приоритет')+'</th></tr></thead><tbody id="segB"></tbody></table></div>';
   }
   h += '<p class="muted" style="font-size:var(--text-xs)">'+T('Quelle: eigene DTC-Regeln (kfz-diagnose/dtc.ts, SAE J2012-Struktur). Orientierung, keine Herstellertabelle.','Источник: собственные правила DTC (kfz-diagnose/dtc.ts, структура SAE J2012). Ориентир, не заводская таблица.')+'</p>' + foot() + '</div>';
   after(function(){
     var dg = $('#dtcDiag'); if (dg) dg.onclick = function(){ diagStart(codes.map(function(c){ return {code:c, set:'manual'}; }), T('manuell','вручную')); };
     $('#dtcForm').onsubmit = function(e){ e.preventDefault(); state.dtcQ = $('#dtcIn').value; render(true); };
     main.querySelectorAll('[data-c]').forEach(function(b){ b.onclick = function(){ state.dtcQ = b.dataset.c; render(true); }; });
+    main.querySelectorAll('[data-dx]').forEach(function(el){ dxGet(el.dataset.dx).then(function(r){ el.innerHTML = dxCard(r); el.querySelectorAll('[data-c]').forEach(function(b){ b.onclick = function(){ state.dtcQ = b.dataset.c; render(true); }; }); }); });
+    var dq = $('#dxQ'), dt = null;
+    if (dq) dq.oninput = function(){ clearTimeout(dt); dt = setTimeout(function(){
+      var out = $('#dxRes'); if (!dq.value.trim()){ out.textContent = ''; return; } out.textContent = T('Suche läuft … (Bibliothek wird einmalig geladen)','Поиск… (библиотека загружается один раз)');
+      dxSearch(dq.value, function(rs){
+        if (rs===null){ out.textContent = T('Bibliothek konnte nicht geladen werden.','Не удалось загрузить библиотеку.'); return; }
+        out.innerHTML = rs.length ? '<div class="rf-grid">'+rs.map(function(r){ return '<a class="rf-card" href="#dtc" data-pick="'+esc(r.c)+'"><span class="rf-b"><b class="rf-t">'+esc(r.c)+' · '+esc(r.t)+'</b><span class="rf-c">'+esc((r.d||'').slice(0,110))+'…</span></span></a>'; }).join('')+'</div>' : T('Kein Treffer.','Ничего не найдено.');
+        out.querySelectorAll('[data-pick]').forEach(function(a){ a.onclick = function(e){ e.preventDefault(); state.dtcQ = a.dataset.pick; render(true); }; });
+      }); }, 250); };
     var sf = $('#segF'); if (!sf) return;
     function draw(){ var f = norm(sf.value); var r = DTC.segs.filter(function(g){ var t = DTC.texts[g[2]]; return t.title!==GENERIC && (!f || norm(g[0]+' '+g[1]+' '+t.title+' '+t.system).indexOf(f)>=0); });
       $('#segB').innerHTML = r.map(function(g){ var t = DTC.texts[g[2]], sv = SEV[t.severity]||[t.severity,t.severity,'na']; return '<tr><td class="mono"><a href="#dtc" data-g="'+g[0]+'">'+esc(g[0]===g[1]?g[0]:g[0]+'–'+g[1])+'</a></td><td>'+esc(t.title)+'</td><td>'+esc(t.system)+'</td><td><span class="st '+sv[2]+'">'+esc(T(sv[0],sv[1]))+'</span></td></tr>'; }).join('');
