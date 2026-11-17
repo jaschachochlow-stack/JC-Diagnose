@@ -95,5 +95,6 @@ Datei `refdb.js` (aus `Kfz_Diagnose_Datenbank_3_1_ROTKEE.xlsx`, Version 3.0 vom 
 ## Live-Daten Vergleich (0.21.1)
 Im Vergleichs-Diagramm hat jede Kurve eine eigene Achse mit echten Werten und Einheit in ihrer Farbe (bis 3 links, 2 rechts; weitere Kurven nur in der Legende mit Bereich).
 
-## Tabellen als Karten (0.21.2)
+## Tabellen als Karten (0.21.3)
 Auf schmalen Bildschirmen (Handy) werden alle Tabellen (Referenztabellen, Berichte, ECU) automatisch als Karten dargestellt: erste Spalte als Titel, jede Zelle mit Spaltenname, leere Werte ausgeblendet. Kein Seitwärts-Scrollen mehr.
+Lange Tabellen (>6 Zeilen) sind einklappbar: Titel antippen öffnet die Karte.

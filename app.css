@@ -882,3 +882,11 @@ html[data-skin=glas] .dx-card{border:1px solid rgba(255,255,255,.85);background:
   table.rt td::before{font-size:10px;letter-spacing:.02em;hyphens:auto;overflow-wrap:anywhere;align-self:center}
   table.rt tr{padding:4px 12px 6px}
 }
+@media (max-width:760px){
+  table.rc tr:not(.open) td:not(:first-child){display:none}
+  table.rc td:first-child{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:0}
+  table.rc tr.open td:first-child{border-bottom:1px solid var(--color-divider);margin-bottom:2px}
+  table.rc td:first-child::after{content:"";flex:none;width:8px;height:8px;border-right:2px solid var(--color-muted,#888);border-bottom:2px solid var(--color-muted,#888);transform:rotate(45deg);transition:transform .15s}
+  table.rc tr.open td:first-child::after{transform:rotate(-135deg)}
+  table.rc tr{padding:2px 12px}
+}
