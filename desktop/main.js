@@ -45,6 +45,7 @@ function createWindow() {
   });
 }
 
+ipcMain.on('jc-quit', () => { app.quit(); });
 ipcMain.on('jc-pick-result', (e, kind, id) => {
   if (kind === 'bluetooth') { if (btCb) btCb(id || ''); btCb = null; }
   else { if (serCb) serCb(id || ''); serCb = null; }

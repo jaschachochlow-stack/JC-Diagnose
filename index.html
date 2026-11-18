@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Archivo:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=0213">
+<link rel="stylesheet" href="app.css?v=0214">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#161a1f">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -37,6 +37,7 @@
   <button class="icon-btn" id="themeToggle" aria-label="Aussehen / Оформление" aria-haspopup="menu">
     <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 2-.8 2-1.8 0-.5-.2-.9-.5-1.3-.3-.3-.5-.8-.5-1.2 0-1 .8-1.7 1.8-1.7H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="7.5" cy="11" r="1.3" fill="currentColor"/><circle cx="10" cy="7" r="1.3" fill="currentColor"/><circle cx="15" cy="7" r="1.3" fill="currentColor"/></svg>
   </button>
+  <button class="icon-btn" id="exitBtn" aria-label="Beenden / Закрыть" title="Beenden / Закрыть" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M6.4 6.6a8 8 0 1 0 11.2 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></button>
   <nav class="quick-nav" id="quickNav" aria-label="Bereiche / Разделы"></nav>
 </header>
 <div class="layout">
@@ -46,16 +47,16 @@
 <div class="scrim" id="scrim" hidden></div>
 <nav class="bottom-nav" id="bottomNav" aria-label="Schnellnavigation"></nav>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="data.js?v=0213"></script>
-<script src="jcx.js?v=0213"></script>
-<script src="oszi.js?v=0213"></script>
-<script src="pids.js?v=0213"></script>
-<script src="ecus.js?v=0213"></script>
-<script src="protos.js?v=0213"></script>
-<script src="refdb.js?v=0213"></script>
-<script src="mode06.js?v=0213"></script>
-<script src="bericht.js?v=0213"></script>
-<script src="app.js?v=0213"></script>
+<script src="data.js?v=0214"></script>
+<script src="jcx.js?v=0214"></script>
+<script src="oszi.js?v=0214"></script>
+<script src="pids.js?v=0214"></script>
+<script src="ecus.js?v=0214"></script>
+<script src="protos.js?v=0214"></script>
+<script src="refdb.js?v=0214"></script>
+<script src="mode06.js?v=0214"></script>
+<script src="bericht.js?v=0214"></script>
+<script src="app.js?v=0214"></script>
 <script>if ('serviceWorker' in navigator && location.protocol==='https:' && !/^localhost$|claude|claudeusercontent/.test(location.hostname)) var had = !!navigator.serviceWorker.controller; navigator.serviceWorker.addEventListener('controllerchange', function(){ if (had && !window.__swr){ window.__swr = 1; location.reload(); } }); navigator.serviceWorker.register('sw.js').catch(function(){});</script>
 </body>
 </html>

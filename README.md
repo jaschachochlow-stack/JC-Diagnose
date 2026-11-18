@@ -98,3 +98,6 @@ Im Vergleichs-Diagramm hat jede Kurve eine eigene Achse mit echten Werten und Ei
 ## Tabellen als Karten (0.21.3)
 Auf schmalen Bildschirmen (Handy) werden alle Tabellen (Referenztabellen, Berichte, ECU) automatisch als Karten dargestellt: erste Spalte als Titel, jede Zelle mit Spaltenname, leere Werte ausgeblendet. Kein Seitwärts-Scrollen mehr.
 Lange Tabellen (>6 Zeilen) sind einklappbar: Titel antippen öffnet die Karte.
+
+## Beenden-Knopf (0.21.4)
+Power-Symbol in der Kopfzeile (Android-App, Windows-App, installierte Web-App): erstes Tippen färbt rot und fragt nach, zweites beendet die App.

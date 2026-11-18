@@ -890,3 +890,5 @@ html[data-skin=glas] .dx-card{border:1px solid rgba(255,255,255,.85);background:
   table.rc tr.open td:first-child::after{transform:rotate(-135deg)}
   table.rc tr{padding:2px 12px}
 }
+#exitBtn[hidden]{display:none}
+#exitBtn.arm{background:#d64545;color:#fff;border-color:#d64545}

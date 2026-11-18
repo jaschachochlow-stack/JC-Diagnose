@@ -6,5 +6,6 @@ contextBridge.exposeInMainWorld('JCDesktop', {
   onData: (cb) => ipcRenderer.on('jc-tcp-data', (e, id, text) => cb(id, text)),
   onClosed: (cb) => ipcRenderer.on('jc-tcp-closed', (e, id) => cb(id)),
   onPick: (cb) => ipcRenderer.on('jc-pick', (e, m) => cb(m)),
+  quit: () => ipcRenderer.send('jc-quit'),
   pick: (kind, id) => ipcRenderer.send('jc-pick-result', kind, id),
 });
