@@ -101,3 +101,9 @@ Lange Tabellen (>6 Zeilen) sind einklappbar: Titel antippen öffnet die Karte.
 
 ## Beenden-Knopf (0.21.4)
 Power-Symbol in der Kopfzeile (Android-App, Windows-App, installierte Web-App): erstes Tippen färbt rot und fragt nach, zweites beendet die App.
+
+## Herstellerdaten, Readiness, UDS-Codes, Batterie (0.22.0)
+- **Herstellerdaten (OBD → Herstellerdaten):** herstellerspezifische Live-Werte (Mode 22/21) aus der offenen Datenbank [OBDb](https://github.com/OBDb) – 61 Marken, 643 Modelle, ca. 103 000 Werte, je Marke in `obdx/<Marke>.js` (erst bei Bedarf geladen). Lizenz der Daten: **CC BY-SA 4.0** (Quelle OBDb). Namen per Wörterbuch (`obdx/lang.js`) ins Deutsche/Russische übertragen, Original darunter. Neu bauen: `python3 tools/make_obdb.py <ordner-mit-signalsets> obdx`.
+- **Readiness:** Bereitschaft der Selbsttests aus 01 01 (seit Löschen) und 01 41 (dieser Fahrzyklus), Benzin und Diesel (SAE J1979).
+- **UDS-Codes:** vollständige NRC-Liste nach ISO 14229-1, Dienste, DTC-Statusbits; Rohbefehle mit 7F-Antwort werden im Protokoll erklärt. Tabelle unter Referenztabellen → UDS-Codes.
+- **Batterie laden:** Ruhespannung ↔ Ladezustand (ADAC, Standard/EFB und AGM), Laderegeln nach ZVEI-Merkblatt 32, Rechner für Ladezustand und Ladezeit (auch unter Rechner).

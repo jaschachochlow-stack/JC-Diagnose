@@ -251,7 +251,7 @@ function demo1(cmd, t){
   }
   var s = Math.sin(t/900), rpm = 820 + 40*Math.sin(t/300), v = function(x){ x = Math.max(0, Math.min(255, Math.round(x))); return ('0'+x.toString(16).toUpperCase()).slice(-2); };
   var map = {
-    0x01:'000765'+'00', 0x03:'0200', 0x04:v(58+6*s), 0x05:v(88+40), 0x06:v(128+6*Math.sin(t/120)), 0x07:v(131), 0x0A:v(100), 0x0B:v(33+2*s),
+    0x01:'000765'+'04', 0x41:'000765'+'24', 0x03:'0200', 0x04:v(58+6*s), 0x05:v(88+40), 0x06:v(128+6*Math.sin(t/120)), 0x07:v(131), 0x0A:v(100), 0x0B:v(33+2*s),
     0x0C:v(rpm*4/256)+v((rpm*4)%256), 0x0D:'00', 0x0E:v((8+3*s+64)*2), 0x0F:v(24+40), 0x10:'01'+v(130+10*s), 0x11:v(38), 0x13:'03', 0x14:v(90+80*Math.sin(t/180))+'80', 0x15:v(140)+'FF',
     0x1C:'06', 0x1F:v((t/1000/256))+v((t/1000)%256), 0x21:'0000', 0x23:'01'+v(130), 0x24:'80'+v(0)+'80'+'00', 0x25:'80'+'40'+'8C'+'00', 0x2C:'00', 0x2D:'80', 0x2E:v(40), 0x2F:v(150),
     0x30:'2A', 0x31:'04'+'D2', 0x32:'0010', 0x33:'62', 0x34:'80'+v(10)+'80'+v(6), 0x35:'8040'+'7F'+'F0', 0x3C:'1C'+'20', 0x3E:'15'+'E0', 0x41:'00076500', 0x42:'36'+'B0', 0x43:'00'+v(45), 0x44:'80'+'00', 0x45:v(10), 0x46:v(18+40),
@@ -273,5 +273,20 @@ var PRESETS = {
   fahrt:{de:'Zähler / Fahrt',ru:'Счётчики / поездка',p:[0x0D,0x31,0x30,0x21,0x4D,0x4E,0x1F,0xA6,0x2F,0x5E]}
 };
 
-window.JCPID = {list:L, by:BY, groups:G, parse:parse, decode:decode, supported:supported, read:read, demo:demo, hex:hex, presets:PRESETS};
+
+// Bereitschaft der Selbsttests (SAE J1979, Mode 01 PID 01 = seit Löschen, PID 41 = dieser Fahrzyklus)
+// Byte B: Bit 0–2 Fehl-/Kraftstoff-/Bauteileüberwachung unterstützt, Bit 4–6 jeweils NICHT abgeschlossen, Bit 3 = Diesel.
+// Byte C: unterstützt, Byte D: nicht abgeschlossen (je Bit ein Monitor).
+var RDY_B = [['Zündaussetzer','Пропуски зажигания'],['Kraftstoffsystem','Топливная система'],['Bauteile (Comprehensive)','Компоненты (общий)']];
+var RDY_G = [['Katalysator','Катализатор'],['Beheizter Katalysator','Подогреваемый катализатор'],['Tankentlüftung (EVAP)','Вентиляция бака (EVAP)'],['Sekundärluft','Вторичный воздух'],['Klimaanlage (Kältemittel)','Кондиционер (хладагент)'],['Lambdasonde','Лямбда-зонд'],['Lambdasonden-Heizung','Подогрев лямбда-зонда'],['AGR / variable Ventilsteuerung','EGR / изменяемые фазы']];
+var RDY_D = [['NMHC-Katalysator','Катализатор NMHC'],['NOx-Nachbehandlung / SCR','Нейтрализация NOx / SCR'],null,['Ladedrucksystem','Система наддува'],null,['Abgassensor','Датчик ОГ'],['Partikelfilter (DPF)','Сажевый фильтр (DPF)'],['AGR / variable Ventilsteuerung','EGR / изменяемые фазы']];
+function readiness(b, cycle){
+  if (!b || b.length < 4) return null;
+  var A = b[0], B = b[1], C = b[2], D = b[3], diesel = !!(B & 8), it = [], i;
+  for (i = 0; i < 3; i++) if (B & (1 << i)) it.push({n:RDY_B[i], done:!(B & (16 << i)), cont:true});
+  var T2 = diesel ? RDY_D : RDY_G;
+  for (i = 0; i < 8; i++) if (T2[i] && (C & (1 << i))) it.push({n:T2[i], done:!(D & (1 << i)), cont:false});
+  return {mil:cycle ? null : !!(A & 128), dtc:cycle ? null : (A & 127), diesel:diesel, items:it, open:it.filter(function(x){ return !x.done; }).length};
+}
+window.JCPID = {readiness:readiness, list:L, by:BY, groups:G, parse:parse, decode:decode, supported:supported, read:read, demo:demo, hex:hex, presets:PRESETS};
 })();
